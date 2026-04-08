@@ -58,8 +58,7 @@ jobs:
             auto-pr
           reviewers: |
             KateSawada
-            ryota-skating
-            ky116
+            mattsunkun
           body: |
             users.csv を更新しました．
             

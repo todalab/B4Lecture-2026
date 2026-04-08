@@ -81,11 +81,7 @@ c. 次元圧縮しよう
 
 ## 注意
 
-- 武田研究室の場合はセットアップで作成した`virtualenv`環境を利用すること
-  - アクティベート例：`source ~/workspace3/myvenv/bin/activate`
-  - アクティベート後`pip install ...`でライブラリのインストールを行う
 - 自分の作業ブランチで課題を行うこと
-- プルリクエストを送る前に[REVIEW.md](https://github.com/TakedaLab/B4Lecture/blob/master/REVIEW.md)を参照し直せるところは直すこと
 - プルリクエストをおくる際には**画像ファイルも載せること**
 - 作業前にリポジトリを最新版に更新すること
 
