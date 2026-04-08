@@ -25,15 +25,15 @@
 
 ## 演習の進め方
 
-1. masterブランチに戻る
+1. mainブランチに戻る
   ```bash
   $ cd B4Lecture-2026
-  $ git checkout master
+  $ git checkout main
   ```
 2. 本家リポジトリから更新されたソースをマージする
   ```bash
   $ git fetch upstream
-  $ git merge upstream/master
+  $ git merge upstream/main
   ```
 3. ブランチを作成する
   ```bash
