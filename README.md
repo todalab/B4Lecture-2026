@@ -11,11 +11,15 @@
 
 3. フォークした自分のリポジトリを適当な場所へダウンロードする。(リポジトリページ右上の[↓Code]ボタンからURLをコピー)
 
-    ```bash
-    $ git clone <自分のgithubのURL>
-    ```
+  > [!NOTE]
+  > GitHubに公開鍵を先に設定すること．詳しくは[こちら](https://qiita.com/dev-cho/items/b0f5574689d9e28c844c)
 
-4. 本家リポジトリを登録 (upstreamという名前でなくてもいい)
+
+  ```bash
+  $ git clone <自分のgithubのURL（git@github.com:から始まるものにする）>
+  ```
+
+1. 本家リポジトリを登録 (upstreamという名前でなくてもいい)
 
     ```bash
     $ cd B4Lecture-2026
@@ -37,7 +41,7 @@
   ```
 3. ブランチを作成する
   ```bash
-  $ git checkout -b ex_XX (ブランチ名。何でもいい)
+  $ git checkout -b exXX (ブランチ名。何でもいい)
   ```
 3. 自分の名前のディレクトリ（`<firstname-initial>_<lastname>`）を作成する
   ```bash
@@ -48,8 +52,8 @@
 7. 適宜gitを使ってコミットする(ローカルのgitに反映される。こまめにやっていいよ)
   ```bash
   # 例
-  git add main.py
-  git commit -m "新しい関数を追加"
+  $ git add main.py
+  $ git commit -m "新しい関数を追加"
   ```
 
 8. githubにpushする(フォークした自分のgithubに反映される。こまめにやっていいよ)
