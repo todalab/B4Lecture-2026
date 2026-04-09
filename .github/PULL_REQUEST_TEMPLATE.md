@@ -30,8 +30,11 @@
 
 ## PR作成後
 - [ ] Reviewersを設定
-- [ ] Assigneesに自分自身とReviewerを設定
+  - [ ] Reviewerを[スプシ](https://docs.google.com/spreadsheets/d/107ZnRHP5DPrRuTkXAlcfQkIh0TwovE6wnDbFSHcUfew/edit?gid=1854832715#gid=1854832715)から探す
+- [ ] Assigneesを設定
+  - [ ] 自分自身を入れる
+  - [ ] Reviewerを入れる
 - [ ] SlackでReviewerにReviewを依頼
 - [ ] 発表者の場合
   - [ ] 発表資料の作成
-  - [ ] 発表資料をnas01の `forall/internal/発表資料/B4輪講/2026/第XX回` へアップロード
+  - [ ] 発表資料をnas01の `internal/発表資料/B4輪講/2026/第XX回` へアップロード
