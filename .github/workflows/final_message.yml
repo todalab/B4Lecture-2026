@@ -3,8 +3,8 @@ name: Final Message
 on:
   pull_request_target:
     branches:
-      - master
-      - temp_master
+      - main
+      - temp_main
     types:
       - closed
     paths:

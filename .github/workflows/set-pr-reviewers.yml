@@ -3,8 +3,8 @@ name: Set PR Reviewers
 on:
   pull_request_target:
     branches:
-      - master
-      - temp_master
+      - main
+      - temp_main
     paths:
       - 'ex[1-9]/**'
 
@@ -24,7 +24,7 @@ jobs:
       contents: read
       pull-requests: write
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@main
       - name: define envs
         run: |
           num_label=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/labels | jq -r '.[].name' | grep -c EX)

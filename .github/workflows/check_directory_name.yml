@@ -3,16 +3,16 @@ name: Check Directory Name
 on:
   pull_request_target:
     branches:
-      - master
-      - temp_master
+      - main
+      - temp_main
     types:
       - opened
     paths-ignore:
       - 'ex[1-9]/**'
   push:
     branches:
-      - master
-      - temp_master
+      - main
+      - temp_main
     paths-ignore:
       - 'ex[1-9]/**'
 

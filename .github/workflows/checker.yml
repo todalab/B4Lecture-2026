@@ -3,12 +3,12 @@ name: Code Checker
 on:
   push:
     branches:
-      - master
-      - temp_master
+      - main
+      - temp_main
   pull_request:
     branches:
-      - master
-      - temp_master
+      - main
+      - temp_main
 
 jobs:
   get-files-changed:
