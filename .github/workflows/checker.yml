@@ -11,6 +11,7 @@ on:
       - temp_main
 
 jobs:
+
   get-files-changed:
     runs-on: ubuntu-latest
     outputs:
@@ -18,46 +19,69 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          fetch-depth: 0  # OR "2" -> To retrieve the preceding commit.
-      - name: Get all changed *.py file(s)
-        id: changed-files-specific
+          fetch-depth: 0
+
+      - name: Get all changed *.py files
+        id: changed-files
         uses: tj-actions/changed-files@v35
         with:
           files: |
             **/*.py
-      - name: Set env
+
+      - name: Set env (multiline safe)
         id: set-env
         run: |
-          {
-            echo 'files<<EOF'
-            echo "${{ steps.changed-files-specific.outputs.all_changed_files }}"
-            echo 'EOF'
-          } >> "$GITHUB_OUTPUT"
+          FILES="${{ steps.changed-files.outputs.all_changed_files }}"
+          echo "Detected files:"
+          echo "$FILES"
+
+          if [ -z "$FILES" ]; then
+            # 空の場合は空の値をセット
+            echo "files=" >> "$GITHUB_OUTPUT"
+          else
+            # 改行対応
+            {
+              echo 'files<<EOF'
+              echo "$FILES"
+              echo 'EOF'
+            } >> "$GITHUB_OUTPUT"
+          fi
+
 
   linter:
     runs-on: ubuntu-latest
     needs: get-files-changed
+    if: ${{ needs.get-files-changed.outputs.files != '' }}
     steps:
       - uses: actions/checkout@v3
       - uses: psf/black@stable
         with:
           options: "--check --diff"
-          src: "${{needs.get-files-changed.outputs.files}}"
+          src: "${{ join(needs.get-files-changed.outputs.files, ' ') }}"
+
+
   formatter:
     runs-on: ubuntu-latest
     needs: get-files-changed
+    if: ${{ needs.get-files-changed.outputs.files != '' }}
     steps:
       - uses: actions/checkout@v3
-      - name: Install flake8 and its plugins
+      - name: Install flake8 and plugins
         run: pip install flake8 flake8-docstrings
+
       - name: Run flake8
         run: |
-          flake8 ${{needs.get-files-changed.outputs.files}} --max-line-length=100 --ignore=H102,H103,W503,H238,E203
+          flake8 ${{ join(needs.get-files-changed.outputs.files, ' ') }} \
+            --max-line-length=100 \
+            --ignore=H102,H103,W503,H238,E203
+
+
   isort:
     runs-on: ubuntu-latest
     needs: get-files-changed
+    if: ${{ needs.get-files-changed.outputs.files != '' }}
     steps:
       - uses: actions/checkout@v3
       - uses: isort/isort-action@v1
         with:
-          sort-paths: "${{needs.get-files-changed.outputs.files}}"
+          sort-paths: "${{ join(needs.get-files-changed.outputs.files, ' ') }}"
