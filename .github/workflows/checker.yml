@@ -27,7 +27,12 @@ jobs:
             **/*.py
       - name: Set env
         id: set-env
-        run: echo "files=${{ steps.changed-files-specific.outputs.all_changed_files }}" >> "$GITHUB_OUTPUT"
+        run: |
+          {
+            echo 'files<<EOF'
+            echo "${{ steps.changed-files-specific.outputs.all_changed_files }}"
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
 
   linter:
     runs-on: ubuntu-latest
