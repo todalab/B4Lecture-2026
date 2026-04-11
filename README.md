@@ -23,49 +23,54 @@
 
     ```bash
     $ cd B4Lecture-2026
-    $ git remote add upstream https://github.com/todalab/B4Lecture-2026
+    $ git remote add upstream git@github.com:todalab/B4Lecture-2026.git
     ```
 
 
 ## 演習の進め方
 
-1. mainブランチに戻る
+1. [vscodeを使いこなす方法](./docs/vscode.md)
+
+2. mainブランチに戻る
   ```bash
   $ cd B4Lecture-2026
-  $ git checkout main
+  $ git switch main
   ```
-2. 本家リポジトリから更新されたソースをマージする
+1. 本家リポジトリから更新されたソースをマージする
   ```bash
   $ git fetch upstream
   $ git merge upstream/main
   ```
-3. ブランチを作成する
+1. ブランチを作成する
   ```bash
-  $ git checkout -b exXX (ブランチ名。何でもいい)
+  $ git switch -c exXX (ブランチ名。何でもいい)
   ```
-3. 自分の名前のディレクトリ（`<firstname-initial>_<lastname>`）を作成する
+1. 自分の名前のディレクトリ（`<firstname-initial>_<lastname>`）を作成する
   ```bash
   $ mkdir -p exXX/m_matsumoto
   ```
-6. ディレクトリ内でスクリプトを作成する
+1. ディレクトリ内でスクリプトを作成する
 
-7. 適宜gitを使ってコミットする(ローカルのgitに反映される。こまめにやっていいよ)
+2. 適宜gitを使ってコミットする(ローカルのgitに反映される。こまめにやっていいよ)
   ```bash
   # 例
   $ git add main.py
   $ git commit -m "新しい関数を追加"
   ```
 
-8. githubにpushする(フォークした自分のgithubに反映される。こまめにやっていいよ)
+1. githubにpushする(フォークした自分のgithubに反映される。こまめにやっていいよ)
   ```bash
   $ git push origin exXX (ブランチ名)
   ```
 
-9. 一通り実装したら、githubにアクセスしてプルリクエストを作成し，レビューをお願いする（下参照）
+1. 一通り実装したら、githubにアクセスしてプルリクエストを作成し，レビューをお願いする
 
-10. レビューを受けてRequest Changesを修正 -> add -> commit -> pushを繰り返す
+2.  レビューを受けてRequest Changesを修正 -> add -> commit -> pushを繰り返す
 
-11. 必須レビュアー（修士学生１人）がApproveしたら、澤田がマージする。マージされたら本家リポジトリに自分のコードが反映される。
+3.  必須レビュアー（修士学生１人）にApproveおよびMergeしてもらう．
+
+## 資料作りの前に
+https://tsutawarudesign.com/
 
 
 ## その他
