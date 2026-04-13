@@ -8,6 +8,11 @@
 
 本課題では, 線形回帰およびロジスティック回帰を行う
 
+## データセット `data/` について
+- `sample2d.csv`: `y = 3x + 5 + ノイズ` の式よりランダム生成
+- `sample3d.csv`: `z = 2x + 3y + 10 + ノイズ` の式よりランダム生成
+- `sample_logistic.csv`: ラベルはシグモイド(slope=1.2)で確率的に生成
+
 ## 課題
 
 ### 1-1 線形回帰（2次元・3次元）
@@ -27,11 +32,14 @@
 ### 発展
 - 他のmetricsなども調査し，可視化などをし，性能向上を試みる
 
-## Python環境を構築する方法
-- venv・condaを使う方法
-  - notionで適当に検索すると出てくると思います．
-- uvを使う方法
-  - すみません．notionにまとまった情報がないので，まとめていただけると助かります．
+## Python環境を構築する上で参考になるリンク
+- venv
+  - 計算機サーバーで使うとき
+    - https://www.notion.so/todalab/studynotes-105468eeb10d8081bafce5a55754f615#105468eeb10d8022b534c21890406175
+  - windowsで使うとき
+    - https://www.notion.so/todalab/venv-version-13d468eeb10d807fa432d1a1f56988b9
+- uv（ナウい(?)）
+  - https://www.notion.so/todalab/B4-uv-341468eeb10d80248511de4ea59f655c?source=copy_link
 
 ## 発表（次週）
 - 取り組んだ内容を周りにわかるように説明
@@ -44,11 +52,11 @@
 ## 注意
 
 - 自分の作業ブランチで課題を行うこと
-- プルリクエストをおくる際には**画像ファイルも載せること**
+- プルリクエストをおくる際には**課題結果を可視化した画像ファイルも載せること**
 - 作業前にリポジトリを最新版に更新すること
 
 ```
 $ git checkout main
 $ git fetch upstream
-$ git merge upstresam/main
+$ git merge upstream/main
 ```
