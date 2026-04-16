@@ -41,6 +41,13 @@
   - 損失関数（クロスエントロピー）
   - 分類精度（accuracy）
 
+### 出力例
+
+![](fig/sample2d_1_regression_degree1_none.png)
+![](fig/sample2d_2_regression_degree3_none.png)
+![](fig/sample3d_regression_degree2_none.png)
+![](fig/sample_logistic_logistic_none.png)
+
 ### 発展
 - 他の metrics なども調査し，可視化などをし，性能向上を試みる
 - 必要以上に高い次数でフィッティングしたときに何が起こるかを観察する
