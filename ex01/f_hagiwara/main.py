@@ -1,7 +1,11 @@
 def main():
+    h11()
+    h12()
+
+def h11():
     import numpy as np
     import matplotlib.pyplot as plt
-
+### 課題1-1 ###
 # 2d_1
     # csvファイル読み込み
     a1 = np.loadtxt('data/sample2d_1.csv', delimiter=',', skiprows=1)
@@ -17,7 +21,7 @@ def main():
     x_row = x.reshape(1, -1)
     x_ex = np.concatenate([x_row.T, ones_row.T],1)
     x_T = x_ex.T
-    w1 = np.linalg.inv(x_T@x_ex)@x_T@y
+    w1 = np.linalg.inv(x_T @ x_ex) @ x_T @ y
     print(w1)
 
     # プロット
@@ -43,11 +47,11 @@ def main():
     ones = np.ones(x.size)
     ones_row = ones.reshape(1,-1)
     x_row = x.reshape(1, -1)
-    x_row2 = x_row*x_row
-    x_row3 = x_row*x_row2
+    x_row2 = x_row * x_row
+    x_row3 = x_row * x_row2
     x_ex = np.concatenate([x_row3.T, x_row2.T, x_row.T, ones_row.T],1)
     x_T = x_ex.T
-    w2 = np.linalg.inv(x_T@x_ex)@x_T@y
+    w2 = np.linalg.inv(x_T @ x_ex) @ x_T @ y
     print(w2)
 
 # TODO: 他とのコードの整合性を整える
@@ -57,7 +61,7 @@ def main():
     ax = fig.add_subplot()
     plt.scatter(x, y)   # 点で表示
     x = np.linspace(0, 10, 100)
-    y = w2[0]*x**3 + w2[1]*x**2 + w2[2]*x + w2[3]
+    y = w2[0] * x**3 + w2[1] * x**2 + w2[2] * x + w2[3]
     plt.plot(x, y, color='red')
     plt.xlabel("x")
     plt.ylabel("y")
@@ -80,12 +84,12 @@ def main():
     ones = np.ones(x.size)
     ones_row = ones.reshape(1,-1)
     x_row = x.reshape(1, -1)
-    x_row2 = x_row*x_row
+    x_row2 = x_row * x_row
     y_row = y.reshape(1, -1)
-    y_row2 = y_row*y_row
+    y_row2 = y_row * y_row
     xy_ex = np.concatenate([x_row2.T, x_row.T, y_row2.T, y_row.T, ones_row.T],1)
     xy_T = xy_ex.T
-    w3 = np.linalg.inv(xy_T@xy_ex)@xy_T@z
+    w3 = np.linalg.inv(xy_T @ xy_ex) @ xy_T @ z
     print(w3)
 
     # プロット
@@ -95,13 +99,70 @@ def main():
     x = np.arange(-5, 5, 0.05)
     y = np.arange(-5, 5, 0.05)
     x, y = np.meshgrid(x, y)
-    z = w3[0]*x**2 + w3[1]*x + w3[2]*y**2 + w3[3]*y + w3[4]
+    z = w3[0] * x**2 + w3[1] * x + w3[2] * y**2 + w3[3] * y + w3[4]
     ax.plot_surface(x, y, z, rstride=1, cstride=1, cmap='inferno', alpha=0.7)
     ax.set_xlabel("x")
     ax.set_ylabel("y")
     ax.set_zlabel("z")
     plt.title("sample3d")
-    plt.savefig("sample3d.png", dpi=300)
+    plt.savefig("sample3d.png", dpi=150)
+
+def h12():
+    import numpy as np
+    import matplotlib.pyplot as plt
+### 課題1-2 ###
+    learn_rate = 0.05
+    w = np.zeros(2)
+    print(w)
+
+    # csvファイル読み込み
+    a = np.loadtxt('data/sample_logistic.csv', delimiter=',', skiprows=1)
+
+    # データのスライシング
+    x = a[:, 0:2]
+    y = a[:, 2]
+    N = y.size
+
+    loss_list = []
+    likeli_list = []
+    acc_list = []
+
+    for i in range(300):
+        sigm = 1 / (1 + np.exp(-x @ w))
+        likeli = np.sum(y * np.log(sigm) + (1 - y) * np.log(1 - sigm))
+        loss = -likeli / N
+        grad = ((sigm - y) @ x) / N
+        w = w - learn_rate * grad
+        acc = np.count_nonzero(np.abs(sigm-y) < 0.5) / N
+
+        likeli_list.append(likeli)
+        loss_list.append(loss)
+        acc_list.append(acc)
+
+    print(likeli_list)
+
+    fig = plt.figure(figsize=(6,8))
+    plotx = np.arange(1, 301)
+    ax1 = fig.add_subplot(311)
+    plt.grid()
+    plt.ylabel("Likelihood")
+    plt.yticks(np.arange(-200,-100,20))
+    plt.plot(plotx,likeli_list,color='red')
+
+    ax2 = fig.add_subplot(312)
+    x = np.linspace(0, 300, 300)
+    plt.grid()
+    plt.ylabel("Loss")
+    plt.plot(plotx,loss_list, color='blue')
+
+    ax3 = fig.add_subplot(313)
+    x = np.linspace(0, 300, 300)
+    plt.grid()
+    plt.ylabel("Accuracy")
+    plt.plot(plotx,acc_list, color='green')
+
+    plt.suptitle("sample_logistic(η=0.05)", fontsize=20)
+    plt.savefig("samplelog.png", dpi=300)
 
 if __name__ == "__main__":
     main()
