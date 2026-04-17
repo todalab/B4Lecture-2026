@@ -74,12 +74,16 @@ def main():
     z = a3[:, 2]
 
     # 散布図より曲面(zをx,yで表現)が適切と判断
+    # 先程3Dで行ったものと同様、項ごとにパラメータを設定
+    # 中央に向かって深くなっている様子が見受けられるためそれぞれ2次とする
     # 正規方程式により推定
     ones = np.ones(x.size)
     ones_row = ones.reshape(1,-1)
     x_row = x.reshape(1, -1)
+    x_row2 = x_row*x_row
     y_row = y.reshape(1, -1)
-    xy_ex = np.concatenate([x_row.T, y_row.T, ones_row.T],1)
+    y_row2 = y_row*y_row
+    xy_ex = np.concatenate([x_row2.T, x_row.T, y_row2.T, y_row.T, ones_row.T],1)
     xy_T = xy_ex.T
     w3 = np.linalg.inv(xy_T@xy_ex)@xy_T@z
     print(w3)
@@ -87,17 +91,17 @@ def main():
     # プロット
     fig = plt.figure()
     ax = fig.add_subplot(111,projection='3d')
-    ax.scatter(x, y, z)
+    ax.scatter(x, y, z, s=10)
     x = np.arange(-5, 5, 0.05)
     y = np.arange(-5, 5, 0.05)
     x, y = np.meshgrid(x, y)
-    z = w3[0]*x + w3[1]*y + w3[2]
-    ax.plot_surface(x, y, z, rstride=1, cstride=1, cmap='hsv', linewidth=0.3)
+    z = w3[0]*x**2 + w3[1]*x + w3[2]*y**2 + w3[3]*y + w3[4]
+    ax.plot_surface(x, y, z, rstride=1, cstride=1, cmap='inferno', alpha=0.7)
     ax.set_xlabel("x")
     ax.set_ylabel("y")
     ax.set_zlabel("z")
     plt.title("sample3d")
-    plt.savefig("sample3d.png")
+    plt.savefig("sample3d.png", dpi=300)
 
 if __name__ == "__main__":
     main()
