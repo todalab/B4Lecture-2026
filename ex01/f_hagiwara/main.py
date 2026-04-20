@@ -24,7 +24,7 @@ def h11():
     # 行列の拡大
     x1_ex = np.column_stack([x1, np.ones_like(x1)]) #column_stackは1次行列の組み合わせなら2次行列に変換する
     w1 = normal_eq(x1_ex,y1)
-    print("w1:" + w1)   # パラメータ確認
+    print("w1:", w1)   # パラメータ確認
 
     # プロット
     fig = plt.figure()
@@ -48,7 +48,7 @@ def h11():
     # 正規方程式により推定
     x2_ex = np.column_stack([x2**3, x2**2, x2, np.ones_like(x2)])
     w2 = normal_eq(x2_ex,y2)
-    print("w2:" + w2)
+    print("w2:", w2)
 
     # プロット
     fig = plt.figure()
@@ -77,12 +77,12 @@ def h11():
     # 正規方程式により推定
     xy_ex = np.column_stack([x3**2, x3, y3**2, y3, np.ones_like(x3)])
     w3 = normal_eq(xy_ex,z3)
-    print("w3:" + w3)
+    print("w3:", w3)
 
     # プロット
     fig = plt.figure()
     ax = fig.add_subplot(111,projection='3d')
-    ax.scatter(x, y, z, s=10)
+    ax.scatter(x3, y3, z3, s=10)
 
     x = np.arange(-5, 5, 0.05)
     y = np.arange(-5, 5, 0.05)
@@ -99,7 +99,6 @@ def h12():
 ### 課題1-2 ###
     learn_rate = 0.05
     w = np.zeros(2)
-    print(w)
 
     # csvファイル読み込み
     a = np.loadtxt('data/sample_logistic.csv', delimiter=',', skiprows=1)
@@ -147,8 +146,8 @@ def h12():
     plt.ylabel("Accuracy")
     plt.plot(plotx,acc_list, color='green')
 
-    plt.suptitle("sample_logistic(η=0.05)", fontsize=20)
-    plt.savefig("samplelog.png", dpi=300)
+    plt.suptitle("sample_logistic(η=0.01)", fontsize=20)
+    plt.savefig("samplelog001.png", dpi=300)
 
 if __name__ == "__main__":
     main()
