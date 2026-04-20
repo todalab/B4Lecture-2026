@@ -1,3 +1,5 @@
+"""線形回帰・多項式回帰・3次元回帰・ロジスティック回帰（勾配降下法）の実装."""
+
 from inspect import signature
 from typing import Callable
 
@@ -12,6 +14,7 @@ from pandas.core.reshape.tile import np
 def regression(
     fig: Figure, index: int, total: int, filename: str, title: str, poly: Callable
 ):
+    """回帰分析を行い、結果をプロットする."""
     # Read data from file
     data = read_csv(filename)
 
@@ -54,10 +57,12 @@ def regression(
 
 
 def sigmoid(x):
+    """シグモイド関数."""
     return 1 / (1 + np.exp(-x))
 
 
 def gradient_descent(filename: str):
+    """勾配降下法でロジスティック回帰を行う."""
     # Read data from file
     data = read_csv(filename)
 
@@ -121,6 +126,7 @@ def gradient_descent(filename: str):
 
 
 def main():
+    """メイン関数."""
     fig = plt.figure(figsize=[24, 6])  # Size in inches
 
     regression(fig, 1, 3, "data/sample2d_1.csv", "Linear 2D", lambda x: (x,))
