@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
+# 発展内容のためのライブラリのimport
 from sklearn.metrics import roc_curve, confusion_matrix, auc
+from sklearn.linear_model import Ridge, Lasso
 
 def main():
     h11()
@@ -8,8 +10,6 @@ def main():
 
 def normal_eq(X,y):
     return np.linalg.inv(X.T @ X) @ X.T @ y
-
-
 
 def h11():
 ### 課題1-1 ###
@@ -73,6 +73,31 @@ def h11():
     plt.savefig("sample2d_1_compare_w.png")
 
     # Ridge回帰
+    ridge = Ridge(alpha=1.0, fit_intercept=False)
+    ridge.fit(x1_ex5, y1)
+    y15_ridge = ridge.predict(np.column_stack([x**5, x**4, x**3, x**2, x, np.ones_like(x)]))
+
+    # Lasso
+    lasso = Lasso(alpha=0.1, fit_intercept=False, max_iter = 2000)
+    lasso.fit(x1_ex5, y1)
+    y15_lasso = lasso.predict(np.column_stack([x**5, x**4, x**3, x**2, x, np.ones_like(x)]))
+
+    fig = plt.figure()
+    ax = fig.add_subplot()
+    plt.scatter(x1, y1)
+    plt.plot(x, y11, label="1st", color='black')
+    plt.plot(x, y12, label="2nd", color='red')
+    plt.plot(x, y13, label="3rd", color='blue')
+    plt.plot(x, y14, label="4th", color='green')
+    plt.plot(x, y15, label="5th", color='orange')
+    plt.plot(x, y15_ridge, label="Ridge", linestyle='--',color='orange')
+    plt.plot(x, y15_lasso, label="Lasso", linestyle=':',color='orange')
+    plt.legend()
+    plt.xlabel("x")
+    plt.ylabel("y")
+    plt.title("sample2d_1_lr")
+    plt.savefig("sample2d_1_lr.png")
+
 
 # 2d_2
     # csvファイル読み込み
@@ -169,6 +194,7 @@ def h12():
         acc_list.append(acc)
         auc_list.append(auc_score)
 
+    # ROC-AUCの値取得
     sigm = 1 / (1 + np.exp(-x @ w))
     fpr, tpr, thresholds = roc_curve(y, sigm)
     auc_score = auc(fpr, tpr)
@@ -179,24 +205,28 @@ def h12():
     fig = plt.figure(figsize=(6,11))
     plotx = np.arange(1, 301)
 
+    # 尤度
     ax1 = fig.add_subplot(411)
     plt.grid()
     plt.ylabel("Likelihood")
     plt.yticks(np.arange(-200,-100,20))
     plt.plot(plotx,likeli_list,color='red')
 
+    # 損失
     ax2 = fig.add_subplot(412)
     x = np.linspace(0, 300, 300)
     plt.grid()
     plt.ylabel("Loss")
     plt.plot(plotx,loss_list, color='blue')
 
+    # 正解率
     ax3 = fig.add_subplot(413)
     x = np.linspace(0, 300, 300)
     plt.grid()
     plt.ylabel("Accuracy")
     plt.plot(plotx,acc_list, color='green')
 
+    # ROC-AUC
     ax4 = fig.add_subplot(414)
     x = np.linspace(0, 300, 300)
     plt.grid()
@@ -207,6 +237,7 @@ def h12():
     plt.suptitle("sample_logistic(η=0.5)", fontsize=20)
     plt.savefig("samplelog.png", dpi=300)
 
+    # ROC曲線
     plt.figure()
     plt.plot(fpr, tpr, marker='o')
     plt.xlabel('FPR')
