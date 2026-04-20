@@ -9,6 +9,8 @@ def main():
 def normal_eq(X,y):
     return np.linalg.inv(X.T @ X) @ X.T @ y
 
+
+
 def h11():
 ### 課題1-1 ###
 # 2d_1
@@ -36,6 +38,41 @@ def h11():
     plt.ylabel("y")
     plt.title("sample2d_1")
     plt.savefig("sample2d_1.png")
+
+    # 過学習の検証
+    x1_ex2 = np.column_stack([x1**2, x1, np.ones_like(x1)])
+    x1_ex3 = np.column_stack([x1**3, x1**2, x1, np.ones_like(x1)])
+    x1_ex4 = np.column_stack([x1**4, x1**3, x1**2, x1, np.ones_like(x1)])
+    x1_ex5 = np.column_stack([x1**5, x1**4, x1**3, x1**2, x1, np.ones_like(x1)])
+
+    w12 = normal_eq(x1_ex2,y1)
+    w13 = normal_eq(x1_ex3,y1)
+    w14 = normal_eq(x1_ex4,y1)
+    w15 = normal_eq(x1_ex5,y1)
+
+    x = np.linspace(-10, 10, 100)
+    y11 = w1[0]*x + w1[1]
+    y12 = w12[0]*x**2 + w12[1]*x + w12[2]
+    y13 = w13[0]*x**3 + w13[1]*x**2 + w13[2]*x + w13[3]
+    y14 = w14[0]*x**4 + w14[1]*x**3 + w14[2]*x**2 + w14[3]*x + w14[4]
+    y15 = (w15[0]*x**5 + w15[1]*x**4 + w15[2]*x**3 + w15[3]*x**2 + w15[4]*x + w15[5])
+
+    fig = plt.figure()
+    ax = fig.add_subplot()
+    plt.scatter(x1, y1)
+    plt.plot(x, y11, label="1st", color='black')
+    plt.plot(x, y12, label="2nd", color='red')
+    plt.plot(x, y13, label="3rd", color='blue')
+    plt.plot(x, y14, label="4th", color='green')
+    plt.plot(x, y15, label="5th", color='orange')
+    plt.legend()
+
+    plt.xlabel("x")
+    plt.ylabel("y")
+    plt.title("sample2d_1(compare:wide)")
+    plt.savefig("sample2d_1_compare_w.png")
+
+    # Ridge回帰
 
 # 2d_2
     # csvファイル読み込み
@@ -98,7 +135,7 @@ def h11():
 
 def h12():
 ### 課題1-2 ###
-    learn_rate = 0.05
+    learn_rate = 0.5
     w = np.zeros(2)
 
     # csvファイル読み込み
@@ -167,15 +204,15 @@ def h12():
     ax4.set_xlabel("Epochs")
     ax4.plot(plotx, auc_list, color='orange')
 
-    plt.suptitle("sample_logistic(η=0.01)", fontsize=20)
+    plt.suptitle("sample_logistic(η=0.5)", fontsize=20)
     plt.savefig("samplelog.png", dpi=300)
 
     plt.figure()
-    plt.title("ROC Curve")
     plt.plot(fpr, tpr, marker='o')
     plt.xlabel('FPR')
     plt.ylabel('TPR')
     plt.grid()
+    plt.suptitle("ROC Curve", fontsize=20)
     plt.savefig("roc_curve.png", dpi=300)
 
 if __name__ == "__main__":
