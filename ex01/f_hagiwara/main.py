@@ -1,8 +1,9 @@
+# 発展内容のためのライブラリscikit-learnもimport
 import matplotlib.pyplot as plt
 import numpy as np
-# 発展内容のためのライブラリのimport
 from sklearn.linear_model import Lasso, Ridge
 from sklearn.metrics import auc, confusion_matrix, roc_curve
+
 
 def main():
     h11()
