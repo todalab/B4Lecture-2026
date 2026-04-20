@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from sklearn.metrics import roc_curve, confusion_matrix, auc
 
 def main():
     h11()
@@ -108,46 +109,74 @@ def h12():
     y = a[:, 2]
     N = y.size
 
+    # 値格納用のリスト宣言
     loss_list = []
     likeli_list = []
     acc_list = []
+    auc_list = []
 
-    # 今回は大丈夫そうだが勾配消失の対応をすべきか
+    # 勾配降下法
     for i in range(300):
         sigm = 1 / (1 + np.exp(-x @ w))
-        likeli = np.sum(y * np.log(sigm) + (1 - y) * np.log(1 - sigm))
-        loss = -likeli / N
-        grad = ((sigm - y) @ x) / N
-        w = w - learn_rate * grad
-        acc = np.count_nonzero(np.abs(sigm-y) < 0.5) / N
+
+        likeli = np.sum(y * np.log(sigm) + (1 - y) * np.log(1 - sigm))      # 尤度
+        loss = -likeli / N      # 損失
+        grad = ((sigm - y) @ x) / N     # 勾配
+        w = w - learn_rate * grad    # パラメータ更新
+        acc = np.count_nonzero(np.abs(sigm-y) < 0.5) / N    # 閾値は0.5とした
+        fpr, tpr, thresholds = roc_curve(y, sigm)
+        auc_score = auc(fpr, tpr)
 
         likeli_list.append(likeli)
         loss_list.append(loss)
         acc_list.append(acc)
+        auc_list.append(auc_score)
 
-    fig = plt.figure(figsize=(6,8))
+    sigm = 1 / (1 + np.exp(-x @ w))
+    fpr, tpr, thresholds = roc_curve(y, sigm)
+    auc_score = auc(fpr, tpr)
+    y_pred = (sigm >= 0.5).astype(int)
+    mat = confusion_matrix(y, y_pred)
+
+    # プロット
+    fig = plt.figure(figsize=(6,11))
     plotx = np.arange(1, 301)
 
-    ax1 = fig.add_subplot(311)
+    ax1 = fig.add_subplot(411)
     plt.grid()
     plt.ylabel("Likelihood")
     plt.yticks(np.arange(-200,-100,20))
     plt.plot(plotx,likeli_list,color='red')
 
-    ax2 = fig.add_subplot(312)
+    ax2 = fig.add_subplot(412)
     x = np.linspace(0, 300, 300)
     plt.grid()
     plt.ylabel("Loss")
     plt.plot(plotx,loss_list, color='blue')
 
-    ax3 = fig.add_subplot(313)
+    ax3 = fig.add_subplot(413)
     x = np.linspace(0, 300, 300)
     plt.grid()
     plt.ylabel("Accuracy")
     plt.plot(plotx,acc_list, color='green')
 
+    ax4 = fig.add_subplot(414)
+    x = np.linspace(0, 300, 300)
+    plt.grid()
+    ax4.set_ylabel("ROC-AUC")
+    ax4.set_xlabel("Epochs")
+    ax4.plot(plotx, auc_list, color='orange')
+
     plt.suptitle("sample_logistic(η=0.01)", fontsize=20)
-    plt.savefig("samplelog001.png", dpi=300)
+    plt.savefig("samplelog.png", dpi=300)
+
+    plt.figure()
+    plt.title("ROC Curve")
+    plt.plot(fpr, tpr, marker='o')
+    plt.xlabel('FPR')
+    plt.ylabel('TPR')
+    plt.grid()
+    plt.savefig("roc_curve.png", dpi=300)
 
 if __name__ == "__main__":
     main()
