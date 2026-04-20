@@ -1,33 +1,35 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
 def main():
     h11()
     h12()
 
+def normal_eq(X,y):
+    return np.linalg.inv(X.T @ X) @ X.T @ y
+
 def h11():
-    import numpy as np
-    import matplotlib.pyplot as plt
 ### 課題1-1 ###
 # 2d_1
     # csvファイル読み込み
     a1 = np.loadtxt('data/sample2d_1.csv', delimiter=',', skiprows=1)
 
     # データのスライシング
-    x = a1[:, 0]
-    y = a1[:, 1]
+    x1 = a1[:, 0]
+    y1 = a1[:, 1]
 
     # 散布図より線形が適切と判断
     # 正規方程式により推定
-    ones = np.ones(x.size)
-    ones_row = ones.reshape(1,-1)
-    x_row = x.reshape(1, -1)
-    x_ex = np.concatenate([x_row.T, ones_row.T],1)
-    x_T = x_ex.T
-    w1 = np.linalg.inv(x_T @ x_ex) @ x_T @ y
-    print(w1)
+
+    # 行列の拡大
+    x1_ex = np.column_stack([x1, np.ones_like(x1)]) #column_stackは1次行列の組み合わせなら2次行列に変換する
+    w1 = normal_eq(x1_ex,y1)
+    print("w1:" + w1)   # パラメータ確認
 
     # プロット
     fig = plt.figure()
     ax = fig.add_subplot()
-    plt.scatter(x, y)   # 点で表示
+    plt.scatter(x1, y1)
     ax.axline((0, w1[1]), slope=w1[0], color='red')
     plt.xlabel("x")
     plt.ylabel("y")
@@ -39,27 +41,19 @@ def h11():
     a2 = np.loadtxt('data/sample2d_2.csv', delimiter=',', skiprows=1)
 
     # データのスライシング
-    x = a2[:, 0]
-    y = a2[:, 1]
+    x2 = a2[:, 0]
+    y2 = a2[:, 1]
 
     # 散布図より3次式が適切と判断
     # 正規方程式により推定
-    ones = np.ones(x.size)
-    ones_row = ones.reshape(1,-1)
-    x_row = x.reshape(1, -1)
-    x_row2 = x_row * x_row
-    x_row3 = x_row * x_row2
-    x_ex = np.concatenate([x_row3.T, x_row2.T, x_row.T, ones_row.T],1)
-    x_T = x_ex.T
-    w2 = np.linalg.inv(x_T @ x_ex) @ x_T @ y
-    print(w2)
+    x2_ex = np.column_stack([x2**3, x2**2, x2, np.ones_like(x2)])
+    w2 = normal_eq(x2_ex,y2)
+    print("w2:" + w2)
 
-# TODO: 他とのコードの整合性を整える
-# TODO: 4次式,5次式にした際の変化を確認する
     # プロット
     fig = plt.figure()
     ax = fig.add_subplot()
-    plt.scatter(x, y)   # 点で表示
+    plt.scatter(x2, y2)   # 点で表示
     x = np.linspace(0, 10, 100)
     y = w2[0] * x**3 + w2[1] * x**2 + w2[2] * x + w2[3]
     plt.plot(x, y, color='red')
@@ -73,29 +67,23 @@ def h11():
     a3 = np.loadtxt('data/sample3d.csv', delimiter=',', skiprows=1)
 
     # データのスライシング
-    x = a3[:, 0]
-    y = a3[:, 1]
-    z = a3[:, 2]
+    x3 = a3[:, 0]
+    y3 = a3[:, 1]
+    z3 = a3[:, 2]
 
     # 散布図より曲面(zをx,yで表現)が適切と判断
     # 先程3Dで行ったものと同様、項ごとにパラメータを設定
     # 中央に向かって深くなっている様子が見受けられるためそれぞれ2次とする
     # 正規方程式により推定
-    ones = np.ones(x.size)
-    ones_row = ones.reshape(1,-1)
-    x_row = x.reshape(1, -1)
-    x_row2 = x_row * x_row
-    y_row = y.reshape(1, -1)
-    y_row2 = y_row * y_row
-    xy_ex = np.concatenate([x_row2.T, x_row.T, y_row2.T, y_row.T, ones_row.T],1)
-    xy_T = xy_ex.T
-    w3 = np.linalg.inv(xy_T @ xy_ex) @ xy_T @ z
-    print(w3)
+    xy_ex = np.column_stack([x3**2, x3, y3**2, y3, np.ones_like(x3)])
+    w3 = normal_eq(xy_ex,z3)
+    print("w3:" + w3)
 
     # プロット
     fig = plt.figure()
     ax = fig.add_subplot(111,projection='3d')
     ax.scatter(x, y, z, s=10)
+
     x = np.arange(-5, 5, 0.05)
     y = np.arange(-5, 5, 0.05)
     x, y = np.meshgrid(x, y)
@@ -108,8 +96,6 @@ def h11():
     plt.savefig("sample3d.png", dpi=150)
 
 def h12():
-    import numpy as np
-    import matplotlib.pyplot as plt
 ### 課題1-2 ###
     learn_rate = 0.05
     w = np.zeros(2)
@@ -127,6 +113,7 @@ def h12():
     likeli_list = []
     acc_list = []
 
+    # 今回は大丈夫そうだが勾配消失の対応をすべきか
     for i in range(300):
         sigm = 1 / (1 + np.exp(-x @ w))
         likeli = np.sum(y * np.log(sigm) + (1 - y) * np.log(1 - sigm))
@@ -139,10 +126,9 @@ def h12():
         loss_list.append(loss)
         acc_list.append(acc)
 
-    print(likeli_list)
-
     fig = plt.figure(figsize=(6,8))
     plotx = np.arange(1, 301)
+
     ax1 = fig.add_subplot(311)
     plt.grid()
     plt.ylabel("Likelihood")
