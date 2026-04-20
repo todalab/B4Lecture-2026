@@ -1,8 +1,8 @@
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 # 発展内容のためのライブラリのimport
-from sklearn.metrics import roc_curve, confusion_matrix, auc
-from sklearn.linear_model import Ridge, Lasso
+from sklearn.linear_model import Lasso, Ridge
+from sklearn.metrics import auc, confusion_matrix, roc_curve
 
 def main():
     h11()
@@ -25,7 +25,7 @@ def h11():
     # 正規方程式により推定
 
     # 行列の拡大
-    x1_ex = np.column_stack([x1, np.ones_like(x1)]) #column_stackは1次行列の組み合わせなら2次行列に変換する
+    x1_ex = np.column_stack([x1, np.ones_like(x1)]) # column_stackは1次行列の組み合わせなら2次行列に変換する
     w1 = normal_eq(x1_ex,y1)
     print("w1:", w1)   # パラメータ確認
 
