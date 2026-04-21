@@ -36,13 +36,14 @@ def main():
         grad = X.T @ (y_pred - y) / len(y)
         w_log -= lr * grad
 
+    #学習曲線の可視化
     fig, axes = plt.subplots(3, 1, figsize=(8, 12))
-
+    fig.suptitle(f'Learning Rate ={lr}')
     axes[0].plot(history['loss'], color='red')
     axes[0].set_ylabel('Loss')
 
     axes[1].plot(history['log_likelihood'], color='blue')
-    axes[1].set_ylabel('log_ikelihood')
+    axes[1].set_ylabel('Log_likelihood')
 
     axes[2].plot(history['accuracy'], color='green')
     axes[2].set_xlabel('Iteration')
