@@ -36,6 +36,28 @@ def main():
     plt.plot(x2_line, y2_line, color='red', label='Fit')
     plt.legend()
     plt.show()
+    
+    # sample3d.csv の処理
+    df3 = pd.read_csv('sample3d.csv')
+    x3 = df3['x']
+    y3 = df3['y']
+    z3 = df3['z']
+    X3 = np.vstack([np.ones(len(x3)), x3, y3, x3**2, y3**2, x3*y3]).T
+    w3 = normal_equation(X3, z3)
+
+    # sample3d の可視化
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.scatter(x3, y3, z3, label='Data')
+
+    x_grid, y_grid = np.meshgrid(np.linspace(x3.min(), x3.max(), 100),
+                                np.linspace(y3.min(), y3.max(), 100))
+    X3_grid = np.vstack([np.ones(x_grid.size), x_grid.ravel(), y_grid.ravel(),
+                        x_grid.ravel()**2, y_grid.ravel()**2, x_grid.ravel() * y_grid.ravel()]).T
+    z_grid = (X3_grid @ w3).reshape(x_grid.shape)
+
+    ax.plot_surface(x_grid, y_grid, z_grid, color='red')
+    plt.show()
 
 if __name__ == "__main__":
     main()
