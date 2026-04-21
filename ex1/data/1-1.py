@@ -21,5 +21,21 @@ def main():
     plt.legend()
     plt.show()
 
+    # sample2d_2.csv の処理
+    df2 = pd.read_csv("sample2d_2.csv", header=0)
+    x2, y2=df2["x"], df2["y"]
+    X2 = np.vstack([np.ones(len(x2)), x2, x2**2, x2**3]).T
+    w2 = normal_equation(X2, y2)
+
+    # sample2d_2.csv の可視化
+    x2_line = np.linspace(x2.min(), x2.max(), 100)
+    X2_line = np.vstack([np.ones(len(x2_line)), x2_line, x2_line**2, x2_line**3]).T
+    y2_line = X2_line @ w2
+    plt.figure()
+    plt.scatter(x2, y2, label='Data')
+    plt.plot(x2_line, y2_line, color='red', label='Fit')
+    plt.legend()
+    plt.show()
+
 if __name__ == "__main__":
     main()
