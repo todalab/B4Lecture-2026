@@ -8,18 +8,18 @@ from sklearn.metrics import auc, confusion_matrix, roc_curve
 
 
 def main():
-    """Main function."""
+    """Run main function."""
     h11()
     h12()
 
 
 def normal_eq(X, y):
-    """Normal eqation."""
+    """Solve normal eqation."""
     return np.linalg.inv(X.T @ X) @ X.T @ y
 
 
 def h11():
-    """Exercise 1-1."""
+    """Solve exercise 1-1."""
     # 2d_1
     # csvファイル読み込み
     a1 = np.loadtxt("data/sample2d_1.csv", delimiter=",", skiprows=1)
@@ -179,7 +179,7 @@ def h11():
 
 
 def h12():
-    """Exercise 1-2"""
+    """Solve exercise 1-2."""
     learn_rate = 0.5
     w = np.zeros(2)
 
