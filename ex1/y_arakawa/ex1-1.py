@@ -21,7 +21,7 @@ plt.legend(loc='upper left')
 plt.title("sample2d_1 scatter plot")
 plt.ylabel(sample2d_1_ylable)
 plt.xlabel(sample2d_1_xlabel)
-plt.show()
+# plt.show()
 
 ## sample2d_2
 print(sample2d_2.describe())
@@ -32,7 +32,7 @@ plt.legend(loc='upper left')
 plt.title("sample2d_2 scatter plot")
 plt.ylabel(sample2d_2_ylable)
 plt.xlabel(sample2d_2_xlabel)
-plt.show()
+# plt.show()
 
 ## sample3d
 print(sample3d.describe())
@@ -46,5 +46,10 @@ ax_sample3d.set_title("sample3d scatter plot")
 ax_sample3d.set_zlabel("z")
 ax_sample3d.set_ylabel("y")
 ax_sample3d.set_xlabel("x")
-plt.show()
+# plt.show()
 
+# 重みの推定
+## sample2d_1 線形回帰（単回帰）を用いる
+sample2d_1_ndarray = sample2d_1.to_numpy()
+sample2d_1_num_data = sample2d_1_ndarray.shape[0]
+sample2d_1_design_mat = np.append(sample2d_1_ndarray, np.zeros((100,1)), axis=1)
