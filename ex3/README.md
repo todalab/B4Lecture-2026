@@ -15,12 +15,6 @@
 - `data2.csv`: 2次元データ（ヘッダーなし）
 - `data3.csv`: 2次元データ（ヘッダーなし）
 
-データの生成は `generate_data.py` を実行することで `data/` ディレクトリに保存される．
-
-```bash
-python generate_data.py
-```
-
 ## 課題
 
 ### 3-1 データの確認
