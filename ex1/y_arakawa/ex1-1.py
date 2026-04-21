@@ -2,7 +2,7 @@ import numpy as np, pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib
 
-matplotlib.rcParams['font.family'] = 'sans-serif'
+matplotlib.rcParams["font.family"] = "sans-serif"
 
 
 # CSVファイルからデータを読み込む
@@ -16,40 +16,45 @@ sample_logistic = pd.read_csv("../data/sample_logistic.csv")
 print(sample2d_1.describe())
 sample2d_1_xlabel, sample2d_1_ylable = sample2d_1.columns
 
-plt.scatter(sample2d_1["x"], sample2d_1["y"], label = "data")
-plt.legend(loc='upper left')
+plt.scatter(sample2d_1["x"], sample2d_1["y"], label="data")
+plt.legend(loc="upper left")
 plt.title("sample2d_1 scatter plot")
 plt.ylabel(sample2d_1_ylable)
 plt.xlabel(sample2d_1_xlabel)
-# plt.show()
+plt.show()
 
 ## sample2d_2
 print(sample2d_2.describe())
 sample2d_2_xlabel, sample2d_2_ylable = sample2d_2.columns
 
-plt.scatter(sample2d_2["x"], sample2d_2["y"], label = "data")
-plt.legend(loc='upper left')
+plt.scatter(sample2d_2["x"], sample2d_2["y"], label="data")
+plt.legend(loc="upper left")
 plt.title("sample2d_2 scatter plot")
 plt.ylabel(sample2d_2_ylable)
 plt.xlabel(sample2d_2_xlabel)
-# plt.show()
+plt.show()
 
 ## sample3d
 print(sample3d.describe())
 sample3d_xlabel, sample3d_ylable, sample3d_zlable = sample3d.columns
 
 fig_sample3d = plt.figure()
-ax_sample3d = fig_sample3d.add_subplot(111, projection = "3d")
-ax_sample3d.scatter(sample3d[sample3d_xlabel], sample3d[sample3d_ylable],sample3d[sample3d_zlable], label = "data")
+ax_sample3d = fig_sample3d.add_subplot(111, projection="3d")
+ax_sample3d.scatter(
+    sample3d[sample3d_xlabel],
+    sample3d[sample3d_ylable],
+    sample3d[sample3d_zlable],
+    label="data",
+)
 ax_sample3d.legend(loc="upper left")
 ax_sample3d.set_title("sample3d scatter plot")
 ax_sample3d.set_zlabel("z")
 ax_sample3d.set_ylabel("y")
 ax_sample3d.set_xlabel("x")
-# plt.show()
+plt.show()
 
 # 重みの推定
 ## sample2d_1 線形回帰（単回帰）を用いる
 sample2d_1_ndarray = sample2d_1.to_numpy()
 sample2d_1_num_data = sample2d_1_ndarray.shape[0]
-sample2d_1_design_mat = np.append(sample2d_1_ndarray, np.zeros((100,1)), axis=1)
+sample2d_1_design_mat = np.append(sample2d_1_ndarray, np.zeros((100, 1)), axis=1)
