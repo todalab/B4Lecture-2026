@@ -13,7 +13,7 @@ def main():
     X = np.vstack([np.ones(len(x1)), x1, x2]).T
 
     #パラメータ
-    lr = 0.1
+    lr = 1
     iterations = 300
     w_log = np.zeros(X.shape[1])
 
