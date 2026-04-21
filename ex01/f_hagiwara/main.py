@@ -1,4 +1,4 @@
-"""萩原楓大 Ex01 解答"""
+"""The answer of Ex01 by Hagiwara Futa."""
 
 # 発展内容のためのライブラリscikit-learnもimport
 import matplotlib.pyplot as plt
@@ -8,18 +8,18 @@ from sklearn.metrics import auc, confusion_matrix, roc_curve
 
 
 def main():
-    """各課題を実行するmain関数"""
+    """Main function."""
     h11()
     h12()
 
 
 def normal_eq(X, y):
-    """正規方程式"""
+    """Normal eqation."""
     return np.linalg.inv(X.T @ X) @ X.T @ y
 
 
 def h11():
-    """課題1-1"""
+    """Exercise 1-1."""
     # 2d_1
     # csvファイル読み込み
     a1 = np.loadtxt("data/sample2d_1.csv", delimiter=",", skiprows=1)
@@ -59,7 +59,7 @@ def h11():
     w14 = normal_eq(x1_ex4, y1)
     w15 = normal_eq(x1_ex5, y1)
 
-    x = np.linspace(-10, 10, 100)
+    x = np.linspace(min(x1), max(x1), 100)
     y11 = w1[0] * x + w1[1]
     y12 = w12[0] * x**2 + w12[1] * x + w12[2]
     y13 = w13[0] * x**3 + w13[1] * x**2 + w13[2] * x + w13[3]
@@ -136,7 +136,7 @@ def h11():
     fig = plt.figure()
     ax = fig.add_subplot()
     plt.scatter(x2, y2)  # 点で表示
-    x = np.linspace(0, 10, 100)
+    x = np.linspace(min(x2), max(x2), 100)
     y = w2[0] * x**3 + w2[1] * x**2 + w2[2] * x + w2[3]
     plt.plot(x, y, color="red")
     plt.xlabel("x")
@@ -179,7 +179,7 @@ def h11():
 
 
 def h12():
-    """課題1-2"""
+    """Exercise 1-2"""
     learn_rate = 0.5
     w = np.zeros(2)
 
@@ -219,6 +219,7 @@ def h12():
     fpr, tpr, thresholds = roc_curve(y, sigm)
     auc_score = auc(fpr, tpr)
     y_pred = (sigm >= 0.5).astype(int)
+    # 混合行列の確認
     mat = confusion_matrix(y, y_pred)
     print(mat)
 
