@@ -1,3 +1,5 @@
+"""萩原楓大 Ex01 解答"""
+
 # 発展内容のためのライブラリscikit-learnもimport
 import matplotlib.pyplot as plt
 import numpy as np
@@ -6,16 +8,18 @@ from sklearn.metrics import auc, confusion_matrix, roc_curve
 
 
 def main():
+    """各課題を実行するmain関数"""
     h11()
     h12()
 
 
 def normal_eq(X, y):
+    """正規方程式"""
     return np.linalg.inv(X.T @ X) @ X.T @ y
 
 
 def h11():
-    ### 課題1-1 ###
+    """課題1-1"""
     # 2d_1
     # csvファイル読み込み
     a1 = np.loadtxt("data/sample2d_1.csv", delimiter=",", skiprows=1)
@@ -175,7 +179,7 @@ def h11():
 
 
 def h12():
-    ### 課題1-2 ###
+    """課題1-2"""
     learn_rate = 0.5
     w = np.zeros(2)
 
@@ -216,6 +220,7 @@ def h12():
     auc_score = auc(fpr, tpr)
     y_pred = (sigm >= 0.5).astype(int)
     mat = confusion_matrix(y, y_pred)
+    print(mat)
 
     # プロット
     fig = plt.figure(figsize=(6, 11))
@@ -223,29 +228,26 @@ def h12():
 
     # 尤度
     ax1 = fig.add_subplot(411)
-    plt.grid()
-    plt.ylabel("Likelihood")
-    plt.yticks(np.arange(-200, -100, 20))
-    plt.plot(plotx, likeli_list, color="red")
+    ax1.grid()
+    ax1.set_ylabel("Likelihood")
+    ax1.set_yticks(np.arange(-200, -100, 20))
+    ax1.plot(plotx, likeli_list, color="red")
 
     # 損失
     ax2 = fig.add_subplot(412)
-    x = np.linspace(0, 300, 300)
-    plt.grid()
-    plt.ylabel("Loss")
-    plt.plot(plotx, loss_list, color="blue")
+    ax2.grid()
+    ax2.set_ylabel("Loss")
+    ax2.plot(plotx, loss_list, color="blue")
 
     # 正解率
     ax3 = fig.add_subplot(413)
-    x = np.linspace(0, 300, 300)
-    plt.grid()
-    plt.ylabel("Accuracy")
-    plt.plot(plotx, acc_list, color="green")
+    ax3.grid()
+    ax3.set_ylabel("Accuracy")
+    ax3.plot(plotx, acc_list, color="green")
 
     # ROC-AUC
     ax4 = fig.add_subplot(414)
-    x = np.linspace(0, 300, 300)
-    plt.grid()
+    ax4.grid()
     ax4.set_ylabel("ROC-AUC")
     ax4.set_xlabel("Epochs")
     ax4.plot(plotx, auc_list, color="orange")
