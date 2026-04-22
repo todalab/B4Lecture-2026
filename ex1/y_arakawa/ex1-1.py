@@ -161,12 +161,8 @@ ax_sample3d.scatter(
     sample3d[sample3d_zlable],
     label="data",
 )
-x = np.linspace(
-    sample3d[sample3d_xlabel].min(), sample3d[sample3d_xlabel].max(), 100
-)
-y = np.linspace(
-    sample3d[sample3d_ylable].min(), sample3d[sample3d_ylable].max(), 100
-)
+x = np.linspace(sample3d[sample3d_xlabel].min(), sample3d[sample3d_xlabel].max(), 100)
+y = np.linspace(sample3d[sample3d_ylable].min(), sample3d[sample3d_ylable].max(), 100)
 X, Y = np.meshgrid(x, y)
 Z = (
     sample3d_weight_vec[0] * X
@@ -176,9 +172,7 @@ Z = (
     + sample3d_weight_vec[4] * X * Y
     + sample3d_weight_vec[5]
 )  # 2次の重回帰の式
-ax_sample3d.plot_surface(
-    X, Y, Z, color="red", alpha=0.5, label="fitted surface"
-)
+ax_sample3d.plot_surface(X, Y, Z, color="red", alpha=0.5, label="fitted surface")
 ax_sample3d.legend(loc="upper left")
 ax_sample3d.set_title("sample3d quadratic regression")
 ax_sample3d.set_zlabel(sample3d_zlable)
