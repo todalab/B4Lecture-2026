@@ -4,7 +4,7 @@ import pandas as pd
 
 
 def sigmoid(x):
-    """シグモイド関数
+    """シグモイド関数.
 
     Args:
         x (np.ndarray): 入力
@@ -16,7 +16,7 @@ def sigmoid(x):
 
 
 def main():
-    """勾配降下法を用いたロジスティック回帰モデルの学習と評価、可視化を実行"""
+    """勾配降下法を用いたロジスティック回帰モデルの学習と評価、可視化を実行する."""
     df = pd.read_csv("../data/sample_logistic.csv")
     x1, x2 = df["x1"], df["x2"]
     y = df["y"]

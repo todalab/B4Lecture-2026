@@ -1,10 +1,12 @@
+"""線形回帰分析を実行するモジュール."""
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
 
 def normal_equation(X, y):
-    """正規方程式による重みwの算出
+    """正規方程式による重みwの算出.
 
     Args:
         X (np.ndarray): 説明変数の行列
@@ -17,13 +19,14 @@ def normal_equation(X, y):
 
 
 def main():
-    """3種類のデータに対して回帰分析を行い、結果を可視化
+    """3種類のデータに対して回帰分析を行い、結果を可視化する.
+
     以下の順番で実行
     1.単回帰分析
     2.多項式回帰分析
     3.2変数多項式回帰分析
     """
-    # sample2d_1.csv の処理
+    # 1.sample2d_1.csv の処理
     df1 = pd.read_csv("../data/sample2d_1.csv")
     x1, y1 = df1["x"], df1["y"]
     X1 = np.vstack([np.ones(len(x1)), x1]).T
@@ -38,7 +41,7 @@ def main():
     plt.legend()
     plt.show()
 
-    # sample2d_2.csv の処理
+    # 2.sample2d_2.csv の処理
     df2 = pd.read_csv("../data/sample2d_2.csv")
     x2, y2 = df2["x"], df2["y"]
     X2 = np.vstack([np.ones(len(x2)), x2, x2**2, x2**3]).T
@@ -54,7 +57,7 @@ def main():
     plt.legend()
     plt.show()
 
-    # sample3d.csv の処理
+    # 3.sample3d.csv の処理
     df3 = pd.read_csv("../data/sample3d.csv")
     x3 = df3["x"]
     y3 = df3["y"]
