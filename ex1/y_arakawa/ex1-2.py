@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-1-2 ロジスティック回帰（勾配降下法）
-"""
+"""1-2 ロジスティック回帰（勾配降下法）."""
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -41,7 +39,7 @@ learning_rate = 1
 
 # シグモイド関数
 def sigmoid(x):
-    """_summary_.
+    """Summary.
 
     Args:
         x (_type_): _description_
@@ -54,7 +52,7 @@ def sigmoid(x):
 
 # 損失関数（勾配）
 def logLossGrad(n, w, b, X, y):
-    """_summary_.
+    """Summary.
 
     Args:
         n (_type_): _description_
@@ -75,7 +73,7 @@ def logLossGrad(n, w, b, X, y):
 
 # 対数尤度
 def logLikelihood(n, w, b, X, y):
-    """_summary_.
+    """Summary.
 
     Args:
         n (_type_): _description_
@@ -94,7 +92,7 @@ def logLikelihood(n, w, b, X, y):
 
 # 対数損失
 def logLoss(n, w, b, X, y):
-    """_summary_.
+    """Summary.
 
     Args:
         n (_type_): _description_
@@ -111,7 +109,7 @@ def logLoss(n, w, b, X, y):
 
 # 分類精度
 def categorize_accuracy(n, w, b, X, y):
-    """_summary_.
+    """Summary.
 
     Args:
         n (_type_): _description_

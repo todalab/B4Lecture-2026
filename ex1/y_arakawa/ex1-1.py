@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-1-1 回帰（2次元・3次元）
-"""
+"""1-1 回帰（2次元・3次元）."""
 
 import matplotlib
 import matplotlib.pyplot as plt
