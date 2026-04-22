@@ -1,3 +1,5 @@
+"""ロジスティック回帰モデルの学習と可視化を行うモジュール."""
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
