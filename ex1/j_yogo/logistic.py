@@ -4,14 +4,22 @@ import pandas as pd
 
 
 def sigmoid(x):
+    """シグモイド関数
+
+    Args:
+        x (np.ndarray): 入力
+
+    Returns:
+        np.ndarray: シグモイド関数の出力
+    """
     return 1 / (1 + np.exp(-x))
 
 
 def main():
+    """勾配降下法を用いたロジスティック回帰モデルの学習と評価、可視化を実行"""
     df = pd.read_csv("../data/sample_logistic.csv")
     x1, x2 = df["x1"], df["x2"]
     y = df["y"]
-
     X = np.vstack([np.ones(len(x1)), x1, x2]).T
 
     # パラメータ

@@ -4,10 +4,25 @@ import pandas as pd
 
 
 def normal_equation(X, y):
+    """正規方程式による重みwの算出
+
+    Args:
+        X (np.ndarray): 説明変数の行列
+        y (np.ndarray): 目的変数の行列
+
+    Returns:
+        w (np.ndarray): 重み係数のベクトル
+    """
     return np.linalg.inv(X.T @ X) @ X.T @ y
 
 
 def main():
+    """3種類のデータに対して回帰分析を行い、結果を可視化
+    以下の順番で実行
+    1.単回帰分析
+    2.多項式回帰分析
+    3.2変数多項式回帰分析
+    """
     # sample2d_1.csv の処理
     df1 = pd.read_csv("../data/sample2d_1.csv")
     x1, y1 = df1["x"], df1["y"]
