@@ -1,4 +1,10 @@
+# -*- coding: utf-8 -*-
+"""
+説明
+"""
+
 def main():
+    """main func."""
     print("Hello from arakawayusuke!")
 
 

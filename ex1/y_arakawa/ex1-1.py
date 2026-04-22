@@ -1,7 +1,12 @@
+# -*- coding: utf-8 -*-
+"""
+1-1 回帰（2次元・3次元）
+"""
+
+import matplotlib
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-import matplotlib
 
 matplotlib.rcParams["font.family"] = "sans-serif"
 
