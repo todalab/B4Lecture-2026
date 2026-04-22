@@ -4,8 +4,8 @@ from inspect import signature
 from typing import Callable
 
 import matplotlib.pyplot as plt
-from matplotlib.figure import Figure
 import numpy as np
+from matplotlib.figure import Figure
 from numpy import column_stack, linspace, meshgrid, ones_like
 from numpy.linalg import inv, norm
 from pandas import read_csv
