@@ -36,11 +36,31 @@ learning_rate = 1
 
 # シグモイド関数
 def sigmoid(x):
+    """_summary_
+
+    Args:
+        x (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
     return 1 / (1 + np.exp(-x))
 
 
 # 損失関数（勾配）
 def logLossGrad(n, w, b, X, y):
+    """_summary_
+
+    Args:
+        n (_type_): _description_
+        w (_type_): _description_
+        b (_type_): _description_
+        X (_type_): _description_
+        y (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
     pred = sigmoid(X @ w + b)
     diff = pred - y
     grad_w = (X.T @ diff) / n
@@ -50,6 +70,18 @@ def logLossGrad(n, w, b, X, y):
 
 # 対数尤度
 def logLikelihood(n, w, b, X, y):
+    """_summary_
+
+    Args:
+        n (_type_): _description_
+        w (_type_): _description_
+        b (_type_): _description_
+        X (_type_): _description_
+        y (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
     pred = sigmoid(X @ w + b)
     pred = np.clip(pred, 1e-12, 1 - 1e-12)
     return np.sum(y * np.log(pred) + (1 - y) * np.log(1 - pred))
@@ -57,11 +89,35 @@ def logLikelihood(n, w, b, X, y):
 
 # 対数損失
 def logLoss(n, w, b, X, y):
+    """_summary_
+
+    Args:
+        n (_type_): _description_
+        w (_type_): _description_
+        b (_type_): _description_
+        X (_type_): _description_
+        y (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
     return -logLikelihood(n, w, b, X, y) / n
 
 
 # 分類精度
 def categorize_accuracy(n, w, b, X, y):
+    """_summary_
+
+    Args:
+        n (_type_): _description_
+        w (_type_): _description_
+        b (_type_): _description_
+        X (_type_): _description_
+        y (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
     pred_label = (sigmoid(X @ w + b) >= 0.5).astype(int)
     return np.sum(pred_label == y) / n
 
