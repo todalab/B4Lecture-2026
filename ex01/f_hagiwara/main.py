@@ -31,7 +31,6 @@ def h11():
     # 散布図より線形が適切と判断
     # 正規方程式により推定
 
-    # 行列の拡大
     x1_ex = np.column_stack(
         [x1, np.ones_like(x1)]
     )  # column_stackは1次行列の組み合わせなら2次行列に変換する
@@ -59,7 +58,7 @@ def h11():
     w14 = normal_eq(x1_ex4, y1)
     w15 = normal_eq(x1_ex5, y1)
 
-    x = np.linspace(min(x1), max(x1), 100)
+    x = np.arange(min(x1), max(x1), 0.05)
     y11 = w1[0] * x + w1[1]
     y12 = w12[0] * x**2 + w12[1] * x + w12[2]
     y13 = w13[0] * x**3 + w13[1] * x**2 + w13[2] * x + w13[3]
@@ -136,7 +135,7 @@ def h11():
     fig = plt.figure()
     ax = fig.add_subplot()
     plt.scatter(x2, y2)  # 点で表示
-    x = np.linspace(min(x2), max(x2), 100)
+    x = np.arange(min(x2), max(x2), 0.05)
     y = w2[0] * x**3 + w2[1] * x**2 + w2[2] * x + w2[3]
     plt.plot(x, y, color="red")
     plt.xlabel("x")
@@ -166,8 +165,8 @@ def h11():
     ax = fig.add_subplot(111, projection="3d")
     ax.scatter(x3, y3, z3, s=10)
 
-    x = np.arange(-5, 5, 0.05)
-    y = np.arange(-5, 5, 0.05)
+    x = np.arange(min(x3), max(x3), 0.05)
+    y = np.arange(min(y3), max(y3), 0.05)
     x, y = np.meshgrid(x, y)
     z = w3[0] * x**2 + w3[1] * x + w3[2] * y**2 + w3[3] * y + w3[4]
     ax.plot_surface(x, y, z, rstride=1, cstride=1, cmap="inferno", alpha=0.7)
