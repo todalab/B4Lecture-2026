@@ -84,8 +84,8 @@ ax.legend(loc="upper left")
 ax.set_title("sample2d_1 linear regression")
 ax.set_ylabel(sample2d_1_ylable)
 ax.set_xlabel(sample2d_1_xlabel)
-plt.show()
 plt.savefig("output/sample2d_1_linear_regression.png")
+plt.show()
 
 
 # sample2d_2 3次非線形回帰（単回帰）を用いる
@@ -127,8 +127,8 @@ ax.legend(loc="upper left")
 ax.set_title("sample2d_2 cubic regression")
 ax.set_ylabel(sample2d_2_ylable)
 ax.set_xlabel(sample2d_2_xlabel)
-plt.show()
 plt.savefig("output/sample2d_2_cubic_regression.png")
+plt.show()
 
 
 # sample3d 2次非線形回帰（重回帰）を用いる
@@ -181,5 +181,5 @@ ax_sample3d.set_title("sample3d quadratic regression")
 ax_sample3d.set_zlabel(sample3d_zlable)
 ax_sample3d.set_ylabel(sample3d_ylable)
 ax_sample3d.set_xlabel(sample3d_xlabel)
-plt.show()
 plt.savefig("output/sample3d_quadratic_regression.png")
+plt.show()
