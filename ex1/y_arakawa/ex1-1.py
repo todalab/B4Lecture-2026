@@ -25,7 +25,9 @@ plt.legend(loc="upper left")
 plt.title("sample2d_1 scatter plot")
 plt.ylabel(sample2d_1_ylable)
 plt.xlabel(sample2d_1_xlabel)
+plt.savefig("output/sample2d_1.png")
 plt.show()
+plt.close()
 
 # sample2d_2
 print(sample2d_2.describe())
@@ -36,6 +38,7 @@ plt.legend(loc="upper left")
 plt.title("sample2d_2 scatter plot")
 plt.ylabel(sample2d_2_ylable)
 plt.xlabel(sample2d_2_xlabel)
+plt.savefig("output/sample2d_2.png")
 plt.show()
 
 # sample3d
@@ -55,6 +58,7 @@ ax_sample3d.set_title("sample3d scatter plot")
 ax_sample3d.set_zlabel("z")
 ax_sample3d.set_ylabel("y")
 ax_sample3d.set_xlabel("x")
+plt.savefig("output/sample3d.png")
 plt.show()
 
 # 重みの推定
@@ -64,6 +68,7 @@ sample2d_1_num_data = sample2d_1_ndarray.shape[0]
 sample2d_1_design_mat = np.append(
     sample2d_1_ndarray[:, 0:1], np.ones((sample2d_1_num_data, 1)), axis=1
 )  # 計画行列 X　sample2d_1_ndarray[:, 0:1]のように0:1としないとベクトルになってしまう
+print("sample2d_1 design matrix:\n", sample2d_1_design_mat)
 sample2d_1_design_mat_T = sample2d_1_design_mat.T  # 計画行列の転置 X^T
 sample2d_1_meseared_vec = sample2d_1_ndarray[:, 1]  # 実測値のベクトル y
 
