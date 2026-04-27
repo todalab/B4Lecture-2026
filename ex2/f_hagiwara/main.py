@@ -1,4 +1,4 @@
-"""The answer of Ex01 by Hagiwara Futa."""
+"""The answer of Ex02 by Hagiwara Futa."""
 
 import japanize_matplotlib
 import matplotlib.pyplot as plt
