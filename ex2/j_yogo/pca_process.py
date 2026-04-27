@@ -151,7 +151,7 @@ def process_pca_100d():
     mean, X_centered = mean_centering(X)
     matrix = calculate_convariance(X_centered)
     eigenvalues, eigenvectors = calculate_eigen(matrix)
-    variance_ratios, _ = calculate_variance_ratio(eigenvalues)
+    variance_ratios, cumulative_ratios = calculate_variance_ratio(eigenvalues)
 
     X_projected = change_basis(eigenvectors, 2, X_centered)
 
@@ -163,6 +163,9 @@ def process_pca_100d():
     plt.axis("equal")
     plt.grid(True, alpha=0.3)
     plt.show()
+
+    Min_dimension = np.argmax(cumulative_ratios >= 0.90) + 1
+    print(f"累積寄与率が90%以上となる最小の次元数: {Min_dimension}")
 
 
 if __name__ == "__main__":
