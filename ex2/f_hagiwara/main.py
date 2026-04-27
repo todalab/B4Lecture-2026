@@ -533,7 +533,6 @@ def lda():
     plt.ylabel("TPR")
     plt.grid()
     plt.suptitle("ROC Curve", fontsize=20)
-    plt.savefig("roc_curve.png")
     plt.savefig("outputs/lda_roc.png")
     plt.close(fig)
 
