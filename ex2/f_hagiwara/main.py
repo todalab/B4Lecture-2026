@@ -4,6 +4,11 @@ import japanize_matplotlib  # noqa
 import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 import numpy as np
+from pathlib import Path
+
+# "outputs" ディレクトリを作成。存在してもエラーにしない
+Path("outputs").mkdir(exist_ok=True)
+
 # fmt: off
 from sklearn.metrics import (auc, average_precision_score, confusion_matrix,
                              precision_recall_curve, roc_curve)
@@ -38,6 +43,7 @@ def pca():
     plt.ylabel("y")
     plt.title("pca_2d")
     plt.grid(True)
+    Path("outputs").mkdir(exist_ok=True)  # ディレクトリが存在しない場合に作成する
     plt.savefig("outputs/pca_2d_scat.png")
 
     # pca_3d
@@ -573,9 +579,12 @@ def lda():
         TN = np.sum((y_pred3 == 0) & (y_true == 0))
 
         acc3 = (TP + TN) / (TP + TN + FP + FN)
-        pre3 = TP / (TP + FP)
-        tpr3 = TP / (TP + FN)
-        fpr3 = FP / (TN + FP)
+        pre_den = TP + FP
+        pre3 = TP / pre_den if pre_den > 0 else 0
+        tpr_den = TP + FN
+        tpr3 = TP / tpr_den if tpr_den > 0 else 0
+        fpr_den = TN + FP
+        fpr3 = FP / fpr_den if fpr_den > 0 else 0
         if acc < acc3:
             acc = acc3
             acc_th = i
