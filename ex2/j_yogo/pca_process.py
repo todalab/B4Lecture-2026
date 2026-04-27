@@ -52,7 +52,7 @@ def process_pca_2d():
     plt.figure(figsize=(8, 6))
     plt.scatter(X[:, 0], X[:, 1], alpha=0.5, label="Original Data")
 
-    colors = ["#d62728", "#2ca02c"]
+    colors = ["red", "green"]
     for i in range(2):
         # 単位ベクトルである固有ベクトルを取得
         u = eigenvectors[:, i]
@@ -78,8 +78,8 @@ def process_pca_2d():
         )
 
     plt.title("PCA: Two-dimension")
-    plt.xlabel("x1")
-    plt.ylabel("x2")
+    plt.xlabel(f"PC1 ({variance_ratios[0] * 100:.1f}%)")
+    plt.ylabel(f"PC2 ({variance_ratios[1] * 100:.1f}%)")
     plt.axis("equal")
     plt.legend(loc="upper left")
     plt.grid(True, alpha=0.3)
@@ -95,39 +95,72 @@ def process_pca_3d():
     eigenvalues, eigenvectors = calculate_eigen(matrix)
     variance_ratios, _ = calculate_variance_ratio(eigenvalues)
 
-    plt.figure(figsize=(8, 6))
-    plt.scatter(X[:, 0], X[:, 1], alpha=0.5, label="Original Data")
+    fig = plt.figure(figsize=(10, 8))
+    ax = fig.add_subplot(111, projection="3d")
 
-    colors = ["#d62728", "#2ca02c"]
-    for i in range(2):
-        # 単位ベクトルである固有ベクトルを取得
+    ax.scatter(X[:, 0], X[:, 1], X[:, 2], alpha=0.5, label="Original Data")
+
+    colors = ["red", "green", "purple"]
+    for i in range(3):
         u = eigenvectors[:, i]
 
-        # 全データを主成分軸に射影し、分布の最小値と最大値を取得
+        # 3次元データを主成分軸に射影し、分布の最小値と最大値を取得
         projections = X_centered @ u
         min_proj = np.min(projections)
         max_proj = np.max(projections)
 
-        # データの分布の両端に合わせた線の始点と終点を計算
+        # 3次元空間における線の始点と終点の座標を計算
         start_point = mean + min_proj * u
         end_point = mean + max_proj * u
 
         label_text = f"PC{i + 1} ({variance_ratios[i] * 100:.1f}%)"
 
-        # 計算した始点と終点を結ぶ直線を引く
-        plt.plot(
+        ax.plot(
             [start_point[0], end_point[0]],
             [start_point[1], end_point[1]],
+            [start_point[2], end_point[2]],
             color=colors[i],
             linewidth=3,
             label=label_text,
         )
 
-    plt.title("PCA: Two-dimension")
-    plt.xlabel("x1")
-    plt.ylabel("x2")
+    ax.set_title("PCA: Three-dimension")
+    ax.set_xlabel(f"PC1 ({variance_ratios[0] * 100:.1f}%)")
+    ax.set_ylabel(f"PC2 ({variance_ratios[1] * 100:.1f}%)")
+    ax.set_zlabel(f"PC2 ({variance_ratios[2] * 100:.1f}%)")
+    ax.legend(loc="upper left")
+    plt.show()
+
+    # PCAにより2次元へ圧縮し、2次元散布図として可視化
+    X_projected = change_basis(eigenvectors, 2, X_centered)
+
+    plt.figure(figsize=(8, 6))
+    plt.scatter(X_projected[:, 0], X_projected[:, 1], alpha=0.5)
+    plt.title("PCA : Three-dimension to Two-dimension")
+    plt.xlabel("PC1")
+    plt.ylabel("PC2")
     plt.axis("equal")
-    plt.legend(loc="upper left")
+    plt.grid(True, alpha=0.3)
+    plt.show()
+
+
+def process_pca_100d():
+    df = pd.read_csv("../data/pca_100d.csv", header=None)
+    X = df.values
+
+    mean, X_centered = mean_centering(X)
+    matrix = calculate_convariance(X_centered)
+    eigenvalues, eigenvectors = calculate_eigen(matrix)
+    variance_ratios, _ = calculate_variance_ratio(eigenvalues)
+
+    X_projected = change_basis(eigenvectors, 2, X_centered)
+
+    plt.figure(figsize=(8, 6))
+    plt.scatter(X_projected[:, 0], X_projected[:, 1], alpha=0.5)
+    plt.title("PCA : 100-dimension to Two-dimension")
+    plt.xlabel(f"PC1 ({variance_ratios[0] * 100:.1f}%)")
+    plt.ylabel(f"PC2 ({variance_ratios[1] * 100:.1f}%)")
+    plt.axis("equal")
     plt.grid(True, alpha=0.3)
     plt.show()
 
@@ -136,5 +169,6 @@ if __name__ == "__main__":
     print("=== 2次元データの処理 (pca_2d.csv) ===")
     process_pca_2d()
     print("\n=== 3次元データの処理 (pca_3d.csv) ===")
-
+    process_pca_3d()
     print("\n=== 100次元データの処理 (pca_100d.csv) ===")
+    process_pca_100d()
