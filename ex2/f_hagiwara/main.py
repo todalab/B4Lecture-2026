@@ -312,14 +312,14 @@ def pca():
         [0, 0],
         v1,
         color="red",
-        label=f"PC1 ({contri_2d[0]*100:.1f}%)",
+        label=f"1st ({contri_2d[0]*100:.1f}%)",
     )
 
     ax.axline(
         [0, 0],
         v2,
         color="orange",
-        label=f"PC2 ({contri_2d[1]*100:.1f}%)",
+        label=f"2nd ({contri_2d[1]*100:.1f}%)",
     )
 
     ax.set_title("主成分の軸を示したpca_2d（標準化）")
