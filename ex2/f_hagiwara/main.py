@@ -1,13 +1,11 @@
 """The answer of Ex02 by Hagiwara Futa."""
 
+from pathlib import Path
+
 import japanize_matplotlib  # noqa
 import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 import numpy as np
-from pathlib import Path
-
-# "outputs" ディレクトリを作成。存在してもエラーにしない
-Path("outputs").mkdir(exist_ok=True)
 
 # fmt: off
 from sklearn.metrics import (auc, average_precision_score, confusion_matrix,
