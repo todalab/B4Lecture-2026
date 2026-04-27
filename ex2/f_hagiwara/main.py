@@ -122,7 +122,7 @@ def pca():
     contri_2d = eigval_2d / np.sum(eigval_2d)
     contri_3d = eigval_3d / np.sum(eigval_3d)
 
-    # 主成分を重ねた散布図取得
+    # 主成分を重ねた散布図取得（可視化）
     # pca_2d
     fig = plt.figure()
     ax = fig.add_subplot()
@@ -273,7 +273,7 @@ def pca():
     plt.grid(True)
     plt.savefig("outputs/pca_100d_ContriRate.png")
 
-    # 標準化
+    # 【発展】標準化
     val2d_std = np.std(val2d, axis=0)
     val2d_std_data = (val2d - val2d_mean) / val2d_std
 
@@ -469,6 +469,7 @@ def lda():
     plt.savefig("outputs/lda_1d.png")
     plt.close(fig)
 
+    # 【発展】複数評価指標による比較
     # 分類1：0を閾値とする
     TP = 0
     FP = 0
@@ -488,7 +489,7 @@ def lda():
     TN = np.sum((y_pred1 == 0) & (y_true == 0))
 
     acc1 = (TP + TN) / (TP + TN + FP + FN)
-    print(acc1)
+    print("閾値を0としたときのacc=", acc1)
 
     # 分類2：平均の中点を動的に閾値とする
     TP = 0
@@ -502,7 +503,6 @@ def lda():
     score1_mean = np.mean(score1)
 
     threshold2 = (score0_mean + score1_mean) / 2
-    print(threshold2)
 
     # 散布図からより大きいほうがclass0
     y_pred2 = (valLDA_1d < threshold2).astype(int)
@@ -513,7 +513,7 @@ def lda():
     TN = np.sum((y_pred2 == 0) & (y_true == 0))
 
     acc2 = (TP + TN) / (TP + TN + FP + FN)
-    print(acc2)
+    print("閾値を平均の中点としたときのacc=", acc2)
 
     mat = confusion_matrix(y_true, y_pred2)
     print(mat)
