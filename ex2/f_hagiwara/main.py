@@ -1,8 +1,8 @@
 """The answer of Ex02 by Hagiwara Futa."""
 
-import japanize_matplotlib
-import matplotlib.pyplot as plt
+import japanize_matplotlib  # noqa
 import matplotlib.animation as animation
+import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.metrics import (
     auc,
@@ -21,7 +21,6 @@ def main():
 
 def pca():
     """Solve Principal Component Analysis(ex2-1)."""
-
     # データ読み込み
     val2d = np.loadtxt("../data/pca_2d.csv", delimiter=",")
     val2d_x = val2d[:, 0]
@@ -136,14 +135,14 @@ def pca():
         val2d_mean,
         val2d_mean + v1,
         color="red",
-        label=f"1st ({contri_2d[0]*100:.1f}%)",
+        label=f"1st ({contri_2d[0] * 100:.1f}%)",
     )
 
     ax.axline(
         val2d_mean,
         val2d_mean + v2,
         color="orange",
-        label=f"2nd ({contri_2d[1]*100:.1f}%)",
+        label=f"2nd ({contri_2d[1] * 100:.1f}%)",
     )
 
     ax.set_xlabel("x")
@@ -170,7 +169,7 @@ def pca():
         val3d_mean[1] + t * v1[1],
         val3d_mean[2] + t * v1[2],
         color="red",
-        label=f"1st ({contri_3d[0]*100:.1f}%)",
+        label=f"1st ({contri_3d[0] * 100:.1f}%)",
     )
 
     ax.plot(
@@ -178,7 +177,7 @@ def pca():
         val3d_mean[1] + t * v2[1],
         val3d_mean[2] + t * v2[2],
         color="orange",
-        label=f"2nd ({contri_3d[1]*100:.1f}%)",
+        label=f"2nd ({contri_3d[1] * 100:.1f}%)",
     )
 
     ax.plot(
@@ -186,7 +185,7 @@ def pca():
         val3d_mean[1] + t * v3[1],
         val3d_mean[2] + t * v3[2],
         color="green",
-        label=f"3rd ({contri_3d[2]*100:.1f}%)",
+        label=f"3rd ({contri_3d[2] * 100:.1f}%)",
     )
 
     ax.set_xlabel("x")
@@ -312,14 +311,14 @@ def pca():
         [0, 0],
         v1,
         color="red",
-        label=f"1st ({contri_2d[0]*100:.1f}%)",
+        label=f"1st ({contri_2d[0] * 100:.1f}%)",
     )
 
     ax.axline(
         [0, 0],
         v2,
         color="orange",
-        label=f"2nd ({contri_2d[1]*100:.1f}%)",
+        label=f"2nd ({contri_2d[1] * 100:.1f}%)",
     )
 
     ax.set_title("主成分の軸を示したpca_2d（標準化）")
@@ -350,7 +349,7 @@ def pca():
         val3d_mean[1] + t * v1[1],
         val3d_mean[2] + t * v1[2],
         color="red",
-        label=f"1st ({contri_3d[0]*100:.1f}%)",
+        label=f"1st ({contri_3d[0] * 100:.1f}%)",
     )
 
     ax.plot(
@@ -358,7 +357,7 @@ def pca():
         val3d_mean[1] + t * v2[1],
         val3d_mean[2] + t * v2[2],
         color="orange",
-        label=f"2nd ({contri_3d[1]*100:.1f}%)",
+        label=f"2nd ({contri_3d[1] * 100:.1f}%)",
     )
 
     ax.plot(
@@ -366,7 +365,7 @@ def pca():
         val3d_mean[1] + t * v3[1],
         val3d_mean[2] + t * v3[2],
         color="green",
-        label=f"3rd ({contri_3d[2]*100:.1f}%)",
+        label=f"3rd ({contri_3d[2] * 100:.1f}%)",
     )
 
     ax.set_xlabel("x")
@@ -389,7 +388,6 @@ def pca():
 
 def lda():
     """Solve Linear Discriminant Analysis(ex2-2)."""
-
     valLDA = np.loadtxt("../data/lda_2class.csv", delimiter=",", skiprows=1)
     valLDA_data = valLDA[:, :2]
     valLDA_label = valLDA[:, 2]
