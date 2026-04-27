@@ -6,7 +6,6 @@ import japanize_matplotlib  # noqa
 import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 import numpy as np
-
 # fmt: off
 from sklearn.metrics import (auc, average_precision_score, confusion_matrix,
                              precision_recall_curve, roc_curve)
