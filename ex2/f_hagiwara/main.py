@@ -458,7 +458,8 @@ def lda():
     # 1次元データの可視化
     fig = plt.figure()
     ax = fig.add_subplot()
-
+    fig.set_size_inches(6, 2)
+    ax.set_ylim(-0.05, 0.15)
     ax.scatter(valLDA_1d_0, np.zeros_like(valLDA_1d_0), label="class 0", s=10)
     ax.scatter(valLDA_1d_1, np.ones_like(valLDA_1d_1) * 0.1, label="class 1", s=10)
     ax.tick_params(left=False, right=False)
