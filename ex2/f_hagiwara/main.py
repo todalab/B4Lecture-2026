@@ -1,8 +1,8 @@
 """The answer of Ex01 by Hagiwara Futa."""
 
+import japanize_matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-import japanize_matplotlib
 import numpy as np
 from sklearn.metrics import (
     auc,
