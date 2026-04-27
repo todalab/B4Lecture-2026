@@ -386,40 +386,6 @@ def pca():
     pca_3d_gif.save("outputs/pca_3d_std_rot.gif", writer="pillow")
     plt.close(fig)
 
-    # =========================
-    # 100次元
-    # =========================
-    val100d = np.loadtxt("../data/pca_100d.csv", delimiter=",")
-
-    mean100 = np.mean(val100d, axis=0)
-    std100 = np.std(val100d, axis=0)
-    val100d_std = (val100d - mean100) / std100
-
-    CovMat100d = (val100d_std.T @ val100d_std) / val100d.shape[0]
-
-    eigval_100d, eigvec_100d = np.linalg.eigh(CovMat100d)
-    idx = np.argsort(eigval_100d)[::-1]
-    eigval_100d = eigval_100d[idx]
-    eigvec_100d = eigvec_100d[:, idx]
-
-    W100d = eigvec_100d[:, :2]
-    val100d_pca = val100d_std @ W100d
-
-    fig = plt.figure()
-    ax = fig.add_subplot()
-
-    contri_100d = eigval_100d / np.sum(eigval_100d)
-
-    ax.scatter(val100d_pca[:, 0], val100d_pca[:, 1])
-    ax.set_xlabel(f"PC1 ({contri_100d[0]*100:.1f}%)")
-    ax.set_ylabel(f"PC2 ({contri_100d[1]*100:.1f}%)")
-
-    ax.set_title("PCA 100D → 2D (standardized)")
-    ax.grid(True)
-
-    plt.savefig("outputs/pca_100d_std.png")
-    plt.close(fig)
-
 
 def lda():
     """Solve Linear Discriminant Analysis(ex2-2)."""
