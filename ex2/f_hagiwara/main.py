@@ -4,13 +4,10 @@ import japanize_matplotlib  # noqa
 import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 import numpy as np
-from sklearn.metrics import (
-    auc,
-    average_precision_score,
-    confusion_matrix,
-    precision_recall_curve,
-    roc_curve,
-)
+# fmt: off
+from sklearn.metrics import (auc, average_precision_score, confusion_matrix,
+                             precision_recall_curve, roc_curve)
+# fmt: on
 
 
 def main():
