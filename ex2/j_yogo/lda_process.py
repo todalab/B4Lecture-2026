@@ -113,7 +113,7 @@ def main():
     print("=== LDA 分類結果 ===")
     print(f"クラス {int(classes[0])} の射影後の平均: {mean_proj_0:.4f}")
     print(f"クラス {int(classes[1])} の射影後の平均: {mean_proj_1:.4f}")
-    print(f"分類の閾値: {threshold:.4f}")
+    print(f"分類の閾値: {threshold:.3f}")
     print(f"Accuracy (正解率): {accuracy * 100:.2f}%")
 
     plt.figure(figsize=(10, 4))
