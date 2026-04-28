@@ -78,12 +78,14 @@ def main():
     X = df[["x1", "x2"]].values
     y = df["label"].values
 
+    # プロットの中心を合わせるためにデータを中心化
     global_mean, X_centered = mean_centering(X)
 
     means, classes = calculate_class_means(X, y)
     S_W, S_B = calculate_scatter_matrices(X, y, means, classes)
     eigenvalues, eigenvectors = solve_eigenproblem(S_W, S_B)
 
+    # 最大固有値に対応する固有ベクトルを取得し、単位ベクトルに正規化
     lda_axis = eigenvectors[:, 0]
     lda_axis = lda_axis / np.linalg.norm(lda_axis)
 
@@ -116,18 +118,26 @@ def main():
     plt.grid(True, alpha=0.3)
     plt.show()
 
+    # すべてのデータを判別軸（1次元）に射影する
     projected_1d = X_centered @ lda_axis
+
+    # 射影後のデータをクラスごとに辞書にまとめる
     proj_by_class = {c: projected_1d[y == c] for c in classes}
 
+    # クラスごとの射影データの平均値を求める
     mean_proj_0 = np.mean(proj_by_class[classes[0]])
     mean_proj_1 = np.mean(proj_by_class[classes[1]])
+
+    # 2つのクラスの射影平均の中点を分類の閾値として設定する
     threshold = (mean_proj_0 + mean_proj_1) / 2
 
+    # クラス0の平均がクラス1の平均より小さい場合と大きい場合で条件を分け、閾値を基準にラベルを予測
     if mean_proj_0 < mean_proj_1:
         y_pred = np.where(projected_1d < threshold, classes[0], classes[1])
     else:
         y_pred = np.where(projected_1d >= threshold, classes[0], classes[1])
 
+    # 予測ラベルと実際のラベルを比較し、正解データ数の割合としてAccuracyを計算
     accuracy = np.sum(y_pred == y) / len(y)
 
     print("=== LDA 分類結果 ===")
