@@ -1,21 +1,49 @@
+"""
+主成分分析（PCA）の処理モジュール
+"""
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
 
 def mean_centering(X):
+    """入力データの各特徴量の平均を引き、中心化を行う。
+
+    Args:
+        X (numpy.ndarray): 元のデータ行列。
+
+    Returns:
+        tuple: 平均値の配列と、中心化されたデータ行列を含むタプル。
+    """
     mean = np.mean(X, axis=0)
     x_centered = X - mean
     return mean, x_centered
 
 
 def calculate_convariance(X_centered):
+    """中心化されたデータの共分散行列を計算する。
+
+    Args:
+        X_centered (numpy.ndarray): 中心化されたデータ行列。
+
+    Returns:
+        numpy.ndarray: 共分散行列。
+    """
     # 共分散行列を計算
     M = X_centered.shape[0]
     return X_centered.T @ X_centered / M
 
 
 def calculate_eigen(matrix):
+    """与えられた行列の固有値分解を行い、結果を降順にソートする。
+
+    Args:
+        matrix (numpy.ndarray): 共分散行列。
+
+    Returns:
+        tuple: ソートされた固有値と、対応する固有ベクトルのタプル。
+    """
     # 固有値分解
     eigenvalues, eigenvectors = np.linalg.eigh(matrix)
 
@@ -25,6 +53,14 @@ def calculate_eigen(matrix):
 
 
 def calculate_variance_ratio(eigenvalues):
+    """固有値に基づいて寄与率および累積寄与率を計算する。
+
+    Args:
+        eigenvalues (numpy.ndarray): 固有値。
+
+    Returns:
+        tuple: 寄与率と累積寄与率のタプル。
+    """
     # 寄与率を計算
     total_variance = np.sum(eigenvalues)
     variance_ratio = eigenvalues / total_variance
@@ -36,11 +72,22 @@ def calculate_variance_ratio(eigenvalues):
 
 
 def change_basis(eigenvectors, k, X_centered):
+    """上位k個の固有ベクトルで構成される新しい基底に、中心化されたデータを射影する。
+
+    Args:
+        eigenvectors (numpy.ndarray): 固有ベクトル。
+        k (int): 保持する上位主成分の数。
+        X_centered (numpy.ndarray): 中心化されたデータ行列。
+
+    Returns:
+        numpy.ndarray: 射影されたデータ行列。
+    """
     U = eigenvectors[:, :k]
     return X_centered @ U
 
 
 def process_pca_2d():
+    """2次元データに対してPCAを適用し、主成分を可視化する。"""
     df = pd.read_csv("../data/pca_2d.csv", header=None)
     X = df.values
 
@@ -87,6 +134,7 @@ def process_pca_2d():
 
 
 def process_pca_3d():
+    """3次元データに対してPCAを適用して3次元上の主成分軸を可視化し、2次元空間への射影を行う。"""
     df = pd.read_csv("../data/pca_3d.csv", header=None)
     X = df.values
 
@@ -145,6 +193,7 @@ def process_pca_3d():
 
 
 def process_pca_100d():
+    """100次元データに対してPCAを適用し、2次元への射影を行うとともに累積寄与率を評価する。"""
     df = pd.read_csv("../data/pca_100d.csv", header=None)
     X = df.values
 

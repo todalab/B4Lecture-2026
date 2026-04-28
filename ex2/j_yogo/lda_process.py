@@ -1,3 +1,5 @@
+"""線形判別分析（LDA）の処理モジュール"""
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -5,6 +7,15 @@ from pca_process import mean_centering
 
 
 def calculate_class_means(X, y):
+    """各クラスの平均ベクトルを計算する。
+
+    Args:
+        X (numpy.ndarray): データ行列。
+        y (numpy.ndarray): ラベル配列。
+
+    Returns:
+        tuple: クラスの平均を格納した辞書とクラスの配列のタプル。
+    """
     classes = np.unique(y)
     means = {}
     for c in classes:
@@ -13,6 +24,17 @@ def calculate_class_means(X, y):
 
 
 def calculate_scatter_matrices(X, y, means, classes):
+    """クラス内分散行列とクラス間分散行列を計算する。
+
+    Args:
+        X (numpy.ndarray): データ行列。
+        y (numpy.ndarray): ラベル配列。
+        means (dict): クラスごとの平均を格納した辞書。
+        classes (numpy.ndarray): クラスの配列。
+
+    Returns:
+        tuple: クラス内分散行列とクラス間分散行列のタプル。
+    """
     n_features = X.shape[1]
     S_W = np.zeros((n_features, n_features))
 
@@ -30,19 +52,16 @@ def calculate_scatter_matrices(X, y, means, classes):
     return S_W, S_B
 
 
-def fisher(S_W, means, classes):
-    mean1 = means[classes[0]]
-    mean2 = means[classes[1]]
-
-    sw_inv = np.linalg.inv(S_W)
-    w = np.dot(sw_inv, (mean1 - mean2))
-
-    # グラフ描画や射影時のスケールを統一するため、長さ1の単位ベクトルに正規化
-    w = w / np.linalg.norm(w)
-    return w
-
-
 def solve_eigenproblem(S_W, S_B):
+    """一般化固有値問題を解き、線形判別軸を求める。
+
+    Args:
+        S_W (numpy.ndarray): クラス内分散行列。
+        S_B (numpy.ndarray): クラス間分散行列。
+
+    Returns:
+        tuple: ソートされた固有値と、対応する固有ベクトルのタプル。
+    """
     S_W_inv = np.linalg.inv(S_W)
     eigenvalues, eigenvectors = np.linalg.eig(S_W_inv @ S_B)
 
@@ -54,6 +73,7 @@ def solve_eigenproblem(S_W, S_B):
 
 
 def main():
+    """2次元・2クラスデータに対してLDAの処理を実行するメイン関数。"""
     df = pd.read_csv("../data/lda_2class.csv")
     X = df[["x1", "x2"]].values
     y = df["label"].values
