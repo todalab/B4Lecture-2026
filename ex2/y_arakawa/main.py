@@ -35,7 +35,7 @@ def make2d_scatter_figure(x: pd.Series, y: pd.Series, title: str) -> None:
 def make2d_scatter_axis_figure(
     x: pd.Series,
     y: pd.Series,
-    coefficients: np.array,
+    coefficients: np.ndarray,
     ave_x: float,
     ave_y: float,
     title: str,
@@ -102,7 +102,7 @@ def make3d_scatter_axis_figure(
     x: pd.Series,
     y: pd.Series,
     z: pd.Series,
-    coefficients: np.array,
+    coefficients: np.ndarray,
     ave_x: float,
     ave_y: float,
     ave_z: float,
@@ -255,8 +255,7 @@ def pca(X: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     X_cov = np.cov(X_centered.T)
     print("X_cov:\n", X_cov)
     # 固有値、固有ベクトルを求める
-    eig = np.linalg.eigh(X_cov)[0]
-    eigvec = np.linalg.eigh(X_cov)[1]
+    eig, eigvec = np.linalg.eigh(X_cov)
     # 大きい順に並べ替え
     idx = np.argsort(eig)[::-1]
     eig = eig[idx]
@@ -340,8 +339,7 @@ def lda(X: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     print("SB:\n", SB)
     # 固有値問題を解く
     # 固有値、固有ベクトルを求める
-    eig = np.linalg.eigh(np.linalg.inv(SW) @ SB)[0]
-    eigvec = np.linalg.eigh(np.linalg.inv(SW) @ SB)[1]
+    eig, eigvec = np.linalg.eigh(np.linalg.inv(SW) @ SB)
     # 大きい順に並べ替え
     idx = np.argsort(eig)[::-1]
     eig = eig[idx]
@@ -356,7 +354,7 @@ def make_lda_scatter_axis_figure(
     x: pd.Series,
     y: pd.Series,
     labels: pd.Series,
-    coefficients: np.array,
+    coefficients: np.ndarray,
     ave_x: float,
     ave_y: float,
     title: str,
@@ -410,7 +408,7 @@ def make_lda_1dprojection_figure(
     labels: pd.Series,
     ave_x: float,
     ave_y: float,
-    coefficients: np.array,
+    coefficients: np.ndarray,
     title: str,
 ) -> None:
     """
