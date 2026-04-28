@@ -50,6 +50,7 @@ def pca():
     ax.set_xlabel("x")
     ax.set_ylabel("y")
     ax.set_zlabel("z")
+    ax.set_zlim(-2, 2)
     plt.title("pca_3d")
     plt.grid(True)
     plt.savefig("outputs/pca_3d_scat.png", dpi=150)
@@ -160,10 +161,13 @@ def pca():
 
     ax.scatter(val3d_x, val3d_y, val3d_z, s=10)
 
+    ax.set_zlim(-2, 2)
+
     t = np.linspace(-2, 2, 100)
     v1 = eigvec_3d[:, 0]
     v2 = eigvec_3d[:, 1]
     v3 = eigvec_3d[:, 2]
+    print(contri_3d)
 
     ax.plot(
         val3d_mean[0] + t * v1[0],
@@ -256,6 +260,7 @@ def pca():
 
     while k < ContriRate_100d.size:
         cev += ContriRate_100d[k]
+        print(k + 1, ":", cev)
         cevlist.append(cev)
         if cev >= 0.9 and k90 == 0:
             k90 = k + 1  # kは0始まりなのでk+1が次元数
@@ -269,7 +274,10 @@ def pca():
     x = np.arange(1, ContriRate_100d.size + 1)
     plt.plot(x, cevlist, marker=".", markersize=5, label="累積寄与率")
     ax.axhline(0.9, color="red", linestyle="--", label="90%")
+    plt.ylim(0.38, 1.02)
+    plt.vlines(9, 0.35, 1.1, "blue", linestyles="dashed", label="9次元")
     plt.title("累積寄与率")
+    ax.legend()
     plt.grid(True)
     plt.savefig("outputs/pca_100d_ContriRate.png")
 
@@ -280,9 +288,13 @@ def pca():
     val3d_std = np.std(val3d, axis=0)
     val3d_std_data = (val3d - val3d_mean) / val3d_std
 
+    val100d_std = np.std(val100d, axis=0)
+    val100d_std_data = (val100d - np.mean(val100d, axis=0)) / val100d_std
+
     # 共分散行列計算
     CovMat2d = (val2d_std_data.T @ val2d_std_data) / M2d
     CovMat3d = (val3d_std_data.T @ val3d_std_data) / M3d
+    CovMat100d = (val100d_std_data.T @ val100d_std_data) / val100d.shape[0]
 
     # 固有値問題
     eigval_2d, eigvec_2d = np.linalg.eigh(CovMat2d)
@@ -295,9 +307,17 @@ def pca():
     eigval_3d = eigval_3d[idx]
     eigvec_3d = eigvec_3d[:, idx]
 
+    eigval_100d, eigvec_100d = np.linalg.eigh(CovMat100d)
+    idx = np.argsort(eigval_100d)[::-1]
+    eigval_100d = eigval_100d[idx]
+    eigvec_100d = eigvec_100d[:, idx]
+
     # 寄与率
     contri_2d = eigval_2d / np.sum(eigval_2d)
     contri_3d = eigval_3d / np.sum(eigval_3d)
+    contri_100d = eigval_100d / np.sum(eigval_100d)
+    print("con3d\n", contri_3d)
+    print("con100d:\n", contri_100d)
 
     # 可視化（2D）
     fig = plt.figure()
@@ -332,6 +352,7 @@ def pca():
     fig = plt.figure()
     ax = fig.add_subplot(111, projection="3d")
 
+    ax.set_zlim(-2, 2)
     ax.scatter(
         val3d_std_data[:, 0],
         val3d_std_data[:, 1],
