@@ -73,24 +73,6 @@ def make2d_scatter_axis_figure(
     plt.close()
 
 
-def ave_center_2d(X: np.ndarray) -> tuple[np.ndarray, float, float]:
-    """
-    2次元データを平均中心化する.
-
-    Args:
-        X (np.ndarray): 2次元データの2次元配列で、形状は (N, 2) .
-
-    Returns:
-        tuple[np.ndarray, float, float]:
-            平均中心化後の2次元配列 (N, 2) と、平均x座標、平均y座標.
-    """
-    ave_x = np.average(X[:, 0])
-    ave_y = np.average(X[:, 1])
-    ave = [ave_x, ave_y]
-    # 平均中心化
-    return (X - ave, ave_x, ave_y)
-
-
 def pca_2d(X: np.ndarray) -> tuple[np.ndarray, np.ndarray, float, float]:
     """
     2次元データに対してPCAを実行する.
@@ -149,25 +131,6 @@ def make3d_scatter_figure(x: pd.Series, y: pd.Series, z: pd.Series, title: str) 
     ax.set_xlabel("x")
     plt.savefig(f"output/{title}.png")
     plt.close()
-
-
-def ave_center_3d(X: np.ndarray) -> tuple[np.ndarray, float, float, float]:
-    """
-    3次元データを平均中心化する.
-
-    Args:
-        X (np.ndarray): 3次元データの2次元配列で、形状は (N, 3) .
-
-    Returns:
-        tuple[np.ndarray, float, float, float]:
-            平均中心化後の2次元配列 (N, 3) と、平均x座標、平均y座標、平均z座標.
-    """
-    ave_x = np.average(X[:, 0])
-    ave_y = np.average(X[:, 1])
-    ave_z = np.average(X[:, 2])
-    ave = [ave_x, ave_y, ave_z]
-    # 平均中心化
-    return (X - ave, ave_x, ave_y, ave_z)
 
 
 def pca_3d(X: np.ndarray) -> tuple[np.ndarray, np.ndarray, float, float, float]:
