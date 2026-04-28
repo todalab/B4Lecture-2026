@@ -1,4 +1,4 @@
-"""線形判別分析（LDA）の処理モジュール"""
+"""線形判別分析（LDA）の処理モジュール。"""
 
 import matplotlib.pyplot as plt
 import numpy as np

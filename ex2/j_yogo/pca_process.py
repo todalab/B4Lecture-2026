@@ -1,6 +1,4 @@
-"""
-主成分分析（PCA）の処理モジュール
-"""
+"""主成分分析（PCA）の処理モジュール。"""
 
 import matplotlib.pyplot as plt
 import numpy as np
