@@ -167,6 +167,26 @@ def process_pca_100d():
     Min_dimension = np.argmax(cumulative_ratios >= 0.90) + 1
     print(f"累積寄与率が90%以上となる最小の次元数: {Min_dimension}")
 
+    # 累積寄与率を示す図の作成
+    plt.figure(figsize=(8, 6))
+    # 次元数は1から始まるため、x軸の範囲を調整
+    dimensions = np.arange(1, len(cumulative_ratios) + 1)
+    plt.plot(dimensions, cumulative_ratios, marker=".", linestyle="-")
+    plt.axhline(y=0.90, color="red", linestyle="--", label="90% Threshold")
+    plt.axvline(
+        x=Min_dimension,
+        color="green",
+        linestyle="--",
+        label=f"{Min_dimension}dimension",
+    )
+
+    plt.title("PCA 100D: Cumulative Variance Ratio")
+    plt.xlabel("Number of Principal Components")
+    plt.ylabel("Cumulative Variance Ratio")
+    plt.grid(True, alpha=0.3)
+    plt.legend()
+    plt.show()
+
 
 if __name__ == "__main__":
     print("=== 2次元データの処理 (pca_2d.csv) ===")
