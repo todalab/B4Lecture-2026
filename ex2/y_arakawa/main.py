@@ -103,7 +103,7 @@ def pca_2d(X: np.ndarray) -> tuple[np.ndarray, np.ndarray, float, float]:
             固有値の1次元配列 (2,), 主成分方向の2次元配列 (2, 2),
             平均x座標, 平均y座標.
     """
-    X_centered, ave_x, ave_y = ave_center_2d(X)
+    X_centered, [ave_x, ave_y] = ave_center(X)
     # 共分散行列
     X_cov = np.cov(X_centered.T)
     print("X_cov:\n", X_cov)
@@ -182,7 +182,7 @@ def pca_3d(X: np.ndarray) -> tuple[np.ndarray, np.ndarray, float, float, float]:
             固有値の1次元配列 (3,), 主成分方向の2次元配列 (3, 3),
             平均x座標, 平均y座標, 平均z座標.
     """
-    X_centered, ave_x, ave_y, ave_z = ave_center_3d(X)
+    X_centered, [ave_x, ave_y, ave_z] = ave_center(X)
     # 共分散行列
     X_cov = np.cov(X_centered.T)
     print("X_cov:\n", X_cov)
@@ -296,16 +296,16 @@ def PC_show(X: np.ndarray, eigvec: np.ndarray, title: str) -> None:
     plt.close()
 
 
-def ave_center_100d(X: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+def ave_center(X: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     """
-    100次元データを平均中心化する.
+    M次元データを平均中心化する.
 
     Args:
-        X (np.ndarray): 100次元データの2次元配列で、形状は (N, 100) .
+        X (np.ndarray): M次元データの2次元配列で、形状は (N, M) .
 
     Returns:
         tuple[np.ndarray, np.ndarray]:
-            平均中心化後の2次元配列 (N, 100) と、各次元の平均を持つ1次元配列 (100,) .
+            平均中心化後の2次元配列 (N, M) と、各次元の平均を持つ1次元配列 (M,) .
     """
     ave = np.average(X, axis=0)
     # 平均中心化
@@ -322,7 +322,7 @@ def show_cumulative_contribution_ratio_sample_100d(X: np.ndarray) -> None:
     Returns:
         None: 累積寄与率のグラフを `output/cumulative_contribution_ratio_100d.png` に保存する.
     """
-    X_centered, ave = ave_center_100d(X)
+    X_centered, ave = ave_center(X)
     # 共分散行列
     X_cov = np.cov(X_centered.T)
     # 固有値、固有ベクトルを求める
@@ -354,10 +354,10 @@ def pca_100d(X: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
 
     Returns:
         tuple[np.ndarray, np.ndarray, np.ndarray]:
-            固有値の1次元配列 (100,), 主成分方向の2次元配列 (100, 100),
-            各次元の平均を持つ1次元配列 (100,) .
+            固有値の1次元配列 (M,), 主成分方向の2次元配列 (M, M),
+            各次元の平均を持つ1次元配列 (M,) .
     """
-    X_centered, ave = ave_center_100d(X)
+    X_centered, ave = ave_center(X)
     # 共分散行列
     X_cov = np.cov(X_centered.T)
     print("X_cov:\n", X_cov)
@@ -607,14 +607,14 @@ def main() -> None:
         ave_z,
         "pca_3d scatter plot with PCA axis",
     )
-    sample3d_centered, ave_x, ave_y, ave_z = ave_center_3d(sample3d)
+    sample3d_centered, [ave_x, ave_y, ave_z] = ave_center(sample3d)
     PC_show(sample3d_centered, eigvec, "pca_3d PCA scatter plot")
 
     # pca_100d
     print("Start PCA_100d")
     sample100d = sample100d_raw.to_numpy()
     eig, eigvec, ave = pca_100d(sample100d)
-    sample100d_centered, ave = ave_center_100d(sample100d)
+    sample100d_centered, ave = ave_center(sample100d)
     PC_show_pca_100d(sample100d_centered, eigvec, "pca_100d PCA scatter plot")
     show_cumulative_contribution_ratio_sample_100d(sample100d)
 
