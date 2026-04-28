@@ -73,41 +73,6 @@ def make2d_scatter_axis_figure(
     plt.close()
 
 
-def pca_2d(X: np.ndarray) -> tuple[np.ndarray, np.ndarray, float, float]:
-    """
-    2次元データに対してPCAを実行する.
-
-    Args:
-        X (np.ndarray): 2次元データの2次元配列で、形状は (N, 2) .
-
-    Returns:
-        tuple[np.ndarray, np.ndarray, float, float]:
-            固有値の1次元配列 (2,), 主成分方向の2次元配列 (2, 2),
-            平均x座標, 平均y座標.
-    """
-    X_centered, [ave_x, ave_y] = ave_center(X)
-    # 共分散行列
-    X_cov = np.cov(X_centered.T)
-    print("X_cov:\n", X_cov)
-    # 固有値、固有ベクトルを求める
-    eig = np.linalg.eigh(X_cov)[0]
-    eigvec = np.linalg.eigh(X_cov)[1]
-    # 大きい順に並べ替え
-    idx = np.argsort(eig)[::-1]
-    eig = eig[idx]
-    eigvec = eigvec[:, idx]
-    print("idx\n", idx)
-    print("eig:\n", eig)
-    print("eigvec:\n", eigvec)
-    # 寄与率
-    cr = eig / sum(eig)
-    print("寄与率:\n", cr)
-    # 累積寄与率
-    ccr = np.cumsum(cr)
-    print("累積寄与率:\n", ccr)
-    return (eig, eigvec, ave_x, ave_y)
-
-
 def make3d_scatter_figure(x: pd.Series, y: pd.Series, z: pd.Series, title: str) -> None:
     """
     3次元データの散布図を作成して保存する.
@@ -131,41 +96,6 @@ def make3d_scatter_figure(x: pd.Series, y: pd.Series, z: pd.Series, title: str) 
     ax.set_xlabel("x")
     plt.savefig(f"output/{title}.png")
     plt.close()
-
-
-def pca_3d(X: np.ndarray) -> tuple[np.ndarray, np.ndarray, float, float, float]:
-    """
-    3次元データに対してPCAを実行する.
-
-    Args:
-        X (np.ndarray): 3次元データの2次元配列で、形状は (N, 3) .
-
-    Returns:
-        tuple[np.ndarray, np.ndarray, float, float, float]:
-            固有値の1次元配列 (3,), 主成分方向の2次元配列 (3, 3),
-            平均x座標, 平均y座標, 平均z座標.
-    """
-    X_centered, [ave_x, ave_y, ave_z] = ave_center(X)
-    # 共分散行列
-    X_cov = np.cov(X_centered.T)
-    print("X_cov:\n", X_cov)
-    # 固有値、固有ベクトルを求める
-    eig = np.linalg.eigh(X_cov)[0]
-    eigvec = np.linalg.eigh(X_cov)[1]
-    # 大きい順に並べ替え
-    idx = np.argsort(eig)[::-1]
-    eig = eig[idx]
-    eigvec = eigvec[:, idx]
-    print("idx\n", idx)
-    print("eig:\n", eig)
-    print("eigvec:\n", eigvec)
-    # 寄与率
-    cr = eig / sum(eig)
-    print("寄与率:\n", cr)
-    # 累積寄与率
-    ccr = np.cumsum(cr)
-    print("累積寄与率:\n", ccr)
-    return (eig, eigvec, ave_x, ave_y, ave_z)
 
 
 def make3d_scatter_axis_figure(
@@ -308,12 +238,12 @@ def show_cumulative_contribution_ratio_sample_100d(X: np.ndarray) -> None:
     plt.close()
 
 
-def pca_100d(X: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+def pca(X: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
-    100次元データに対してPCAを実行し、必要な主成分数の目安も確認する.
+    M次元データに対してPCAを実行し、必要な主成分数の目安も確認する.
 
     Args:
-        X (np.ndarray): 100次元データの2次元配列で、形状は (N, 100) .
+        X (np.ndarray): M次元データの2次元配列で、形状は (N, M) .
 
     Returns:
         tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -543,7 +473,7 @@ def main() -> None:
     print("Start PCA_2d")
     make2d_scatter_figure(sample2d_raw[0], sample2d_raw[1], "pca_2d scatter plot")
     sample2d = sample2d_raw.to_numpy()
-    eig, eigvec, ave_x, ave_y = pca_2d(sample2d)
+    eig, eigvec, [ave_x, ave_y] = pca(sample2d)
     make2d_scatter_axis_figure(
         sample2d_raw[0],
         sample2d_raw[1],
@@ -559,7 +489,7 @@ def main() -> None:
         sample3d_raw[0], sample3d_raw[1], sample3d_raw[2], "pca_3d scatter plot"
     )
     sample3d = sample3d_raw.to_numpy()
-    eig, eigvec, ave_x, ave_y, ave_z = pca_3d(sample3d)
+    eig, eigvec, [ave_x, ave_y, ave_z] = pca(sample3d)
     make3d_scatter_axis_figure(
         sample3d_raw[0],
         sample3d_raw[1],
@@ -576,7 +506,7 @@ def main() -> None:
     # pca_100d
     print("Start PCA_100d")
     sample100d = sample100d_raw.to_numpy()
-    eig, eigvec, ave = pca_100d(sample100d)
+    eig, eigvec, ave = pca(sample100d)
     sample100d_centered, ave = ave_center(sample100d)
     PC_show_pca_100d(sample100d_centered, eigvec, "pca_100d PCA scatter plot")
     show_cumulative_contribution_ratio_sample_100d(sample100d)
