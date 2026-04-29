@@ -1,3 +1,9 @@
+"""_summary_
+
+Perform principal component analysis on the 100-dimensional input data, plot the results on a two-dimensional plane, and output a table showing the changes in cumulative contribution rates.
+
+"""
+
 import itertools
 
 import matplotlib.pyplot as plt

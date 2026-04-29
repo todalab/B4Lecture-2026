@@ -1,3 +1,9 @@
+"""_summary_
+
+Output the scatter plot and LDA axes from lda_2class.csv onto a two-dimensional plane.
+
+"""
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd

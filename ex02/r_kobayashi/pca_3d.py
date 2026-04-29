@@ -1,3 +1,9 @@
+"""_summary_
+
+Perform principal component analysis on the three-dimensional input data, plot the results in three-dimensional space, and then reduce the dimensions to two-dimensional space.
+
+"""
+
 import matplotlib.pyplot as plt
 import numpy as np
 

@@ -1,3 +1,9 @@
+"""_summary_
+
+Perform principal component analysis on the two-dimensional input and output the results on a two-dimensional plane.
+
+"""
+
 import matplotlib.pyplot as plt
 import numpy as np
 
