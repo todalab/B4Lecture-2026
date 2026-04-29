@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from pca_process import mean_centering
+from pca_process import mean_centering  # isort: skip
 
 
 def calculate_class_means(X, y):
