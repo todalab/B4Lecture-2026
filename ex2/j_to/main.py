@@ -1,13 +1,14 @@
 """P.C.A./L.D.A. visualisation."""
 
+import subprocess
 from math import sqrt
 from os import path
-import subprocess
+
+import matplotlib.pyplot as plt
+from matplotlib.pyplot import figure
 from numpy import array, column_stack, mean, ones, outer
 from numpy.linalg import eig, eigh, pinv
 from pandas import read_csv
-from matplotlib.pyplot import figure
-import matplotlib.pyplot as plt
 
 # Assume running on macOS. Choose system Japanese font
 plt.rcParams["font.family"] = ["Hiragino Sans"]
