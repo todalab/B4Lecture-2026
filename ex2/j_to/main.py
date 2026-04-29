@@ -79,6 +79,7 @@ def pca(filepath: str, is_3d=False):
     if n <= 3:
         ax.set_title(f"P.C.A.: {n}次元データと主成分軸")
         ax.legend()
+        fig.savefig(f"{FIG_DIR}/1_{filename}_pca_basis.png")
 
     # 2次元へ圧縮する
     if n > 2:
