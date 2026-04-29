@@ -236,6 +236,7 @@ def process_pca_100d():
 
 
 def main():
+    """各次元での処理と可視化を実行."""
     print("=== 2次元データの処理 (pca_2d.csv) ===")
     process_pca_2d()
     print("\n=== 3次元データの処理 (pca_3d.csv) ===")
