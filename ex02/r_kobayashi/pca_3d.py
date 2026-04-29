@@ -1,6 +1,6 @@
-"""_summary_
+"""_summary_.
 
-Perform principal component analysis on the three-dimensional input data, plot the results in three-dimensional space, and then reduce the dimensions to two-dimensional space.
+Perform principal component analysis on the three-dimensional input data.
 
 """
 
@@ -30,6 +30,15 @@ ax.scatter(x_input, y_input, color="black", s=10)
 
 
 def pca(X, n_components=3):
+    """_summary_.
+
+    Args:
+        X: Original data
+        n_components: Number of eigenvectors to extract
+
+    Returns:
+        T: Dimensionally compressed array
+    """
     mu = X.mean(axis=0)  # 元データの平均点（2次元）
     X = X - mu  # 平均中心化
     cov = np.cov(X, rowvar=False)  # 共分散行列の導出

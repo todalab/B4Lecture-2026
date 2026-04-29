@@ -1,4 +1,4 @@
-"""_summary_
+"""_summary_.
 
 Output the scatter plot and LDA axes from lda_2class.csv onto a two-dimensional plane.
 
@@ -78,7 +78,7 @@ df_nolabel = df.drop("label", axis=1).to_numpy()
 
 
 def acc(df_0, df_1, threshold):
-    """_summary_
+    """_summary_.
 
     Args:
         df_0 : x0
