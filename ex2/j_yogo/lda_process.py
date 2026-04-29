@@ -3,6 +3,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+
 from pca_process import mean_centering
 
 
@@ -138,7 +139,7 @@ def main():
         y_pred = np.where(projected_1d >= threshold, classes[0], classes[1])
 
     # 予測ラベルと実際のラベルを比較し、正解データ数の割合としてAccuracyを計算
-    accuracy = np.sum(y_pred == y) / len(y)
+    accuracy = np.mean(y_pred == y)
 
     print("=== LDA 分類結果 ===")
     print(f"クラス {int(classes[0])} の射影後の平均: {mean_proj_0:.4f}")

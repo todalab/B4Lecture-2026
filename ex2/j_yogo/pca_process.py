@@ -19,7 +19,7 @@ def mean_centering(X):
     return mean, x_centered
 
 
-def calculate_convariance(X_centered):
+def calculate_covariance(X_centered):
     """中心化されたデータの共分散行列を計算する.
 
     Args:
@@ -90,7 +90,7 @@ def process_pca_2d():
     X = df.values
 
     mean, X_centered = mean_centering(X)
-    matrix = calculate_convariance(X_centered)
+    matrix = calculate_covariance(X_centered)
     eigenvalues, eigenvectors = calculate_eigen(matrix)
     variance_ratios, _ = calculate_variance_ratio(eigenvalues)
 
@@ -137,7 +137,7 @@ def process_pca_3d():
     X = df.values
 
     mean, X_centered = mean_centering(X)
-    matrix = calculate_convariance(X_centered)
+    matrix = calculate_covariance(X_centered)
     eigenvalues, eigenvectors = calculate_eigen(matrix)
     variance_ratios, _ = calculate_variance_ratio(eigenvalues)
 
@@ -173,7 +173,7 @@ def process_pca_3d():
     ax.set_title("PCA: Three-dimension")
     ax.set_xlabel(f"PC1 ({variance_ratios[0] * 100:.1f}%)")
     ax.set_ylabel(f"PC2 ({variance_ratios[1] * 100:.1f}%)")
-    ax.set_zlabel(f"PC2 ({variance_ratios[2] * 100:.1f}%)")
+    ax.set_zlabel(f"PC3 ({variance_ratios[2] * 100:.1f}%)")
     ax.legend(loc="upper left")
     plt.show()
 
@@ -196,7 +196,7 @@ def process_pca_100d():
     X = df.values
 
     mean, X_centered = mean_centering(X)
-    matrix = calculate_convariance(X_centered)
+    matrix = calculate_covariance(X_centered)
     eigenvalues, eigenvectors = calculate_eigen(matrix)
     variance_ratios, cumulative_ratios = calculate_variance_ratio(eigenvalues)
 
@@ -235,10 +235,14 @@ def process_pca_100d():
     plt.show()
 
 
-if __name__ == "__main__":
+def main():
     print("=== 2次元データの処理 (pca_2d.csv) ===")
     process_pca_2d()
     print("\n=== 3次元データの処理 (pca_3d.csv) ===")
     process_pca_3d()
     print("\n=== 100次元データの処理 (pca_100d.csv) ===")
     process_pca_100d()
+
+
+if __name__ == "__main__":
+    main()
