@@ -6,7 +6,7 @@ from os import path
 
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import figure
-from numpy import array, column_stack, mean, ones, outer
+from numpy import array, column_stack, concatenate, mean, ones, outer
 from numpy.linalg import eig, eigh, pinv
 from pandas import read_csv
 
@@ -123,6 +123,26 @@ def pca(filepath: str, is_3d=False):
         fig.savefig(f"{FIG_DIR}/1_{filename}_accumulated_ratio.png")
 
 
+def lda_extra_metrics(labels, projections):
+    """Compute precision/recall/F1 for L.D.A. projections."""
+    labels = array(labels).astype(int)
+    projections = array(projections)
+    positive = labels == 0
+    predicted = projections > 0
+
+    tp = sum(predicted & positive)
+    fp = sum(predicted & ~positive)
+    fn = sum(~predicted & positive)
+
+    assert tp + fp != 0
+    precision = tp / (tp + fp)
+    recall = tp / (tp + fn)
+    f1 = 2 * precision * recall / (precision + recall)
+
+    print("L.D.A. extra metrics")
+    print(f"precision: {precision}, recall: {recall}, f1: {f1}")
+
+
 def lda(filename: str):
     """Run 2-class L.D.A. on a CSV dataset, visualise the projection axis, and save plots."""
     data = read_csv(filename)
@@ -165,15 +185,21 @@ def lda(filename: str):
     ax = fig.add_subplot()
     ax.grid(True)
 
+    projections, labels = [], []
     correct = 0
-    for c, X in enumerate(Xs):
-        projections = X @ u
-        correct += sum((projections > 0) == (c == 0))
+    for class_index, class_samples in enumerate(Xs):
+        projection = class_samples @ u
+        correct += sum((projection > 0) == (class_index == 0))
+        label = ones(len(class_samples)) * class_index
 
-        x = column_stack([projections, ones(len(X)) * c])
-        ax.scatter(*x.T, label=f"Class {c}")
+        projections.append(projection)
+        labels.append(label)
+
+        projected = column_stack([projection, label])
+        ax.scatter(*projected.T, label=f"Class {class_index}")
 
     accuracy = correct / sum(len(X) for X in Xs)
+    lda_extra_metrics(concatenate(labels), concatenate(projections))
 
     ax.set_yticks([0, 1])
     ax.set_title(f"L.D.A.: 1次元射影 (accuracy={accuracy:.3f})")
