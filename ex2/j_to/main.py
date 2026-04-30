@@ -1,7 +1,6 @@
 """P.C.A./L.D.A. visualisation."""
 
 import os
-import subprocess
 from math import sqrt
 from os import path
 
