@@ -39,7 +39,7 @@ def run_experiment(data_path: str, out_dir: str) -> None:
 
     for algo in ("forward", "viterbi"):
         t_start = time.perf_counter()
-        y_pred = predict_models(outputs, PI, A, B, algorithm=algo)
+        y_pred, best_paths = predict_models(outputs, PI, A, B, algorithm=algo)
         elapsed = time.perf_counter() - t_start
 
         cm = confusion_matrix(answer, y_pred, n_classes=k)
@@ -49,6 +49,14 @@ def run_experiment(data_path: str, out_dir: str) -> None:
         print(f"    Accuracy : {acc:.4f}")
         print(f"    Time     : {elapsed:.4f} s")
         print(f"    Confusion Matrix:\n{cm}")
+
+        # Viterbi のときだけ最尤状態系列を先頭3件表示
+        if algo == "viterbi" and best_paths is not None:
+            print(f"    最尤状態系列（先頭3件）:")
+            for idx in range(min(3, p)):
+                print(
+                    f"      系列{idx} (推定モデル=m{y_pred[idx]}, 正解=m{answer[idx]}): {best_paths[idx]}"
+                )
 
         results.append(
             {"algo": algo.capitalize(), "cm": cm, "acc": acc, "elapsed": elapsed}
