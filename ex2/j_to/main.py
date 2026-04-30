@@ -1,5 +1,6 @@
 """P.C.A./L.D.A. visualisation."""
 
+import os
 import subprocess
 from math import sqrt
 from os import path
@@ -209,7 +210,7 @@ def lda(filename: str):
 
 def main():
     """Generate P.C.A./L.D.A. figures from the datasets into `fig/`."""
-    subprocess.run(["mkdir", "-p", FIG_DIR])
+    os.makedirs(FIG_DIR, exist_ok=True)
 
     pca("data/pca_2d.csv")
     pca("data/pca_3d.csv", is_3d=True)
