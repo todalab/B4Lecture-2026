@@ -26,24 +26,68 @@ class parameter:
         self.pi = np.array([pi])
 
     def get_mu(self, index) -> np.ndarray:
+        """指定されたインデックスのmuを取得する.
+
+        Args:
+            index (int): 取得するインデックス
+
+        Returns:
+            np.ndarray: 指定されたインデックスのmu(k,2)
+        """
         return self.mu[index]
 
     def get_Sigma(self, index) -> np.ndarray:
+        """指定されたインデックスのSigmaを取得する.
+
+        Args:
+            index (int): 取得するインデックス
+
+        Returns:
+            np.ndarray: 指定されたインデックスのSigma(k,2,2)
+        """
         return self.Sigma[index]
 
     def get_pi(self, index) -> np.ndarray:
+        """指定されたインデックスのpiを取得する.
+
+        Args:
+            index (int): 取得するインデックス
+
+        Returns:
+            np.ndarray: 指定されたインデックスのpi(k)
+        """
         return self.pi[index]
 
     def append_mu(self, mu) -> None:
+        """muを追加する.
+
+        Args:
+            mu (np.ndarray): 追加するmu(K,2)
+        """
         self.mu = np.vstack([self.mu, [mu]])
 
     def append_Sigma(self, Sigma) -> None:
+        """Sigmaを追加する.
+
+        Args:
+            Sigma (np.ndarray): 追加するSigma(K,2,2)
+        """
         self.Sigma = np.vstack([self.Sigma, [Sigma]])
 
     def append_pi(self, pi) -> None:
+        """piを追加する.
+
+        Args:
+            pi (np.ndarray): 追加するpi(K)
+        """
         self.pi = np.vstack([self.pi, [pi]])
 
     def __str__(self) -> str:
+        """オブジェクトの文字列表現を返す.
+
+        Returns:
+            str: mu, Sigma, piを含む文字列表現
+        """
         return f"mu: {self.mu}\nSigma: {self.Sigma}\npi: {self.pi}\n"
 
 
@@ -71,7 +115,7 @@ def show_data_scatter(x1: pd.Series, x2: pd.Series, title: str) -> None:
 
 def gaussian(x: np.ndarray, mu: np.ndarray, Sigma: np.ndarray) -> float:
     """
-    ガウス関数
+    ガウス関数.
 
     Args:
         x (np.ndarray): 観測データの集合(N,2)
