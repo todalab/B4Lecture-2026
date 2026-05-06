@@ -10,7 +10,17 @@ matplotlib.rcParams["font.family"] = "sans-serif"
 
 
 class parameter:
+    """EMアルゴリズムで学習された各ステップのパラメータを保存するクラス."""
+
     def __init__(self, mu: np.ndarray, Sigma: np.ndarray, pi: np.ndarray) -> None:
+        """
+        初期化 mu, Sigma, piを1次元配列として保存する.
+
+        Args:
+            mu (np.ndarray): 混合ガウス分布のセントロイドの集合(K,2)
+            Sigma (np.ndarray): 混合ガウス分布の分散共分散行列(K,2,2)
+            pi (np.ndarray): 混合ガウス分布の混合係数の集合(K)
+        """
         self.mu = np.array([mu])
         self.Sigma = np.array([Sigma])
         self.pi = np.array([pi])
@@ -183,6 +193,18 @@ def calculate_pi(N_k: np.ndarray, N: int) -> np.ndarray:
 def calculate_mu(
     x: np.ndarray, gamma: np.ndarray, N_k: np.ndarray, K: int
 ) -> np.ndarray:
+    """
+    各クラスタのセントロイドmuを計算する.
+
+    Args:
+        x (np.ndarray): 観測データの集合(N,2)
+        gamma (np.ndarray): 各データの負担率(N,K)
+        N_k (np.ndarray): 各クラスタに所属するデータ数(K)
+        K (int): クラスタの総数
+
+    Returns:
+        np.ndarray: 各クラスタのセントロイドmuの集合(K,2)
+    """
     tmp_mu = np.zeros((K, 2))
 
     for k in range(K):
@@ -195,6 +217,20 @@ def calculate_mu(
 def calculate_Sigma(
     x: np.ndarray, gamma: np.ndarray, mu: np.ndarray, N_k: np.ndarray, K: int
 ) -> np.ndarray:
+    """
+    各クラスタの分散共分散行列Sigmaを計算する.
+
+    Args:
+        x (np.ndarray): 観測データの集合(N,2)
+        gamma (np.ndarray): 各データの負担率(N,K)
+        mu (np.ndarray): 各クラスタのセントロイドの集合(K,2)
+        N_k (np.ndarray): 各クラスタに所属するデータ数(K)
+        K (int): クラスタの総数
+
+    Returns:
+        np.ndarray: 各クラスタの分散共分散行列Sigmaの集合
+        (K,2,2)
+    """
     tmp_Sigma = np.zeros((K, 2, 2))
 
     for k in range(K):
@@ -215,6 +251,19 @@ def calculate_log_likelihood(
     pi: np.ndarray,
     K: int,
 ) -> np.ndarray:
+    """
+    各データのGMMからの確率を計算し、対数を取って合計することで、モデルの対数尤度を計算する.
+
+    Args:
+        x (np.ndarray): 観測データの集合(N,2)
+        mu (np.ndarray): GMMのセントロイドの集合(K,2)
+        Sigma (np.ndarray): GMMの分散共分散行列(K,2,2)
+        pi (np.ndarray): GMMの混合係数の集合(K)
+        K (int): クラスタの総数
+
+    Returns:
+        np.ndarray: モデルの対数尤度
+    """
     return np.sum(np.log(GMM(x, mu, Sigma, pi, K)))
 
 
@@ -223,6 +272,21 @@ def m_step(
     gamma: np.ndarray,
     K: int,
 ) -> tuple:
+    """
+    EMアルゴリズムのMステップを実行する.
+
+    Args:
+        x (np.ndarray): 観測データの集合(N,2)
+        gamma (np.ndarray): 各データの負担率(N,K)
+        K (int): クラスタの総数
+
+    Returns:
+        tuple: 更新されたパラメータ (mu, Sigma, pi) とモデルの対数尤度
+    1. mu: 各クラスタのセントロイドの集合(K,2)
+    2. Sigma: 各クラスタの分散共分散行列の集合(K,2,2)
+    3. pi: 各クラスタの混合係数の集合(K)
+    4. log_likelihood: モデルの対数尤度
+    """
     new_N_k = calculate_N_k(gamma, K)
     new_pi = calculate_pi(new_N_k, len(x))
     new_mu = calculate_mu(x, gamma, new_N_k, K)
@@ -232,6 +296,18 @@ def m_step(
 
 
 def set_initial(x: np.ndarray, K: int) -> tuple:
+    """
+    GMMの初期パラメータを設定する.
+
+    Args:
+        x (np.ndarray): 観測データの集合(N,2)
+        K (int): クラスタの総数
+    Returns:
+    tuple: 初期パラメータ (mu, Sigma, pi)
+    1. mu: 各クラスタのセントロイドの集合(K,2)
+    2. Sigma: 各クラスタの分散共分散行列の集合(K,2,2)
+    3. pi: 各クラスタの混合係数の集合(K)
+    """
     mu = np.random.rand(K, 2) * (np.max(x, axis=0) - np.min(x, axis=0)) + np.min(
         x, axis=0
     )
@@ -242,6 +318,17 @@ def set_initial(x: np.ndarray, K: int) -> tuple:
 
 
 def loop_em_algorithm(x: np.ndarray, K: int) -> tuple:
+    """
+    EMアルゴリズムを反復して実行する.
+
+    Args:
+        x (np.ndarray): 観測データの集合(N,2)
+        K (int): クラスタの総数
+    Returns:
+        tuple: 学習されたパラメータの集合と対数尤度の履歴
+    1. parameters: EMアルゴリズムで学習された各ステップのパラメータを保存するparameterクラスのインスタンス
+    2. log_likelihoods: 各反復ステップでのモデルの対数尤度のリスト
+    """
     # 初期化
     mu, Sigma, pi = set_initial(x, K)
     parameters = parameter(mu, Sigma, pi)
@@ -260,6 +347,13 @@ def loop_em_algorithm(x: np.ndarray, K: int) -> tuple:
 
 
 def show_log_likelihood(log_likelihoods: np.ndarray, title: str) -> None:
+    """
+    EMアルゴリズムでのステップごとのモデルの対数尤度をグラフで出力する.
+
+    Args:
+        log_likelihoods (np.ndarray): 各反復ステップでのモデルの対数尤度のリスト
+        title (str): 図のタイトルおよび保存ファイル名に使う文字列
+    """
     print("Log Likelihoods:\n", log_likelihoods)
     fig = plt.figure()
     ax = fig.add_subplot(111)
