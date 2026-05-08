@@ -9,7 +9,7 @@ import pandas as pd
 matplotlib.rcParams["font.family"] = "sans-serif"
 
 
-class parameter:
+class Parameter:
     """EMアルゴリズムで学習された各ステップのパラメータを保存するクラス."""
 
     def __init__(self, mu: np.ndarray, Sigma: np.ndarray, pi: np.ndarray) -> None:
@@ -174,7 +174,7 @@ def calculate_gamma(
     Returns:
         np.ndarray: 各データのクラスタkの負担率(N)
     """
-    normalization = GMM(x, mu, Sigma, pi, K)
+    normalization = np.maximum(GMM(x, mu, Sigma, pi, K), 1e-15)
     return pi[k] * gaussian(x, mu[k], Sigma[k]) / normalization
 
 
@@ -308,7 +308,7 @@ def calculate_log_likelihood(
     Returns:
         np.ndarray: モデルの対数尤度
     """
-    return np.sum(np.log(GMM(x, mu, Sigma, pi, K)))
+    return np.sum(np.log(np.maximum(GMM(x, mu, Sigma, pi, K), 1e-15)))
 
 
 def m_step(
@@ -375,7 +375,7 @@ def loop_em_algorithm(x: np.ndarray, K: int) -> tuple:
     """
     # 初期化
     mu, Sigma, pi = set_initial(x, K)
-    parameters = parameter(mu, Sigma, pi)
+    parameters = Parameter(mu, Sigma, pi)
     log_likelihoods = np.array([calculate_log_likelihood(x, mu, Sigma, pi, K)])
     # 反復
     while True:
@@ -411,7 +411,7 @@ def show_log_likelihood(log_likelihoods: np.ndarray, title: str) -> None:
 
 
 def show_data_scatter_and_GMM(
-    x: np.ndarray, parameters: parameter, K: int, title: str
+    x: np.ndarray, parameters: Parameter, K: int, title: str
 ) -> None:
     """
     GMMでクラスタリングした2次元データを、色分け、平均、等高線を重ねて表示する.
