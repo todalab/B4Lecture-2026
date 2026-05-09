@@ -1,11 +1,11 @@
 """The answer of Ex03 by Hagiwara Futa."""
 
+import sys
 from pathlib import Path
 
 import japanize_matplotlib  # noqa
 import matplotlib.pyplot as plt
 import numpy as np
-import sys
 
 
 def main():
@@ -80,7 +80,7 @@ def em_algorithm(data, K):
         likes.append(like)
         # 閾値以下になったら収束とみなす
         if abs(like - like_old) < threshold:
-            print(f"K={K}:converged in the {i+1}th iteration.")
+            print(f"K={K}:converged in the {i + 1}th iteration.")
             break
         # 対数尤度の保存
         like_old = like
@@ -92,6 +92,8 @@ def gmm_plot(data, K, likes, mu, sigma, gamma, name):
     """Plot results of GMM."""
     # 対数尤度の推移グラフ
     plotx = np.arange(1, len(likes) + 1)
+    fig_width = max(8, len(likes) * 0.3)  # 横幅を自動調整
+    plt.figure(figsize=(fig_width, 6))
     plt.xticks(np.arange(1, len(likes) + 1, 1))
     plt.xlabel("Iteration")
     plt.ylabel("Likelihood")
@@ -127,7 +129,7 @@ def gmm_plot(data, K, likes, mu, sigma, gamma, name):
             data[mask, 1],
             color=okabe_ito[k],
             s=20,
-            label=f"Cluster {k+1}",
+            label=f"Cluster {k + 1}",
             zorder=1,
         )
 
