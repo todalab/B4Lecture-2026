@@ -159,6 +159,9 @@ def gmm_plot(data, K, likes, mu, sigma, gamma, name):
         det = np.linalg.det(sigma[k])
         sigma1 = np.exp(-0.5 * 1**2) / np.sqrt((2 * np.pi) ** D * det)  # 1σ
         sigma2 = np.exp(-0.5 * 2**2) / np.sqrt((2 * np.pi) ** D * det)  # 2σ
+        # グリッド上の最大確率密度がsigma2を超えない場合は等高線が描けないためスキップ
+        if pdf.max() <= sigma2:
+            continue
         # 2σ〜1σ
         plt.contourf(
             gx,
@@ -193,7 +196,7 @@ def gmm_plot(data, K, likes, mu, sigma, gamma, name):
     plt.title(f"data{name} GMM Clustering (K={K})")
     plt.legend()
     plt.grid(True)
-    plt.savefig(f"outputs/data{name}_gmm.png")
+    plt.savefig(f"outputs/data{name}_gmm_optimized.png")
     plt.close()
 
 
