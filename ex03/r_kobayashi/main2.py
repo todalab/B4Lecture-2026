@@ -38,8 +38,8 @@ def gauss(X, mu, sigma):
         ndarray of shape (N,): 各データにおけるガウス分布の確率密度のリスト
     """
     output = np.array([])
-    eps = np.spacing(1)
-    Eps = eps * np.eye(sigma.shape[0])
+    # eps = np.spacing(1)
+    # Eps = eps * np.eye(sigma.shape[0])
     sigma_inv = la.pinv(sigma)
     sigma_det = la.det(sigma)
     N = X.shape[0]
@@ -99,8 +99,8 @@ def log_likelihood(X, Mu, Sigma, Pi):
     Returns:
         float: 対数化された尤度の合計
     """
-    K = Mu.shape[0]
-    D = X.shape[1]
+    # K = Mu.shape[0]
+    # D = X.shape[1]
     N = X.shape[0]
     _, out_sum = mix_gauss(X, Mu, Sigma, Pi)
     logs = np.array([np.log(out_sum[0][n]) for n in range(N)])
@@ -189,24 +189,24 @@ def main(arg, k):
     k = int(k)
     if arg == "1":
         txt_dir = "../../ex3/data/data1.csv"
-        csv_name = "gamma_data1"
-        dat_name = "params_data1"
-        fig_name = "plot_data1"
-        fig_gap_name = "log_likelihood_gap_data1"
+        # csv_name = "gamma_data1"
+        # dat_name = "params_data1"
+        # fig_name = "plot_data1"
+        # fig_gap_name = "log_likelihood_gap_data1"
 
     elif arg == "2":
         txt_dir = "../../ex3/data/data2.csv"
-        csv_name = "gamma_data2"
-        dat_name = "params_data2"
-        fig_name = "plot_data2"
-        fig_gap_name = "log_likelihood_gap_data2"
+        # csv_name = "gamma_data2"
+        # dat_name = "params_data2"
+        # fig_name = "plot_data2"
+        # fig_gap_name = "log_likelihood_gap_data2"
 
     elif arg == "3":
         txt_dir = "../../ex3/data/data3.csv"
-        csv_name = "gamma_data3"
-        dat_name = "params_data3"
-        fig_name = "plot_data3"
-        fig_gap_name = "log_likelihood_gap_data3"
+        # csv_name = "gamma_data3"
+        # dat_name = "params_data3"
+        # fig_name = "plot_data3"
+        # fig_gap_name = "log_likelihood_gap_data3"
 
     else:
         print(f"不正な引数です: {arg}。1, 2, 3 のいずれかを指定してください。")
@@ -214,16 +214,16 @@ def main(arg, k):
 
     with open(txt_dir) as f:
         reader = csv.reader(f)
-        l = [row for row in reader]
-        for i in range(len(l)):
-            for j in range(len(l[i])):
-                l[i][j] = float(l[i][j])
-    l = np.array(l)
+        li = [row for row in reader]
+        for i in range(len(li)):
+            for j in range(len(li[i])):
+                li[i][j] = float(li[i][j])
+    li = np.array(li)
 
     thr = 0.01
     # k = 2
-    Mu, Sigma, Pi = setInitial(l, k)
-    n_iter, log_list, Mu, Sigma, Pi, gamma = EM(l, k, Mu, Sigma, Pi, thr)
+    Mu, Sigma, Pi = setInitial(li, k)
+    n_iter, log_list, Mu, Sigma, Pi, gamma = EM(li, k, Mu, Sigma, Pi, thr)
     # print("Iteration:" + str(n_iter))
     # print("log-likelihood:" + str(log_list))
 
@@ -240,12 +240,12 @@ def main(arg, k):
     # Pi（混合比）
     params.append(["Pi"] + Pi.tolist())
 
-    index = np.argmax(gamma, 0)
+    # index = np.argmax(gamma, 0)
 
     # cm = plt.get_cmap("tab10")
     # fig = plt.figure()
     # ax = fig.add_subplot(111)
-    N = l.shape[0]
+    N = li.shape[0]
 
     # for n in range(N):
     #     ax.plot([l[n][0]], [l[n][1]], "o", color=cm(index[n]), ms=1.5)
@@ -282,7 +282,7 @@ def main(arg, k):
     #     writer = csv.writer(file, lineterminator="\n\n")
     #     writer.writerows(params)
 
-    log_gap_list = log_list[1:] - log_list[:-1]
+    # log_gap_list = log_list[1:] - log_list[:-1]
     # ax = plt.gca()
     # ax.set_yscale("log")
     # plt.title("log-likelihood-gap")
@@ -297,7 +297,7 @@ def main(arg, k):
     # plt.show()
     # print("log-likelihood:" + str(log_gap_list))
 
-    D = l.shape[1]
+    D = li.shape[1]
     p = k * D + k * D * (D + 1) / 2 + (k - 1)  # パラメータ数導出
     p = int(p)
     return log_list, N, p

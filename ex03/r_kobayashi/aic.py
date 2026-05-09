@@ -1,3 +1,5 @@
+"""AIC・BICグラフの導出."""
+
 import sys
 
 import main2
@@ -6,6 +8,11 @@ import numpy as np
 
 
 def main(arg):
+    """メイン関数.
+
+    Args:
+        arg (str): データの選択
+    """
     arg = str(arg)
     AIC_list = []
     BIC_list = []

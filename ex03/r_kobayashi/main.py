@@ -44,11 +44,11 @@ else:
 
 with open(txt_dir) as f:
     reader = csv.reader(f)
-    l = [row for row in reader]
-    for i in range(len(l)):
-        for j in range(len(l[i])):
-            l[i][j] = float(l[i][j])
-l = np.array(l)
+    li = [row for row in reader]
+    for i in range(len(li)):
+        for j in range(len(li[i])):
+            li[i][j] = float(li[i][j])
+li = np.array(li)
 
 
 def calc(x, mu, sigma_inv, sigma_det):
@@ -82,8 +82,8 @@ def gauss(X, mu, sigma):
         ndarray of shape (N,): 各データにおけるガウス分布の確率密度のリスト
     """
     output = np.array([])
-    eps = np.spacing(1)
-    Eps = eps * np.eye(sigma.shape[0])
+    # eps = np.spacing(1)
+    # Eps = eps * np.eye(sigma.shape[0])
     sigma_inv = la.inv(sigma)
     sigma_det = la.det(sigma)
     N = X.shape[0]
@@ -143,8 +143,8 @@ def log_likelihood(X, Mu, Sigma, Pi):
     Returns:
         float: 対数化された尤度の合計
     """
-    K = Mu.shape[0]
-    D = X.shape[1]
+    # K = Mu.shape[0]
+    # D = X.shape[1]
     N = X.shape[0]
     _, out_sum = mix_gauss(X, Mu, Sigma, Pi)
     logs = np.array([np.log(out_sum[0][n]) for n in range(N)])
@@ -219,8 +219,8 @@ def EM(X, k, Mu, Sigma, Pi, thr):
 
 thr = 0.01
 # k = 2
-Mu, Sigma, Pi = setInitial(l, k)
-n_iter, log_list, Mu, Sigma, Pi, gamma = EM(l, k, Mu, Sigma, Pi, thr)
+Mu, Sigma, Pi = setInitial(li, k)
+n_iter, log_list, Mu, Sigma, Pi, gamma = EM(li, k, Mu, Sigma, Pi, thr)
 print("Iteration:" + str(n_iter))
 print("log-likelihood:" + str(log_list))
 
@@ -244,18 +244,18 @@ index = np.argmax(gamma, 0)
 cm = plt.get_cmap("tab10")
 fig = plt.figure()
 ax = fig.add_subplot(111)
-N = l.shape[0]
+N = li.shape[0]
 
 for n in range(N):
-    ax.plot([l[n][0]], [l[n][1]], "o", color=cm(index[n]), ms=1.5)
+    ax.plot([li[n][0]], [li[n][1]], "o", color=cm(index[n]), ms=1.5)
 # ax.view_init(elev=30, azim=45)
 
 
 # 各ガウス分布の平均をプロット
 plt.scatter(Mu[:, 0], Mu[:, 1], s=100, c="red", edgecolors="black")
 # 各ガウス分布の等高線をプロット
-x = np.linspace(l[:, 0].min(), l[:, 0].max(), 100)
-y = np.linspace(l[:, 1].min(), l[:, 1].max(), 100)
+x = np.linspace(li[:, 0].min(), li[:, 0].max(), 100)
+y = np.linspace(li[:, 1].min(), li[:, 1].max(), 100)
 
 X_grid, Y_grid = np.meshgrid(x, y)
 grid = np.column_stack([X_grid.ravel(), Y_grid.ravel()])
