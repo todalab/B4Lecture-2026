@@ -1,5 +1,6 @@
 import os
 
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import multivariate_normal
@@ -127,20 +128,9 @@ class GaussianMixtureModel:
 # ---課題 3-3: GMMの結果を可視化---
 def plot_gmm_results(X, gmm, title="GMM Clustering Results"):
     labels = gmm.predict(X)
-    plt.figure(figsize=(8, 6))
 
-    # 各クラスターを個別に描画して凡例に登録
-    for k in range(gmm.n_components):
-        plt.scatter(
-            X[labels == k, 0],
-            X[labels == k, 1],
-            s=15,
-            alpha=0.7,
-            label=f"Cluster {k + 1}",
-        )
-
-    # 中心の描画
-    plt.scatter(gmm.means_[:, 0], gmm.means_[:, 1], c="red", marker="*", s=100)
+    fig, ax = plt.subplots(figsize=(8, 6))
+    colors = plt.cm.tab10.colors
 
     # 等高線の描画準備
     x_min, x_max = X[:, 0].min() - 1, X[:, 0].max() + 1
@@ -150,16 +140,39 @@ def plot_gmm_results(X, gmm, title="GMM Clustering Results"):
     )
     pos = np.dstack((X_grid, Y_grid))
 
-    # 各ガウス分布の等高線を表示
+    # 各ガウス分布の塗りつぶし等高線を表示
     for k in range(gmm.n_components):
         rv = multivariate_normal(gmm.means_[k], gmm.covariances_[k])
-        plt.contour(X_grid, Y_grid, rv.pdf(pos), levels=3, colors="black", alpha=0.5)
+        Z = rv.pdf(pos)
+        cmap = matplotlib.colors.LinearSegmentedColormap.from_list(
+            f"cmap_{k}", ["white", colors[k]]
+        )
+        ax.contourf(X_grid, Y_grid, Z, levels=5, cmap=cmap, alpha=0.4)
+        ax.contour(
+            X_grid, Y_grid, Z, levels=5, colors=[colors[k]], alpha=0.6, linewidths=0.8
+        )
 
-    plt.title(title)
-    plt.legend()
-    plt.grid(True, alpha=0.3)
-    plt.xlabel("x1")
-    plt.ylabel("x2")
+    # 各クラスターを個別に描画して凡例に登録
+    for k in range(gmm.n_components):
+        ax.scatter(
+            X[labels == k, 0],
+            X[labels == k, 1],
+            s=15,
+            alpha=0.7,
+            color=colors[k],
+            label=f"Cluster {k + 1}",
+        )
+
+    # 中心の描画
+    ax.scatter(
+        gmm.means_[:, 0], gmm.means_[:, 1], c="black", marker="*", s=200, zorder=5
+    )
+
+    ax.set_title(title)
+    ax.legend()
+    ax.grid(True, alpha=0.3)
+    ax.set_xlabel("x1")
+    ax.set_ylabel("x2")
     plt.show()
 
 
@@ -202,6 +215,10 @@ def evaluate_optimal_clusters(X, max_k=8, title="AIC and BIC for Model Selection
         aic_values.append(aic)
         bic_values.append(bic)
 
+        # ↓ 追加: 各Kのクラスタリング散布図を描画
+        # plot_gmm_results(X, gmm, title=f"GMM Clustering (K={k})")
+
+    # AIC/BICグラフ（既存のまま）
     plt.figure(figsize=(9, 6))
     plt.plot(
         k_values, aic_values, marker="o", label="AIC", color="#1f77b4", linewidth=2
@@ -210,21 +227,19 @@ def evaluate_optimal_clusters(X, max_k=8, title="AIC and BIC for Model Selection
         k_values, bic_values, marker="s", label="BIC", color="#ff7f0e", linewidth=2
     )
 
-    # AICとBICが最小となるKを特定
     best_k_aic = k_values[np.argmin(aic_values)]
     best_k_bic = k_values[np.argmin(bic_values)]
 
-    # 最小値の位置に点線を表示
     plt.axvline(
         x=best_k_aic,
-        color="blue",
+        color="#1f77b4",
         linestyle="--",
         alpha=0.7,
         label=f"AIC min (K={best_k_aic})",
     )
     plt.axvline(
         x=best_k_bic,
-        color="orange",
+        color="#ff7f0e",
         linestyle="--",
         alpha=0.7,
         label=f"BIC min (K={best_k_bic})",
