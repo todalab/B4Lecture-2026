@@ -1,3 +1,4 @@
+import argparse
 import os
 
 import matplotlib
@@ -203,7 +204,9 @@ def calculate_information_criteria(gmm, X):
     return aic, bic
 
 
-def evaluate_optimal_clusters(X, max_k=8, title="AIC and BIC for Model Selection"):
+def evaluate_optimal_clusters(
+    X, max_k=8, title="AIC and BIC for Model Selection", plot_scatter=False
+):
     k_values = list(range(1, max_k + 1))
     aic_values = []
     bic_values = []
@@ -215,31 +218,28 @@ def evaluate_optimal_clusters(X, max_k=8, title="AIC and BIC for Model Selection
         aic_values.append(aic)
         bic_values.append(bic)
 
-        # ↓ 追加: 各Kのクラスタリング散布図を描画
-        # plot_gmm_results(X, gmm, title=f"GMM Clustering (K={k})")
+        # --scatterが指定されたら各Kのクラスタリング散布図を描画
+        if plot_scatter:
+            plot_gmm_results(X, gmm, title=f"GMM Clustering (K={k})")
 
     # AIC/BICグラフ（既存のまま）
     plt.figure(figsize=(9, 6))
-    plt.plot(
-        k_values, aic_values, marker="o", label="AIC", color="#1f77b4", linewidth=2
-    )
-    plt.plot(
-        k_values, bic_values, marker="s", label="BIC", color="#ff7f0e", linewidth=2
-    )
+    plt.plot(k_values, aic_values, marker="o", label="AIC", color="blue", linewidth=2)
+    plt.plot(k_values, bic_values, marker="s", label="BIC", color="orange", linewidth=2)
 
     best_k_aic = k_values[np.argmin(aic_values)]
     best_k_bic = k_values[np.argmin(bic_values)]
 
     plt.axvline(
         x=best_k_aic,
-        color="#1f77b4",
+        color="blue",
         linestyle="--",
         alpha=0.7,
         label=f"AIC min (K={best_k_aic})",
     )
     plt.axvline(
         x=best_k_bic,
-        color="#ff7f0e",
+        color="orange",
         linestyle="--",
         alpha=0.7,
         label=f"BIC min (K={best_k_bic})",
@@ -255,22 +255,48 @@ def evaluate_optimal_clusters(X, max_k=8, title="AIC and BIC for Model Selection
 
 
 def main():
-    filepaths = ["data1.csv", "data2.csv", "data3.csv"]
-    for filepath in filepaths:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--scatter",
+        action="store_true",
+        help="K=1〜8の各クラスタリング散布図のみ表示する",
+    )
+    parser.add_argument(
+        "--files",
+        nargs="+",
+        default=["data1.csv", "data2.csv", "data3.csv"],
+        help="処理するCSVファイル名",
+    )
+    parser.add_argument(
+        "--k",
+        type=int,
+        default=3,
+        help="クラスター数 K",
+    )
+    args = parser.parse_args()
+
+    for filepath in args.files:
         if not os.path.exists("../data/" + filepath):
             print(f"File {filepath} not found.")
             continue
         X = load_data("../data/" + filepath)
 
-        plot_data(X, f"scatter for {filepath}")
+        if args.scatter:
+            # 散布図のみ：K=1〜8の散布図だけ描画
+            for k in range(1, 9):
+                gmm = GaussianMixtureModel(n_components=k)
+                gmm.fit(X)
+                plot_gmm_results(X, gmm, title=f"{filepath} GMM Clustering (K={k})")
+        else:
+            plot_data(X, f"scatter for {filepath}")
 
-        n_components = 3
-        gmm = GaussianMixtureModel(n_components=n_components)
-        gmm.fit(X)
-        plot_gmm_results(X, gmm, title=f"{filepath} GMM Clustering Results")
-        plot_convergence(gmm.log_likelihood_, title=f"{filepath} Log Likelihood")
+            n_components = args.k
+            gmm = GaussianMixtureModel(n_components=n_components)
+            gmm.fit(X)
+            plot_gmm_results(X, gmm, title=f"{filepath} GMM Clustering Results")
+            plot_convergence(gmm.log_likelihood_, title=f"{filepath} Log Likelihood")
 
-        evaluate_optimal_clusters(X, max_k=8, title=f"{filepath} AIC BIC")
+            evaluate_optimal_clusters(X, max_k=8, title=f"{filepath} AIC BIC")
 
 
 if __name__ == "__main__":
