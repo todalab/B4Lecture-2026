@@ -1,5 +1,6 @@
 """
 混合ガウスモデル（GMM）の実装モジュール.
+
 EMアルゴリズムを使ってデータをクラスタリングし、AIC/BIC による最適クラスター数の選択をサポートする.
 """
 
@@ -170,6 +171,7 @@ class GaussianMixtureModel:
 def plot_gmm_results(X, gmm, title="GMM Clustering Results"):
     """
     GMMのクラスタリング結果を散布図 + 等高線で可視化する.
+
     各成分のガウス分布を塗りつぶし等高線で示し、データ点をクラスターごとに色分けして描画する.
 
     Args:
