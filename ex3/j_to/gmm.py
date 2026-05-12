@@ -1,43 +1,46 @@
-"""Implement the Gaussian Mixture Model (GMM) and Expectation-Maximization (EM) algorithm."""
+"""Implement the Gaussian Mixture Model (G.M.M.) and Expectation-Maximization (EM) algorithm."""
 
 import os
+
+from matplotlib.patches import Ellipse
 from matplotlib.pyplot import (
     figure,
+    gca,
+    grid,
+    legend,
     plot,
+    savefig,
     scatter,
     subplot,
-    gca,
-    savefig,
     title,
     xlabel,
     ylabel,
-    legend,
-    grid,
 )
-from matplotlib.patches import Ellipse
 from numpy import (
     angle,
     array,
     diag,
+    exp,
     eye,
     inf,
     log,
     ones,
-    exp,
-    zeros,
     sqrt,
+    zeros,
 )
-from numpy.typing import NDArray
 from numpy.linalg import eigh
-from scipy.stats import multivariate_normal
+from numpy.typing import NDArray
 from scipy.special import logsumexp
+from scipy.stats import multivariate_normal
 
 FIG_DIR = "fig"
 
 
 class GMM:
+    """Gaussian Mixture Model (G.M.M.) class for clustering."""
+
     def __init__(self, K: int):
-        """Initialise the GMM instance with the specified number of clusters K."""
+        """Initialise the G.M.M. instance with the specified number of clusters K."""
         self.K: int = K
 
         self.phi: NDArray
@@ -49,7 +52,7 @@ class GMM:
         self.w: NDArray
 
     def initialise(self, X):
-        """Initialise the cluster means using a K-means++ strategy, along with uniform weights and identity covariances."""
+        """Initialise using K-means++, uniform weights, and identity covariances."""
         _, D = X.shape
 
         # Assume homogeneous portion of data for each clustering
@@ -79,7 +82,7 @@ class GMM:
         return w, log_likelihood
 
     def m_step(self, X, w):
-        """Perform the Maximization step."""
+        """Perform the Maximisation step."""
         N, D = X.shape
         w_sum_for_data = w.sum(axis=1)
         self.phi = w_sum_for_data / N
@@ -93,7 +96,7 @@ class GMM:
         )
 
     def train(self, X, tolerance=1e-4):
-        """Train the GMM on the dataset using the EM algorithm until the log-likelihood converges."""
+        """Train the G.M.M. using the EM algorithm until the log-likelihood converges."""
         self.initialise(X)
         log_likelihoods = [-inf]
         while True:
@@ -108,7 +111,7 @@ class GMM:
         self.log_likelihoods = log_likelihoods[1:]  # Skip -inf
 
     def predict(self, X):
-        """Predict the most likely cluster assignment for each data point based on the trained model."""
+        """Predict the most likely cluster assignment for each data point."""
         w, _ = self.e_step(X)
         return w.argmax(axis=0)
 
@@ -126,11 +129,11 @@ class GMM:
         scatter_out = f'scatter_{basename.replace(".csv", ".png")}'
         savefig(os.path.join(FIG_DIR, scatter_out))
 
-        # Plot GMM clustering results
+        # Plot G.M.M. clustering results
         figure(figsize=(15, 6))
 
         subplot(1, 2, 1)
-        title(f"GMM Clustering (K={self.K})")
+        title(f"G.M.M. Clustering (K={self.K})")
         xlabel("x_0")
         ylabel("x_1")
 

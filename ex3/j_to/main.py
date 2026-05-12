@@ -1,15 +1,19 @@
-"""Main execution script that runs Gaussian Mixture Model clustering and criteria evaluation on sample datasets."""
+"""Run Gaussian Mixture Model clustering and criteria evaluation on sample datasets."""
 
 import os
+
 from numpy import array
 from pandas import read_csv
 
-from gmm import GMM, FIG_DIR
 from criteria import evaluate
+from gmm import FIG_DIR, GMM
 
 
 def apply_GMM(filename: str, K: int):
-    """Trains a GMM with a specific number of clusters on a dataset and outputs the clustering visualization."""
+    """Train a G.M.M. with a specific number of clusters on a dataset.
+
+    Outputs the clustering visualisation.
+    """
     data = read_csv(filename, header=None)
     X = array(data)
 
@@ -20,7 +24,7 @@ def apply_GMM(filename: str, K: int):
 
 
 def main():
-    """Orchestrates the GMM training and criteria evaluation processes for multiple data files."""
+    """Orchestrate the G.M.M. training and criteria evaluation processes for data files."""
     os.makedirs(FIG_DIR, exist_ok=True)
 
     for filename, k in [

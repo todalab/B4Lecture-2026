@@ -1,26 +1,27 @@
-"""Provide model evaluation criteria (A.I.C. and B.I.C.) to determine the optimal number of clusters for a dataset."""
+"""Provide model evaluation criteria (A.I.C. and B.I.C.) to determine optimal cluster counts."""
 
 import os
+
 from matplotlib.pyplot import (
+    axvline,
     figure,
+    grid,
+    legend,
     plot,
+    savefig,
     title,
     xlabel,
     ylabel,
-    legend,
-    grid,
-    savefig,
-    axvline,
 )
 from numpy import array, log
 from numpy.typing import NDArray
 from pandas import read_csv
 
-from gmm import GMM, FIG_DIR
+from gmm import FIG_DIR, GMM
 
 
 def n_params(K: int, D: int) -> int:
-    """Calculate the total number of free parameters."""
+    """Calculate the total number of free parameters in a G.M.M.."""
     return int(K * D + K * D * (D + 1) / 2 + K - 1)
 
 
@@ -39,7 +40,7 @@ def BIC(gmm: GMM, X: NDArray) -> float:
 
 
 def evaluate(filename: str, max_K: int = 8):
-    """Evaluate and plots A.I.C. and B.I.C. scores across a range of cluster counts to identify the optimal K."""
+    """Plot A.I.C. and B.I.C. scores across cluster counts to identify the optimal K."""
     basename = os.path.basename(filename)
     data = read_csv(filename, header=None)
     X = array(data)
