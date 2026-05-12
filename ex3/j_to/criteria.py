@@ -2,17 +2,8 @@
 
 import os
 
-from matplotlib.pyplot import (
-    axvline,
-    figure,
-    grid,
-    legend,
-    plot,
-    savefig,
-    title,
-    xlabel,
-    ylabel,
-)
+from matplotlib.pyplot import (axvline, figure, grid, legend, plot, savefig,
+                               title, xlabel, ylabel)
 from numpy import array, log
 from numpy.typing import NDArray
 from pandas import read_csv

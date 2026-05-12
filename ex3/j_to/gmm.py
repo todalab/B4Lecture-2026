@@ -3,31 +3,9 @@
 import os
 
 from matplotlib.patches import Ellipse
-from matplotlib.pyplot import (
-    figure,
-    gca,
-    grid,
-    legend,
-    plot,
-    savefig,
-    scatter,
-    subplot,
-    title,
-    xlabel,
-    ylabel,
-)
-from numpy import (
-    angle,
-    array,
-    diag,
-    exp,
-    eye,
-    inf,
-    log,
-    ones,
-    sqrt,
-    zeros,
-)
+from matplotlib.pyplot import (figure, gca, grid, legend, plot, savefig,
+                               scatter, subplot, title, xlabel, ylabel)
+from numpy import angle, array, diag, exp, eye, inf, log, ones, sqrt, zeros
 from numpy.linalg import eigh
 from numpy.typing import NDArray
 from scipy.special import logsumexp
