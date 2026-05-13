@@ -1,10 +1,17 @@
 # -*- coding: utf-8 -*-
 """課題3 GMM EMアルゴリズム."""
 
+import os
+
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+
+try:
+    import imageio
+except Exception:
+    imageio = None
 
 matplotlib.rcParams["font.family"] = "sans-serif"
 
@@ -378,7 +385,7 @@ def loop_em_algorithm(x: np.ndarray, K: int) -> tuple:
     parameters = Parameter(mu, Sigma, pi)
     log_likelihoods = np.array([calculate_log_likelihood(x, mu, Sigma, pi, K)])
     # 反復
-    while True:
+    while len(log_likelihoods) < 10000:
         gamma = e_step(x, parameters.mu[-1], parameters.Sigma[-1], parameters.pi[-1], K)
         new_mu, new_Sigma, new_pi, log_likelihood = m_step(x, gamma, K)
         parameters.append_mu(new_mu)
@@ -514,6 +521,127 @@ def show_data_scatter_and_GMM(
     plt.close()
 
 
+def show_EM_progress_gif(
+    x: np.ndarray, parameters: Parameter, K: int, title: str, fps: int = 2
+) -> None:
+    """
+    EMアルゴリズム各ステップのパラメータで散布図を描画し、GIFにまとめる.
+
+    Args:
+        x (np.ndarray): データ (N,2)
+        parameters (Parameter): 各ステップのパラメータを持つオブジェクト
+        K (int): クラスタ数
+        title (str): 保存するGIFのファイル名（output/{title}.gif）
+        fps (int): GIFのフレームレート
+    """
+    os.makedirs("output/gifs", exist_ok=True)
+    frames = []
+    # 色定義をshow_data_scatter_and_GMM と合わせる
+    colors = [
+        "tab:blue",
+        "tab:orange",
+        "tab:green",
+        "tab:red",
+        "tab:purple",
+        "tab:brown",
+        "tab:pink",
+        "tab:gray",
+        "tab:olive",
+        "tab:cyan",
+    ]
+
+    n_steps = len(parameters.mu)
+    for t in range(n_steps):
+        mu_t = parameters.mu[t]
+        Sigma_t = parameters.Sigma[t]
+        pi_t = parameters.pi[t]
+
+        fig = plt.figure(figsize=(6, 5))
+        ax = fig.add_subplot(111)
+
+        # 現ステップの負担率でクラスタ割当を算出し、色分けして描画
+        try:
+            gamma_t = e_step(x, mu_t, Sigma_t, pi_t, K)
+            cluster_assignments = np.argmax(gamma_t, axis=1)
+        except Exception:
+            cluster_assignments = np.zeros(len(x), dtype=int)
+
+        for k in range(K):
+            mask = cluster_assignments == k
+            ax.scatter(
+                x[mask, 0],
+                x[mask, 1],
+                c=colors[k % len(colors)],
+                label=f"Cluster {k}",
+                alpha=0.6,
+                s=20,
+            )
+
+        # 各クラスタの平均を描画
+        for k in range(K):
+            ax.plot(
+                mu_t[k, 0],
+                mu_t[k, 1],
+                marker="X",
+                color=colors[k % len(colors)],
+                markersize=10,
+                markeredgecolor="black",
+                markeredgewidth=1,
+            )
+
+            # 等高線（1σ,2σ）
+            x_min, x_max = x[:, 0].min() - 1, x[:, 0].max() + 1
+            y_min, y_max = x[:, 1].min() - 1, x[:, 1].max() + 1
+            xx, yy = np.meshgrid(
+                np.linspace(x_min, x_max, 100), np.linspace(y_min, y_max, 100)
+            )
+            grid_points = np.c_[xx.ravel(), yy.ravel()]
+            diff = grid_points - mu_t[k]
+            inv_Sigma = np.linalg.pinv(Sigma_t[k])
+            mahal_dist_sq = np.sum(diff @ inv_Sigma * diff, axis=1).reshape(xx.shape)
+            ax.contour(
+                xx,
+                yy,
+                mahal_dist_sq,
+                levels=[1, 4],
+                colors=colors[k % len(colors)],
+                linestyles=["solid", "dashed"],
+                linewidths=1.5,
+                alpha=0.6,
+            )
+
+        ax.set_title(f"{title} (step {t})")
+        ax.set_xlabel("x1")
+        ax.set_ylabel("x2")
+        ax.grid(True, alpha=0.3)
+
+        # 一時ファイルに保存してフレームとして読み込む
+        tmp_path = f"output/gifs/{title.replace(' ', '_')}_step_{t}.png"
+        plt.savefig(tmp_path, dpi=120, bbox_inches="tight")
+        plt.close()
+
+        if imageio is not None:
+            frames.append(imageio.imread(tmp_path))
+        else:
+            from PIL import Image
+
+            frames.append(Image.open(tmp_path).convert("RGBA"))
+
+    out_path = f"output/gifs/{title.replace(' ', '_')}.gif"
+    # imageio が使える場合は imageio で保存
+    if imageio is not None:
+        imageio.mimsave(out_path, frames, fps=fps)
+    else:
+        # Pillow で保存
+        frames[0].save(
+            out_path,
+            save_all=True,
+            append_images=frames[1:],
+            duration=int(1000 / fps),
+            loop=0,
+        )
+
+
 def AIC(log_likelihood: float, num_parameters: int) -> float:
     """
     AICを計算する.
@@ -596,6 +724,7 @@ def main() -> None:
         None: CSVファイルを読み込み、各解析結果を `output/` 以下に保存する.
     """
     # CSVファイルからデータを読み込む
+    os.makedirs("output", exist_ok=True)
     data1_raw = pd.read_csv("../data/data1.csv", header=None)
     data2_raw = pd.read_csv("../data/data2.csv", header=None)
     data3_raw = pd.read_csv("../data/data3.csv", header=None)
@@ -622,6 +751,10 @@ def main() -> None:
         show_data_scatter_and_GMM(
             data1, parameters_data1, K1, f"data1 GMM clustering result (K={K1})"
         )
+        # EM各ステップの可視化をGIFで出力
+        show_EM_progress_gif(
+            data1, parameters_data1, K1, f"data1 EM evolution (K={K1})"
+        )
     AIC_BIC_show(
         final_log_likelihoods_data1, np.arange(1, 9), len(data1), "data1 AIC_BIC"
     )
@@ -647,6 +780,9 @@ def main() -> None:
         show_data_scatter_and_GMM(
             data2, parameters_data2, K2, f"data2 GMM clustering result (K={K2})"
         )
+        show_EM_progress_gif(
+            data2, parameters_data2, K2, f"data2 EM evolution (K={K2})"
+        )
     AIC_BIC_show(
         final_log_likelihoods_data2, np.arange(1, 9), len(data2), "data2 AIC_BIC"
     )
@@ -670,6 +806,9 @@ def main() -> None:
         show_log_likelihood(log_likelihoods_data3, f"data3 log likelihood (K={K3})")
         show_data_scatter_and_GMM(
             data3, parameters_data3, K3, f"data3 GMM clustering result (K={K3})"
+        )
+        show_EM_progress_gif(
+            data3, parameters_data3, K3, f"data3 EM evolution (K={K3})"
         )
     AIC_BIC_show(
         final_log_likelihoods_data3, np.arange(1, 9), len(data3), "data3 AIC_BIC"
