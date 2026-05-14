@@ -21,7 +21,7 @@ from mlp import MLP
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--input", default="answer/data/synthetic_music.npz")
+    parser.add_argument("--input", default="answer/data/speech_commands_subset.npz")
     parser.add_argument("--fig-dir", default="answer/fig")
     parser.add_argument("--epochs", type=int, default=200)
     parser.add_argument("--hidden", type=int, default=64)
@@ -31,6 +31,22 @@ def parse_args():
     parser.add_argument("--test-ratio", type=float, default=0.25)
     parser.add_argument("--seed", type=int, default=0)
     return parser.parse_args()
+
+
+def split_dataset(path, X, y, test_ratio, seed):
+    data = np.load(path, allow_pickle=True)
+    if "split" not in data:
+        return train_test_split(X, y, test_ratio=test_ratio, seed=seed)
+
+    split = data["split"].astype(str)
+    train_mask = split == "train"
+    test_mask = split == "test"
+    if not np.any(test_mask):
+        test_mask = split == "validation"
+    if not np.any(train_mask) or not np.any(test_mask):
+        return train_test_split(X, y, test_ratio=test_ratio, seed=seed)
+
+    return X[train_mask], X[test_mask], y[train_mask], y[test_mask]
 
 
 def evaluate(model, X, y, l2):
@@ -50,9 +66,7 @@ def main():
     plot_spectrum_examples(X_wave, y, labels, sample_rate, fig_dir / "spectrum_examples.png")
 
     X = spectral_features(X_wave, sample_rate=sample_rate, n_bins=args.bins)
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_ratio=args.test_ratio, seed=args.seed
-    )
+    X_train, X_test, y_train, y_test = split_dataset(args.input, X, y, args.test_ratio, args.seed)
     X_train, X_test = standardize_train_test(X_train, X_test)
 
     model = MLP(

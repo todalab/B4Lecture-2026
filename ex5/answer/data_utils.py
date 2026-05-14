@@ -83,7 +83,9 @@ def ensure_dir(path):
 def plot_waveform_examples(X, y, labels, sample_rate, output):
     n_classes = len(labels)
     t = np.arange(X.shape[1]) / sample_rate
-    fig, axes = plt.subplots(n_classes, 1, figsize=(9, 7), sharex=True)
+    fig_height = max(7, 1.3 * n_classes)
+    fig, axes = plt.subplots(n_classes, 1, figsize=(9, fig_height), sharex=True)
+    axes = np.atleast_1d(axes)
     for label, ax in enumerate(axes):
         idx = np.where(y == label)[0][0]
         ax.plot(t, X[idx], lw=1.0)
@@ -97,7 +99,9 @@ def plot_waveform_examples(X, y, labels, sample_rate, output):
 
 def plot_spectrum_examples(X, y, labels, sample_rate, output):
     n_classes = len(labels)
-    fig, axes = plt.subplots(n_classes, 1, figsize=(9, 7), sharex=True)
+    fig_height = max(7, 1.3 * n_classes)
+    fig, axes = plt.subplots(n_classes, 1, figsize=(9, fig_height), sharex=True)
+    axes = np.atleast_1d(axes)
     for label, ax in enumerate(axes):
         idx = np.where(y == label)[0][0]
         window = np.hanning(X.shape[1])

@@ -61,7 +61,7 @@ def export_one(X, y, labels, sample_rate, output_dir, index, play):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--input", default="answer/data/synthetic_music.npz")
+    parser.add_argument("--input", default="answer/data/speech_commands_subset.npz")
     parser.add_argument("--output-dir", default="answer/audio")
     parser.add_argument("--per-class", type=int, default=2)
     parser.add_argument("--index", type=int, default=None)
