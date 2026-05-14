@@ -1,16 +1,42 @@
 """The answer of Ex03 by Hagiwara Futa."""
 
-import sys
+import argparse
 from pathlib import Path
 
-import japanize_matplotlib  # noqa
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy.stats import multivariate_normal
+
+plt.rcParams["font.family"] = "Noto Sans CJK JP"
+
+DATA1_PATH = Path("../data/data1.csv")
+DATA2_PATH = Path("../data/data2.csv")
+DATA3_PATH = Path("../data/data3.csv")
 
 
-def main():
-    """Run main function."""
-    gmm()
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "output_dir",
+        type=Path,
+        help="Path to output result directory.",
+    )
+    parser.add_argument(
+        "--input_paths",
+        type=Path,
+        nargs="*",
+        default=[DATA1_PATH, DATA2_PATH, DATA3_PATH],
+        help="Path to input data.",
+    )
+    parser.add_argument(
+        "--cluster_nums",
+        type=int,
+        nargs="*",
+        default=[3, 4, 2],
+        help="Number of clusters.",
+    )
+
+    return parser.parse_args()
 
 
 def gauss(x, mu, sigma):
@@ -43,10 +69,11 @@ def em_algorithm(data, K):
     # EMアルゴリズム
     for i in range(max_iter):
         # Eステップ (負担率の計算)
-        # 分子
+        # 多次元ガウス分布の計算を行う scipy.stats.multivariate_normal で全データ・全クラスタを一括計算
         for j in range(K):
-            for n in range(N):
-                gamma[n, j] = pi[j] * gauss(data[n], mu[j], sigma[j])
+            gamma[:, j] = pi[j] * multivariate_normal.pdf(
+                data, mean=mu[j], cov=sigma[j]
+            )
         # 正規化 (分母)
         # 行方向に足し合わせることで各データに対するクラスタの合計が得られる
         gamma /= np.sum(gamma, axis=1, keepdims=True)
@@ -63,19 +90,27 @@ def em_algorithm(data, K):
         # クラス毎の処理を行う
         for k in range(K):
             data_mu = data - mu[k]
-            sigma[k] = (data_mu.T @ (gamma[:, k][:, None] * data_mu)) / (Nk[k] + 1e-12)
+            # np.einsum で gamma の重みを付けた外積の総和を計算
+            sigma[k] = np.einsum("n,nd,ne->de", gamma[:, k], data_mu, data_mu) / (
+                Nk[k] + 1e-12
+            )
             # 正則化
             sigma[k] += 1e-6 * np.eye(2)
         # 混合係数の更新
         pi = Nk / N
 
         # 対数尤度の計算
-        like = 0.0
-        for n in range(N):
-            tmp = 0.0
-            for k in range(K):
-                tmp += pi[k] * gauss(data[n], mu[k], sigma[k])
-            like += np.log(tmp + 1e-12)
+        # for n in range(N_v1):
+        #     tmp = 0.0
+        #     for k in range(K):
+        #         tmp += pi[k] * gauss(v1[n], mu[k], sigma[k])
+        #     like += np.log(tmp + 1e-12)
+        # scipy で全データ・全クラスタの pdf を一括計算し einsum で混合密度を得る
+        pdf = np.stack(
+            [multivariate_normal.pdf(data, mean=mu[k], cov=sigma[k]) for k in range(K)],
+            axis=1,
+        )  # (N, K)
+        like = np.sum(np.log(np.einsum("k,nk->n", pi, pdf) + 1e-12))
 
         likes.append(like)
         # 閾値以下になったら収束とみなす
@@ -88,7 +123,7 @@ def em_algorithm(data, K):
     return mu, sigma, pi, gamma, likes
 
 
-def gmm_plot(data, K, likes, mu, sigma, gamma, name):
+def gmm_plot(data, K, likes, mu, sigma, gamma, name, output_dir):
     """Plot results of GMM."""
     # 対数尤度の推移グラフ
     plotx = np.arange(1, len(likes) + 1)
@@ -101,7 +136,7 @@ def gmm_plot(data, K, likes, mu, sigma, gamma, name):
     plt.grid(True)
     plt.tick_params(labelsize=7)
     plt.title(f"data{name} Log-Likelihood")
-    plt.savefig(f"outputs/data{name}_likelihood.png")
+    plt.savefig(output_dir / f"data{name}_likelihood.png")
     plt.close()
 
     # GMMによるソフトクラスタリング
@@ -155,8 +190,8 @@ def gmm_plot(data, K, likes, mu, sigma, gamma, name):
 
     D = mu.shape[1]
     for k in range(K):
-        # グリッド各点の確率密度を計算、元の2次元に戻す
-        pdf = np.array([gauss(p, mu[k], sigma[k]) for p in grid]).reshape(gx.shape)
+        # scipy で grid 全点の確率密度を一括計算、元の2次元に戻す
+        pdf = multivariate_normal.pdf(grid, mean=mu[k], cov=sigma[k]).reshape(gx.shape)
         # 1σ, 2σ に対応するガウス分布の確率密度値
         det = np.linalg.det(sigma[k])
         sigma1 = np.exp(-0.5 * 1**2) / np.sqrt((2 * np.pi) ** D * det)  # 1σ
@@ -198,11 +233,11 @@ def gmm_plot(data, K, likes, mu, sigma, gamma, name):
     plt.title(f"data{name} GMM Clustering (K={K})")
     plt.legend()
     plt.grid(True)
-    plt.savefig(f"outputs/data{name}_gmm_optimized.png")
+    plt.savefig(output_dir / f"data{name}_gmm_optimized.png")
     plt.close()
 
 
-def aic_bic(data, name):
+def aic_bic(data, name, output_dir):
     """Calculate AIC and BIC."""
     N, D = data.shape  # データ数・次元数
 
@@ -281,22 +316,26 @@ def aic_bic(data, name):
     plt.xticks(k_list)
     plt.legend()
     plt.grid(True)
-    plt.savefig(f"outputs/data{name}_aic_bic.png")
+    plt.savefig(output_dir / f"data{name}_aic_bic.png")
     plt.close()
 
 
 def gmm():
     """Solve assignments."""
+    args = parse_args()
+    output_dir = args.output_dir
+    output_dir.mkdir(parents=True, exist_ok=True)
+
     # データ読み込み(Ex3-1)
-    v1 = np.loadtxt("../data/data1.csv", delimiter=",")
+    v1 = np.loadtxt(args.input_paths[0], delimiter=",")
     v1x = v1[:, 0]
     v1y = v1[:, 1]
 
-    v2 = np.loadtxt("../data/data2.csv", delimiter=",")
+    v2 = np.loadtxt(args.input_paths[1], delimiter=",")
     v2x = v2[:, 0]
     v2y = v2[:, 1]
 
-    v3 = np.loadtxt("../data/data3.csv", delimiter=",")
+    v3 = np.loadtxt(args.input_paths[2], delimiter=",")
     v3x = v3[:, 0]
     v3y = v3[:, 1]
 
@@ -310,7 +349,7 @@ def gmm():
     plt.ylabel("Axis2")
     plt.title("data1.csv")
     plt.grid(True)
-    plt.savefig("outputs/data1_scat.png")
+    plt.savefig(output_dir / "data1_scat.png")
     plt.close()
 
     plt.figure()
@@ -319,7 +358,7 @@ def gmm():
     plt.ylabel("Axis2")
     plt.title("data2.csv")
     plt.grid(True)
-    plt.savefig("outputs/data2_scat.png")
+    plt.savefig(output_dir / "data2_scat.png")
     plt.close()
 
     plt.figure()
@@ -328,25 +367,24 @@ def gmm():
     plt.ylabel("Axis2")
     plt.title("data3.csv")
     plt.grid(True)
-    plt.savefig("outputs/data3_scat.png")
+    plt.savefig(output_dir / "data3_scat.png")
     plt.close()
 
     # GMM(Ex3-2)
-    args = sys.argv
-    mu1, sigma1, pi1, gamma1, likes1 = em_algorithm(v1, int(args[1]))
-    mu2, sigma2, pi2, gamma2, likes2 = em_algorithm(v2, int(args[2]))
-    mu3, sigma3, pi3, gamma3, likes3 = em_algorithm(v3, int(args[3]))
+    mu1, sigma1, pi1, gamma1, likes1 = em_algorithm(v1, args.cluster_nums[0])
+    mu2, sigma2, pi2, gamma2, likes2 = em_algorithm(v2, args.cluster_nums[1])
+    mu3, sigma3, pi3, gamma3, likes3 = em_algorithm(v3, args.cluster_nums[2])
 
     # GMM結果プロット(Ex3-3)
-    gmm_plot(v1, int(args[1]), likes1, mu1, sigma1, gamma1, 1)
-    gmm_plot(v2, int(args[2]), likes2, mu2, sigma2, gamma2, 2)
-    gmm_plot(v3, int(args[3]), likes3, mu3, sigma3, gamma3, 3)
+    gmm_plot(v1, args.cluster_nums[0], likes1, mu1, sigma1, gamma1, 1, output_dir)
+    gmm_plot(v2, args.cluster_nums[1], likes2, mu2, sigma2, gamma2, 2, output_dir)
+    gmm_plot(v3, args.cluster_nums[2], likes3, mu3, sigma3, gamma3, 3, output_dir)
 
     # AIC,BIC(Ex3-4)
-    aic_bic(v1, 1)
-    aic_bic(v2, 2)
-    aic_bic(v3, 3)
+    aic_bic(v1, 1, output_dir)
+    aic_bic(v2, 2, output_dir)
+    aic_bic(v3, 3, output_dir)
 
 
 if __name__ == "__main__":
-    main()
+    gmm()
