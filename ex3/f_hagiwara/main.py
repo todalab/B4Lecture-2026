@@ -15,6 +15,7 @@ DATA3_PATH = Path("../data/data3.csv")
 
 
 def parse_args():
+    """Receive information about arguments."""
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "output_dir",
