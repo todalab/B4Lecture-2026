@@ -152,7 +152,9 @@ def main(file_name, method, show_details=False):
 
     # 混同行列を可視化
     fig, ax = plt.subplots(figsize=(8, 6))
-    plot_confusion_matrix(cm, title=f"Confusion Matrix ({method})", ax=ax)
+    plot_confusion_matrix(
+        cm, title=f"Confusion Matrix ({method}) -- {file_name}", ax=ax
+    )
     plt.show()
 
 
