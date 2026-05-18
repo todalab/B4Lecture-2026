@@ -127,9 +127,10 @@ def analyze_dataset(file_name):
 
 
 def main():
-    """
-    4つのすべてのデータセット（data1～data4）に対して analyze_dataset を実行し、
-    総合的な分析結果を出力.
+    """複数のデータセットに対して analyze_dataset を実行.
+
+    4つのすべてのデータセット（data1～data4）を分析し、
+    総合的な分析結果を出力します。
     """
     target_files = ["data1.pickle", "data2.pickle", "data3.pickle", "data4.pickle"]
     for f in target_files:
