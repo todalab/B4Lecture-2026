@@ -11,6 +11,7 @@ from scipy.special import logsumexp
 # fmt: off
 from sklearn.metrics import (ConfusionMatrixDisplay, accuracy_score,
                              confusion_matrix)
+
 # fmt: on
 
 plt.rcParams["font.family"] = "Noto Sans CJK JP"
