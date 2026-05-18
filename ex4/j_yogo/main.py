@@ -2,10 +2,10 @@ import argparse
 import time
 
 import matplotlib.pyplot as plt
-from hmm_eval import evaluate
-from hmm_plot import plot_confusion_matrix
-from hmm_score import score_sequences
-from process_data import get_hmm_params, load_dataset
+from hmm.eval import evaluate
+from hmm.plot import plot_confusion_matrix
+from hmm.process_data import get_hmm_params, load_dataset
+from hmm.score import score_sequences
 
 
 def main(dataset_path, method):
