@@ -1,7 +1,7 @@
 """
 HMM推論スクリプト
 
-このモジュールは、複数のHMM（隠れマルコフモデル）を用いて、観測系列を最も尤度の高いモデルに分類する。
+このモジュールは、複数のHMM（隠れマルコフモデル）を用いて、観測系列を最も尤度の高いモデルに分類する.
 """
 
 import argparse
@@ -17,21 +17,21 @@ from hmm.score import score_sequences
 
 def run_inference(file_name, method):
     """
-    単一のデータセットに対してHMM推論を実行し、結果を返す。
+    単一のデータセットに対してHMM推論を実行し、結果を返す.
 
     Args:
         file_name (str): 読み込むデータセットのファイル名
         method (str): 使用するアルゴリズム ("forward" または "viterbi")
 
     Returns:
-        dict | None: 推論結果を含む辞書。以下のキーを持つ:
+        dict | None: 推論結果を含む辞書.以下のキーを持つ:
             - "acc": 分類精度（0.0～1.0）
             - "time": 処理時間（秒）
             - "cm": 混同行列（numpy array）
             - "pred": 予測ラベル配列
             - "scores": 各モデルのスコア行列
 
-            ファイルが存在しない場合は None を返します。
+            ファイルが存在しない場合は None を返します.
     """
     dataset_path = "../data/" + file_name
     if not os.path.exists(dataset_path):
@@ -61,7 +61,7 @@ def run_inference(file_name, method):
 
 def main(file_name, method, show_details=False):
     """
-    HMM推論のメイン処理を実行。
+    HMM推論のメイン処理を実行.
 
     3つのモードに対応:
     1. "compare" モード: 複数データセット間でForwardとViterbiの精度・処理時間を比較
@@ -72,8 +72,8 @@ def main(file_name, method, show_details=False):
         file_name (str): 読み込むデータセットのファイル名
                          (compare モードでは無視される)
         method (str): 推論方法 ("forward", "viterbi", "compare")
-        show_details (bool): 詳細結果の出力有無。
-                             True の場合、全系列の詳細情報を表示。
+        show_details (bool): 詳細結果の出力有無.
+                             True の場合、全系列の詳細情報を表示.
                              デフォルト: False
 
     Returns:

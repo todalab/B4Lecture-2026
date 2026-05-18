@@ -2,7 +2,7 @@
 HMM モデルトポロジー分類・分析スクリプト
 
 このモジュールは、複数のHMMモデルをそのトポロジー（Left-to-Right または Ergodic）で分類し、
-各グループの推論性能や最尤状態系列パターンを分析。
+各グループの推論性能や最尤状態系列パターンを分析.
 """
 
 import os
@@ -14,14 +14,14 @@ from hmm.score import score_sequences
 
 def is_left_to_right(A, eps=1e-5):
     """
-    遷移行列AがLeft-to-Right構造かどうかを判定。
+    遷移行列AがLeft-to-Right構造かどうかを判定.
 
-    Left-to-Rightモデルでは、状態は一方向にのみ遷移するため、遷移行列の下三角成分はほぼ0になる。
+    Left-to-Rightモデルでは、状態は一方向にのみ遷移するため、遷移行列の下三角成分はほぼ0になる.
 
     Args:
         A (np.ndarray): 状態遷移確率行列
                        A[i, j] = 状態iから状態jへの遷移確率
-        eps (float): 下三角成分の閾値。この値以下なら0とみなす。
+        eps (float): 下三角成分の閾値.この値以下なら0とみなす.
                     デフォルト: 1e-5
 
     Returns:
@@ -32,7 +32,7 @@ def is_left_to_right(A, eps=1e-5):
 
 def analyze_dataset(file_name):
     """
-    単一のデータセットを分析し、モデルのトポロジーごとに推論性能を評価します。
+    単一のデータセットを分析し、モデルのトポロジーごとに推論性能を評価します.
 
     処理内容:
     1. データセットを読み込み、HMMパラメータを抽出
@@ -130,7 +130,7 @@ def analyze_dataset(file_name):
 def main():
     """
     4つのすべてのデータセット（data1～data4）に対して
-    analyze_dataset を実行し、総合的な分析結果を出力。
+    analyze_dataset を実行し、総合的な分析結果を出力.
     """
     target_files = ["data1.pickle", "data2.pickle", "data3.pickle", "data4.pickle"]
     for f in target_files:
