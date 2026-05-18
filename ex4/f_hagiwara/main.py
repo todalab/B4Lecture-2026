@@ -1,16 +1,14 @@
 """The answer of Ex04 by Hagiwara Futa."""
 
 import argparse
+import pickle
+import time
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
-import pickle
 from scipy.special import logsumexp
-from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, accuracy_score
-import time
-
-# from scipy.stats import multivariate_normal
+from sklearn.metrics import ConfusionMatrixDisplay, accuracy_score, confusion_matrix
 
 plt.rcParams["font.family"] = "Noto Sans CJK JP"
 
@@ -21,6 +19,7 @@ DATA4_PATH = Path("../data/data4.pickle")
 
 
 def parse_args():
+    """Parse command-line arguments for the program."""
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--output_dir",
@@ -54,28 +53,6 @@ def forward(datapath, output_dir):
     _, _, n = B.shape
     p, t = outputs.shape
     print(f"k={k},l={l},n={n},p={p},t={t}")
-
-    # for o in outputs:
-    #     alpha = np.zeros((k, t, l))
-
-    #     # 初期化
-    #     alpha[:, 0, :] = PI[:, :, 0] * B[:, :, o[0]]
-
-    #     # 帰納
-    #     # 各モデル各時刻ごとに順に計算を行う
-    #     for times in range(1, t):
-    #         for model in range(k):
-    #             # 同一時刻における各状態に対する演算を一気に行う
-    #             alpha[model, times] = (alpha[model, times - 1] @ A[model]) * B[
-    #                 model, :, o[times]
-    #             ]
-
-    #     # 尤度
-    #     likelihood = np.sum(alpha[:, t - 1, :], axis=1)
-
-    #     pred_models.append(np.argmax(likelihood))
-
-    # cm = confusion_matrix(answer_models, pred_models)
 
     start = time.time()
     logA = np.log(A)
