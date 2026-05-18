@@ -1,8 +1,8 @@
 """
-結果可視化モジュール
+結果可視化モジュール.
 
 このモジュールは、HMM推論結果の混同行列を
-カラーマップを用いて可視化。
+カラーマップを用いて可視化.
 """
 
 from __future__ import annotations
@@ -19,7 +19,7 @@ def plot_confusion_matrix(
     cmap: str = "Blues",
 ) -> None:
     """
-    混同行列をヒートマップで可視化。
+    混同行列をヒートマップで可視化.
 
     Args:
         cm (Array): 混同行列
