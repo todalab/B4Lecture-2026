@@ -9,10 +9,52 @@ from hmm.process_data import get_hmm_params, load_dataset
 from hmm.score import score_sequences
 
 
+def run_inference(file_name, method):
+    dataset_path = "../data/" + file_name
+    if not os.path.exists(dataset_path):
+        return None
+
+    data = load_dataset(dataset_path)
+    outputs, PI_all, A_all, B_all, true_labels, k = get_hmm_params(data)
+
+    start_time = time.perf_counter()
+    pred_labels, scores, best_paths = score_sequences(
+        outputs, PI_all, A_all, B_all, method=method
+    )
+    elapsed_time = time.perf_counter() - start_time
+
+    cm, acc = evaluate(true_labels, pred_labels, k)
+    return {
+        "acc": acc,
+        "time": elapsed_time,
+        "cm": cm,
+        "pred": pred_labels,
+        "scores": scores,
+    }
+
+
 def main(file_name, method, show_details=False):
+    if method == "compare":
+        print("=== 6-3 性能比較（data1〜data4） ===")
+        results = {}
+        for f in ["data1.pickle", "data2.pickle", "data3.pickle", "data4.pickle"]:
+            fwd = run_inference(f, "forward")
+            vtb = run_inference(f, "viterbi")
+
+            if fwd and vtb:
+                results[f] = {
+                    "fwd_acc": fwd["acc"],
+                    "vtb_acc": vtb["acc"],
+                    "fwd_time": fwd["time"],
+                    "vtb_time": vtb["time"],
+                }
+                print(
+                    f"[{f}] Forward: {fwd['acc']:.4f} ({fwd['time']:.4f}秒) | Viterbi: {vtb['acc']:.4f} ({vtb['time']:.4f}秒)"
+                )
+        return
     if not os.path.exists("../data/" + file_name):
         print(f"File {file_name} not found.")
-        return
+        return None
     dataset_path = "../data/" + file_name
     data = load_dataset(dataset_path)
     outputs, PI_all, A_all, B_all, true_labels, k = get_hmm_params(data)
@@ -72,7 +114,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--method",
         type=str,
-        choices=["forward", "viterbi"],
+        choices=["forward", "viterbi", "compare"],
         default="forward",
         help="使用するアルゴリズムを指定 (forward または viterbi)",
     )
