@@ -41,10 +41,10 @@ def _forward_log(
     prob_PI = np.exp(log_PI)
     prob_B = np.exp(log_B)
     T = len(O)  # 観測系列の長さ
-    l = A.shape[0]  # 状態数
+    num_states = A.shape[0]  # 状態数
 
     # フォワード変数
-    alpha = np.zeros((T, l))
+    alpha = np.zeros((T, num_states))
 
     # t=0 での初期化: alpha[0, i] = π_i * b_i(O_0)
     alpha[0] = prob_PI * prob_B[:, O[0]]

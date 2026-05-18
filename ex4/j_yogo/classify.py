@@ -47,7 +47,6 @@ def analyze_dataset(file_name):
     Returns:
         None (結果はコンソール出力)
     """
-
     # データセットの読み込みとHMMパラメータの抽出
     dataset_path = "../data/" + file_name
     if not os.path.exists(dataset_path):
@@ -129,8 +128,7 @@ def analyze_dataset(file_name):
 
 def main():
     """
-    4つのすべてのデータセット（data1～data4）に対して
-    analyze_dataset を実行し、総合的な分析結果を出力.
+    4つのすべてのデータセット（data1～data4）に対してanalyze_dataset を実行し、総合的な分析結果を出力.
     """
     target_files = ["data1.pickle", "data2.pickle", "data3.pickle", "data4.pickle"]
     for f in target_files:

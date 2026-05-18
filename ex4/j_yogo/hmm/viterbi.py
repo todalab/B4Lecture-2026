@@ -38,13 +38,13 @@ def _viterbi_log(
             - 最尤状態系列: list[int], 最も確率の高い隠れ状態の系列
             - delta: shape (T, l), 各時刻・状態での最高確率
     """
-    l = log_A.shape[0]  # 状態数
+    num_states = log_A.shape[0]  # 状態数
     T = len(O)  # 観測系列の長さ
 
     # Viterbi 変数:
-    delta = np.zeros((T, l))
+    delta = np.zeros((T, num_states))
 
-    psi = np.zeros((T, l), dtype=int)
+    psi = np.zeros((T, num_states), dtype=int)
 
     # t=0 での初期化
     delta[0] = log_PI + log_B[:, O[0]]

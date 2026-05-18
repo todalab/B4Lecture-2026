@@ -1,5 +1,5 @@
 """
-HMM推論スクリプト
+HMM推論スクリプト.
 
 このモジュールは、複数のHMM（隠れマルコフモデル）を用いて、観測系列を最も尤度の高いモデルに分類する.
 """
@@ -97,7 +97,8 @@ def main(file_name, method, show_details=False):
                 }
                 # 精度と処理時間の比較結果を出力
                 print(
-                    f"[{f}] Forward: {fwd['acc']:.4f} ({fwd['time']:.4f}秒) | Viterbi: {vtb['acc']:.4f} ({vtb['time']:.4f}秒)"
+                    f"[{f}] Forward: {fwd['acc']:.4f} ({fwd['time']:.4f}秒) | "
+                    f"Viterbi: {vtb['acc']:.4f} ({vtb['time']:.4f}秒)"
                 )
         return
     if not os.path.exists("../data/" + file_name):
