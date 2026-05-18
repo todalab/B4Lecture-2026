@@ -8,7 +8,11 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.special import logsumexp
-from sklearn.metrics import ConfusionMatrixDisplay, accuracy_score, confusion_matrix
+from sklearn.metrics import (
+    ConfusionMatrixDisplay,
+    accuracy_score,
+    confusion_matrix,
+)
 
 plt.rcParams["font.family"] = "Noto Sans CJK JP"
 
