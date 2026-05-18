@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+"""課題4 HMM Forwardアルゴリズム Viterbiアルゴリズム."""
+
 import pickle
 import time
 
@@ -47,48 +50,8 @@ def forward_algorithm(
     return forward_prob
 
 
-# def backward_algorithm(
-#     PI: np.ndarray,
-#     A: np.ndarray,
-#     B: np.ndarray,
-#     output: np.ndarray,
-# ) -> np.ndarray:
-#     """backwardアルゴリズム.複数モデルについて同時に計算する.
-
-#     Args:
-#         PI (np.ndarray): 初期確率(K, L, 1)
-#         A (np.ndarray): 状態遷移確率行列(K, L, L)
-#         B (np.ndarray): (K, L, N)
-#         output (np.ndarray): (P, T)
-#             K: モデル数
-#             L: 状態数
-#             N: 出力記号数
-#             P: 出力系列数
-#             T: 系列長
-
-#     Returns:
-#         np.ndarray: 後ろ向き確率(K, L, T)
-#     """
-#     L = PI.shape[1]
-#     T = output.shape[1]
-#     K = PI.shape[0]
-#     backward_prob = np.zeros((K, L, T))
-
-#     # 初期化
-#     backward_prob[:, :, T - 1] = 1
-
-#     # 帰納
-#     for k in range(K):
-#         for t in range(T - 2, 0, -1):
-#             for l in range(L):
-#                 backward_prob[k, l, t] = np.sum(
-#                     A[k, l, :] * backward_prob[k, :, t + 1] * B[k, :, output[k, t + 1]]
-#                 )
-#     return backward_prob
-
-
 def calculate_forward_likelihood(forward_prob: np.ndarray) -> np.ndarray:
-    """前向き確率を用いたモデル全体での尤度の計算．
+    """前向き確率を用いたモデル全体での尤度の計算.
 
     Args:
         forward_prob (np.ndarray): 前向き確率(K, L, T)
@@ -122,7 +85,7 @@ def run_forward_algorithm_against_all_output_series(
         tuple[np.ndarray, float]: 前向き確率(K, L, T), 実行時間
     """
     start_time = time.time()
-    K, L, N = PI.shape[0], PI.shape[1], B.shape[2]
+    K, L = PI.shape[0], PI.shape[1]
     P, T = output.shape
     forward_prob = np.zeros((K, L, T))
     likelihoods = np.zeros((K, P))
@@ -174,9 +137,11 @@ def evaluate_model_selection_by_forward_algorithm(
                 confusion_matrix[i, j],
                 ha="center",
                 va="center",
-                color="white"
-                if confusion_matrix[i, j] > confusion_matrix.max() / 2
-                else "black",
+                color=(
+                    "white"
+                    if confusion_matrix[i, j] > confusion_matrix.max() / 2
+                    else "black"
+                ),
             )
     plt.savefig(f"output/data{data_number}_forward_confusion_matrix.png")
 
@@ -232,7 +197,7 @@ def viterbi_algorithm(
 
 
 def calculate_viterbi_log_likelihood(viterbi_prob: np.ndarray) -> np.ndarray:
-    """viterbiアルゴリズムの最終的な確率を用いて、モデル全体での対数尤度の計算．
+    """viterbiアルゴリズムの最終的な確率を用いて、モデル全体での対数尤度の計算.
 
     Args:
         viterbi_prob (np.ndarray): viterbiアルゴリズムの最終的な確率(K, L, T)
@@ -250,8 +215,7 @@ def calculate_viterbi_log_likelihood(viterbi_prob: np.ndarray) -> np.ndarray:
 def run_viterbi_algorithm_against_all_output_series(
     PI: np.ndarray, A: np.ndarray, B: np.ndarray, output: np.ndarray
 ) -> tuple[np.ndarray, np.ndarray, float]:
-    """全ての出力系列に対してviterbiアルゴリズムを実行する.
-    実行時間を計測する.
+    """全ての出力系列に対してviterbiアルゴリズムを実行する.実行時間を計測する.
 
     Args:
         PI (np.ndarray): 初期確率(K, L, 1)
@@ -268,7 +232,7 @@ def run_viterbi_algorithm_against_all_output_series(
         tuple[np.ndarray, float]: 最尤状態系列(K, P, T), 実行時間
     """
     start_time = time.time()
-    K, L, N = PI.shape[0], PI.shape[1], B.shape[2]
+    K = PI.shape[0]
     P, T = output.shape
     best_paths = np.zeros((K, P, T), dtype=int)
     likelihoods = np.zeros((K, P))
@@ -287,8 +251,7 @@ def evaluate_model_selection_by_viterbi_algorithm(
     time: float,
     data_number: int,
 ) -> None:
-    """ビタビアルゴリズムを用いたモデル選択の評価.各出力系列について、尤度が最大のモデルが正解モデルと一致しているかを評価し、混同行列と正解率を出力する.
-    また、最尤状態系列をテキストファイルに出力する.
+    """ビタビアルゴリズムを用いたモデル選択の評価.各出力系列について、尤度が最大のモデルが正解モデルと一致しているかを評価し、混同行列と正解率を出力する.また、最尤状態系列をテキストファイルに出力する.
 
     Args:
         best_paths (np.ndarray): 最尤状態系列(K, P, T)
@@ -329,9 +292,11 @@ def evaluate_model_selection_by_viterbi_algorithm(
                 confusion_matrix[i, j],
                 ha="center",
                 va="center",
-                color="white"
-                if confusion_matrix[i, j] > confusion_matrix.max() / 2
-                else "black",
+                color=(
+                    "white"
+                    if confusion_matrix[i, j] > confusion_matrix.max() / 2
+                    else "black"
+                ),
             )
     plt.savefig(f"output/data{data_number}_viterbi_confusion_matrix.png")
 
