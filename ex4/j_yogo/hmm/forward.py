@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import numpy as np
-from process_data import EPS, Array, Sequence, convert_to_log_params
+from hmm.process_data import EPS, Array, Sequence, convert_to_log_params
 
 
 def _forward_log(

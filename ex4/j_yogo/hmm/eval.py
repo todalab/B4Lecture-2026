@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import numpy as np
-from process_data import Array
+from hmm.process_data import Array
 
 
 def confusion_matrix(true_labels: Array, pred_labels: Array, k: int) -> Array:

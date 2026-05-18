@@ -3,8 +3,9 @@ from __future__ import annotations
 from typing import Literal
 
 import numpy as np
-from forward import _forward_log
-from process_data import Array, Sequence, convert_to_log_params
+from hmm.forward import _forward_log
+from hmm.process_data import Array, Sequence, convert_to_log_params
+from hmm.viterbi import _viterbi_log
 
 
 def score_sequences(
@@ -13,7 +14,7 @@ def score_sequences(
     A_all: Array,
     B_all: Array,
     method: Literal["forward", "viterbi"] = "forward",
-) -> tuple[Array, list | None]:
+) -> tuple[Array, Array, list | None]:
     k = PI_all.shape[0]
     p = len(outputs)
     scores = np.zeros((p, k))
@@ -28,7 +29,11 @@ def score_sequences(
             log_PI, log_A, log_B = log_params[m_idx]
             A = A_all[m_idx]
 
-            score, _ = _forward_log(log_PI, A, log_B, O)
+            if method == "forward":
+                score, _ = _forward_log(log_PI, A, log_B, O)
+            else:
+                score, path, _ = _viterbi_log(log_PI, log_A, log_B, O)
+                best_paths[seq_idx][m_idx] = path
 
             scores[seq_idx, m_idx] = score
 

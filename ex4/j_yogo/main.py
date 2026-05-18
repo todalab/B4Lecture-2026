@@ -1,4 +1,5 @@
 import argparse
+import os
 import time
 
 import matplotlib.pyplot as plt
@@ -8,13 +9,17 @@ from hmm.process_data import get_hmm_params, load_dataset
 from hmm.score import score_sequences
 
 
-def main(dataset_path, method):
+def main(file_name, method, show_all=False):
+    if not os.path.exists("../data/" + file_name):
+        print(f"File {file_name} not found.")
+        return
+    dataset_path = "../data/" + file_name
     data = load_dataset(dataset_path)
     outputs, PI_all, A_all, B_all, true_labels, k = get_hmm_params(data)
 
     start_time = time.perf_counter()
 
-    pred_labels, scores, _ = score_sequences(
+    pred_labels, scores, best_paths = score_sequences(
         outputs, PI_all, A_all, B_all, method=method
     )
 
@@ -28,8 +33,16 @@ def main(dataset_path, method):
     print("混同行列 :")
     print(cm)
 
+    if show_all:
+        print("\n=== 各系列の対数尤度 ===")
+        for i in range(len(outputs)):
+            print(f"系列 {i}:")
+            for m in range(k):
+                print(f"  モデル m{m} の対数尤度: {scores[i, m]:.4f}")
+            print(f"  => 推定モデル: m{pred_labels[i]}")
+
     fig, ax = plt.subplots(figsize=(8, 6))
-    plot_confusion_matrix(cm, title=f"Confusion Matrix ({method.capitalize()})", ax=ax)
+    plot_confusion_matrix(cm, title="Confusion Matrix (Forward)", ax=ax)
     plt.show()
 
 
@@ -38,16 +51,20 @@ if __name__ == "__main__":
     parser.add_argument(
         "--file",
         type=str,
-        default="../data/data1.pickle",
+        default="data1.pickle",
         help="読み込むデータセットのファイルパスを指定",
+    )
+    parser.add_argument(
+        "--show_all",
+        action="store_true",
+        help="すべての系列に対する対数尤度を出力",
     )
     parser.add_argument(
         "--method",
         type=str,
         choices=["forward", "viterbi"],
         default="forward",
-        help="推論に使用するアルゴリズムを指定 ",
+        help="使用するアルゴリズムを指定 (forward または viterbi)",
     )
     args = parser.parse_args()
-
-    main(args.file, args.method)
+    main(args.file, method=args.method, show_all=args.show_all)
