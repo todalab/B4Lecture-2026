@@ -3,15 +3,13 @@
 
 import pickle
 
-from main import (
-    calculate_forward_likelihood,
-    evaluate_model_selection_by_forward_algorithm,
-    evaluate_model_selection_by_viterbi_algorithm,
-    forward_algorithm,
-    run_forward_algorithm_against_all_output_series,
-    run_viterbi_algorithm_against_all_output_series,
-    viterbi_algorithm,
-)
+from main import calculate_forward_likelihood
+from main import evaluate_model_selection_by_forward_algorithm
+from main import evaluate_model_selection_by_viterbi_algorithm
+from main import forward_algorithm
+from main import run_forward_algorithm_against_all_output_series
+from main import run_viterbi_algorithm_against_all_output_series
+from main import viterbi_algorithm
 
 
 def test_forward_algorithm():
