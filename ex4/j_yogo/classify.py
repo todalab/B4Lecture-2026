@@ -8,6 +8,7 @@ HMM モデルトポロジー分類・分析スクリプト.
 import os
 
 import numpy as np
+
 from hmm.process_data import get_hmm_params, load_dataset
 from hmm.score import score_sequences
 
@@ -28,6 +29,11 @@ def is_left_to_right(A, eps=1e-5):
         bool: Left-to-Right構造なら True、そうでなければ False
     """
     return np.all(np.tril(A, k=-1) <= eps)
+
+
+def is_ergodic(A, eps=1e-5):
+    """A行列のすべての成分がepsより大きいか（完全結合であるか）判定."""
+    return np.all(A > eps)
 
 
 def analyze_dataset(file_name):
@@ -59,15 +65,20 @@ def analyze_dataset(file_name):
     # モデルのトポロジー分類: Left-to-Right vs Ergodic
     ltr_models = []
     erg_models = []
+    other_models = []
     for m in range(k):
         if is_left_to_right(A_all[m]):
             ltr_models.append(m)
-        else:
+        elif is_ergodic(A_all[m]):
             erg_models.append(m)
+        else:
+            other_models.append(m)
 
     print("\n=========================================")
     print(f"データセット: {file_name}")
-    print(f"Left-to-Right: {len(ltr_models)}個, Ergodic: {len(erg_models)}個")
+    print(
+        f"Left-to-Right: {len(ltr_models)}個, Ergodic: {len(erg_models)}個, その他: {len(other_models)}個"
+    )
 
     # Forward と Viterbi の両方で推論を実行
     for method in ["forward", "viterbi"]:
