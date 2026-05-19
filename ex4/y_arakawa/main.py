@@ -42,10 +42,10 @@ def forward_algorithm(
     # 帰納
     for k in range(K):
         for t in range(1, T):
-            for l in range(L):
-                forward_prob[k, l, t] = (
-                    np.sum(np.dot(forward_prob[k, :, t - 1], A[k, :, l]))
-                    * B[k, l, output[t]]
+            for state in range(L):
+                forward_prob[k, state, t] = (
+                    np.sum(np.dot(forward_prob[k, :, t - 1], A[k, :, state]))
+                    * B[k, state, output[t]]
                 )
     return forward_prob
 
@@ -181,10 +181,12 @@ def viterbi_algorithm(
     # 帰納
     for k in range(K):
         for t in range(1, T):
-            for l in range(L):
-                prob = viterbi_prob[k, :, t - 1] * A[k, :, l] * B[k, l, output[t]]
-                backpointer[k, l, t] = np.argmax(prob)
-                viterbi_prob[k, l, t] = np.max(prob)
+            for state in range(L):
+                prob = (
+                    viterbi_prob[k, :, t - 1] * A[k, :, state] * B[k, state, output[t]]
+                )
+                backpointer[k, state, t] = np.argmax(prob)
+                viterbi_prob[k, state, t] = np.max(prob)
 
     # 最も尤もらしい状態系列の復元
     best_path = np.zeros((K, T), dtype=int)

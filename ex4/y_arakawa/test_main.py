@@ -1,17 +1,19 @@
+# -*- coding: utf-8 -*-
+"""課題4 mainl.pyのテストコード."""
+
 import pickle
 
-from main import (
-    calculate_forward_likelihood,
-    evaluate_model_selection_by_forward_algorithm,
-    evaluate_model_selection_by_viterbi_algorithm,
-    forward_algorithm,
-    run_forward_algorithm_against_all_output_series,
-    run_viterbi_algorithm_against_all_output_series,
-    viterbi_algorithm,
-)
+from main import (calculate_forward_likelihood,
+                  evaluate_model_selection_by_forward_algorithm,
+                  evaluate_model_selection_by_viterbi_algorithm,
+                  forward_algorithm,
+                  run_forward_algorithm_against_all_output_series,
+                  run_viterbi_algorithm_against_all_output_series,
+                  viterbi_algorithm)
 
 
 def test_forward_algorithm():
+    """forward_algorithm関数のテスト."""
     data1 = pickle.load(open("../data/data1.pickle", "rb"))
     forward_prob = forward_algorithm(
         data1["models"]["PI"],
@@ -23,6 +25,7 @@ def test_forward_algorithm():
 
 
 def test_calculate_likelihood():
+    """calculate_forward_likelihood関数のテスト."""
     data1 = pickle.load(open("../data/data1.pickle", "rb"))
     forward_prob = forward_algorithm(
         data1["models"]["PI"],
@@ -35,6 +38,7 @@ def test_calculate_likelihood():
 
 
 def test_run_forward_algorithm_against_all_output_series():
+    """run_forward_algorithm_against_all_output_series関数のテスト."""
     data1 = pickle.load(open("../data/data1.pickle", "rb"))
     likelihoods, time = run_forward_algorithm_against_all_output_series(
         data1["models"]["PI"],
@@ -47,6 +51,7 @@ def test_run_forward_algorithm_against_all_output_series():
 
 
 def test_evaluate_model_selection_by_forward_algorithm():
+    """evaluate_model_selection_by_forward_algorithm関数のテスト."""
     data1 = pickle.load(open("../data/data1.pickle", "rb"))
     likelihoods, time = run_forward_algorithm_against_all_output_series(
         data1["models"]["PI"],
@@ -59,18 +64,8 @@ def test_evaluate_model_selection_by_forward_algorithm():
     )
 
 
-# def test_backward_algorithm():
-#     data1 = pickle.load(open("../data/data1.pickle", "rb"))
-#     backward_prob = backward_algorithm(
-#         data1["models"]["PI"],
-#         data1["models"]["A"],
-#         data1["models"]["B"],
-#         data1["output"],
-#     )
-#     print(backward_prob)
-
-
 def test_viterbi_algorithm():
+    """viterbi_algorithm関数のテスト."""
     data1 = pickle.load(open("../data/data1.pickle", "rb"))
     best_paths = viterbi_algorithm(
         data1["models"]["PI"],
@@ -82,6 +77,7 @@ def test_viterbi_algorithm():
 
 
 def test_run_viterbi_algorithm_against_all_output_series():
+    """run_viterbi_algorithm_against_all_output_series関数のテスト."""
     data1 = pickle.load(open("../data/data1.pickle", "rb"))
     best_paths, likelihoods, time = run_viterbi_algorithm_against_all_output_series(
         data1["models"]["PI"],
@@ -95,6 +91,7 @@ def test_run_viterbi_algorithm_against_all_output_series():
 
 
 def test_evaluate_model_selection_by_viterbi_algorithm():
+    """evaluate_model_selection_by_viterbi_algorithm関数のテスト."""
     data1 = pickle.load(open("../data/data1.pickle", "rb"))
     best_paths, likelihoods, time = run_viterbi_algorithm_against_all_output_series(
         data1["models"]["PI"],
