@@ -45,7 +45,8 @@ def accuracy(cm: Array) -> float:
     Returns:
         float: 分類精度（0.0～1.0）
     """
-    return float(np.trace(cm) / cm.sum())
+    cm_sum = cm.sum()
+    return float(np.trace(cm) / cm_sum) if cm_sum != 0 else 0.0
 
 
 def evaluate(
