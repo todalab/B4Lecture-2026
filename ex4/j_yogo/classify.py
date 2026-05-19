@@ -32,7 +32,21 @@ def is_left_to_right(A, eps=1e-5):
 
 
 def is_ergodic(A, eps=1e-5):
-    """A行列のすべての成分がepsより大きいか（完全結合であるか）判定."""
+    """
+    A行列のすべての成分がepsより大きいか（完全結合であるか）判定.
+
+    Ergodicモデルでは、すべての状態から他のすべての状態への遷移が可能であるため、
+    遷移行列のすべての成分がepsより大きい.
+
+    Args:
+        A (np.ndarray): 状態遷移確率行列
+                       A[i, j] = 状態iから状態jへの遷移確率
+        eps (float): 下三角成分の閾値.この値以下なら0とみなす.
+                    デフォルト: 1e-5
+
+    Returns:
+        bool: Ergodic構造なら True、そうでなければ False
+    """
     return np.all(A > eps)
 
 
