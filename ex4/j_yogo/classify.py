@@ -5,10 +5,10 @@ HMM モデルトポロジー分類・分析スクリプト.
 各グループの推論性能や最尤状態系列パターンを分析.
 """
 
+# isort: skip_file
+# ruff: noqa: I
 import os
-
 import numpy as np
-
 from hmm.process_data import get_hmm_params, load_dataset
 from hmm.score import score_sequences
 
