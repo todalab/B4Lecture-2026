@@ -40,13 +40,19 @@ def forward_algorithm(
         forward_prob[k, :, 0] = PI[k].reshape(L) * B[k, :, output[0]]
 
     # 帰納
+    # for k in range(K):
+    #     for t in range(1, T):
+    #         for state in range(L):
+    #             forward_prob[k, state, t] = (
+    #                 np.sum(np.dot(forward_prob[k, :, t - 1], A[k, :, state]))
+    #                 * B[k, state, output[t]]
+    #             )
     for k in range(K):
         for t in range(1, T):
-            for state in range(L):
-                forward_prob[k, state, t] = (
-                    np.sum(np.dot(forward_prob[k, :, t - 1], A[k, :, state]))
-                    * B[k, state, output[t]]
-                )
+            forward_prob[k, :, t] = (
+                forward_prob[k, :, t - 1] @ A[k, :, :] * B[k, :, output[t]]
+            )
+
     return forward_prob
 
 
