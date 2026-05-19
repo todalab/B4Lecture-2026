@@ -20,6 +20,9 @@
 - 学習データに「異常音あり」のラベルを含めてモデルを学習する  
 - 異常音を検知できるシステム（分類器）を構築する  
 
+> [!WARNING]
+> - 正常・異常のラベルが均等でないので，愚直な2値分類では高い性能は出ないかもしれません．
+>  - 一般的な異常検知の枠組みではない（異常データも一定存在する）ため，異常検知でググったものをそのまま実装しても高い性能は出ないかもしれません．
 ---
 
 ## 3. データセット
@@ -52,21 +55,30 @@ data/
 │   ├── model_03_anomaly_00000000.wav
 │   ├── model_03_normal_00000000.wav
 │   └── ...
-│
 ├── eval/   # ラベルなし評価データ
 │   ├── model_03_XXXX.wav
 │   └── ...
 │
-└── eval-groundtruth-labeled/   # 6/1 公開予定（eval 用ラベル）
-    ├── model_03_anomaly_00000001.wav
-    ├── model_03_normal_00000001.wav
-    └── ...
+├── eval-groundtruth-labeled/   # 6/1 公開予定 ラベルあり評価データ
+│   ├── model_03_anomaly_00000001.wav
+│   ├── model_03_normal_00000001.wav
+│   └── ...
+├── eval_mapping.csv # 6/1 公開予定 評価データラベルの対応表  
+└── gen_data.py   # 6/1 公開予定 データセット作成手続き
 ```
 
 - dev データ：学習用
 - eval データ：評価対象（ラベルなし）
 - eval-groundtruth-labeled データ：6/1 公開予定、eval の正解ラベル
   - **→ これ公開後は 手法の変更禁止とする**
+
+以下のコマンドを実行することで，コンペのデータが得られる．
+```
+$ mkdir data
+$ cd $_
+$ curl -L -o dev-eval.zip 'https://drive.usercontent.google.com/download?id=1Yx-hVTwPq_biQCnduV5Rv-Sw1jQLOy9_&export=download&confirm=t'
+$ unzip dev-eval.zip
+```
 
 ---
 
