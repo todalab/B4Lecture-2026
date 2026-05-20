@@ -85,4 +85,3 @@ jobs:
       - uses: isort/isort-action@v1
         with:
           sort-paths: "${{ join(needs.get-files-changed.outputs.files, ' ') }}"
-          profile: "black"
