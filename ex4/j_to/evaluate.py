@@ -4,21 +4,9 @@ import os
 import pickle
 from time import perf_counter
 
-from matplotlib.pyplot import (
-    colorbar,
-    figure,
-    imshow,
-    savefig,
-    subplot,
-    suptitle,
-    text,
-    tight_layout,
-    title,
-    xlabel,
-    xticks,
-    ylabel,
-    yticks,
-)
+from matplotlib.pyplot import (colorbar, figure, imshow, savefig, subplot,
+                               suptitle, text, tight_layout, title, xlabel,
+                               xticks, ylabel, yticks)
 from sklearn.metrics import confusion_matrix
 
 from hmm import forward, viterbi
