@@ -1,0 +1,9 @@
+# Generated datasets and local caches
+data/
+answer/data/
+answer/tfds_data/
+answer/audio/
+
+# Python cache files
+__pycache__/
+*.py[cod]
