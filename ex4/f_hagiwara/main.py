@@ -23,7 +23,13 @@ DATA4_PATH = Path("../data/data4.pickle")
 
 
 def parse_args():
-    """Parse command-line arguments for the program."""
+    """Parse command-line arguments for the program.
+
+    Returns:
+        argparse.Namespace: Parsed arguments with the following fields:
+            - output_dir (Path): Path to the output directory.
+            - input_paths (list[Path]): List of paths to input files.
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--output_dir",
@@ -43,50 +49,58 @@ def parse_args():
 
 
 def forward(datapath, output_dir):
-    """Run codes about Forward algorithm."""
+    """Run codes about Forward algorithm.
+
+    Args:
+        datapath (Path): Path of dataset containing HMM.
+        output_dir (Path): Directory where the confusion matrix image is saved.
+
+    Returns:
+        float: Computation time of the Forward algorithm.
+    """
     data = pickle.load(open(datapath, "rb"))
 
-    PI = data["models"]["PI"]
-    A = data["models"]["A"]
-    B = data["models"]["B"]
-    outputs = data["output"]
-    answer_models = data["answer_models"]
+    PI = data["models"]["PI"]  # 初期確率行列 [k, l, 1]
+    A = data["models"]["A"]  # 状態遷移確率行列 [k, l, l]
+    B = data["models"]["B"]  # 出力確率行列 [k, l, n]
+    outputs = data["output"]  # 出力系列 [p, t]
+    answer_models = data["answer_models"]  # 出力系列を生成したモデル（正解ラベル）[p,]
     pred_models = []
 
-    k, l, _ = PI.shape
-    _, _, n = B.shape
-    p, t = outputs.shape
+    k, l, _ = PI.shape  # k:モデル数 l:状態数
+    _, _, n = B.shape  # n:出力記号数
+    p, t = outputs.shape  # p:出力系列数 t:系列長
     print(f"k={k},l={l},n={n},p={p},t={t}")
 
-    start = time.time()
-    logA = np.log(A)
-    logB = np.log(B)
-    logPI = np.log(PI)
+    start = time.time()  # アルゴリズムの開始時刻
+    logA = np.log(A)  # 状態遷移確率行列の対数を取ったもの
+    logB = np.log(B)  # 出力確率行列の対数を取ったもの
+    logPI = np.log(PI)  # 初期確率行列の対数を取ったもの
 
     for o in outputs:
-        log_alpha = np.zeros((k, t, l))
+        log_alpha = np.zeros((k, t, l))  # 前向き変数の値を格納する行列
 
         # 初期化
         log_alpha[:, 0, :] = logPI[:, :, 0] + logB[:, :, o[0]]
 
         # 帰納
         # 各モデル各時刻ごとに順に計算を行う
-        for times in range(1, t):
+        for counts in range(1, t):
             # 同一時刻における各状態に対する演算を一気に行う
             log_sum = (
-                log_alpha[:, times - 1, :, np.newaxis] + logA
+                log_alpha[:, counts - 1, :, np.newaxis] + logA
             )  # newaxisにより(l,) → (l, 1) にして broadcast
-            log_alpha[:, times] = logsumexp(log_sum, axis=1) + logB[:, :, o[times]]
+            log_alpha[:, counts] = logsumexp(log_sum, axis=1) + logB[:, :, o[counts]]
 
         # 対数尤度
         log_likelihood = logsumexp(log_alpha[:, t - 1, :], axis=1)
 
         pred_models.append(np.argmax(log_likelihood))
 
-    end = time.time()
+    end = time.time()  # アルゴリズムの終了時刻
 
-    acc = accuracy_score(answer_models, pred_models)
-    cm = confusion_matrix(answer_models, pred_models)
+    accuracy = accuracy_score(answer_models, pred_models)  # 正解率
+    cm = confusion_matrix(answer_models, pred_models)  # 混同行列
     disp = ConfusionMatrixDisplay(
         confusion_matrix=cm, display_labels=[f"m{i}" for i in range(k)]
     )
@@ -95,7 +109,7 @@ def forward(datapath, output_dir):
     plt.ylabel("Answer models")
 
     # データファイル名をタイトルに使う
-    title = f"{datapath.stem}:混合行列(Forward,Acc={acc:.4f})"
+    title = f"{datapath.stem}:混合行列(Forward,Acc={accuracy:.4f})"
     plt.title(title)
 
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -106,7 +120,15 @@ def forward(datapath, output_dir):
 
 
 def viterbi(datapath, output_dir):
-    """Run codes about Viterbi algorithm."""
+    """Run codes about Viterbi algorithm.
+
+    Args:
+        datapath (Path): Path of dataset containing HMM.
+        output_dir (Path): Directory where the confusion matrix image is saved.
+
+    Returns:
+        float: Computation time of the Viterbi algorithm.
+    """
     data = pickle.load(open(datapath, "rb"))
 
     PI = data["models"]["PI"]
@@ -134,12 +156,12 @@ def viterbi(datapath, output_dir):
         delta_list = np.zeros((k, t, l))
         psi_list = np.zeros((k, t, l))
         delta_list[:, 0, :] = logPI[:, :, 0] + logB[:, :, o[0]]
-        for times in range(1, t):
+        for counts in range(1, t):
             temp_list = (
-                delta_list[:, times - 1, :, np.newaxis] + logA
+                delta_list[:, counts - 1, :, np.newaxis] + logA
             )  # newaxisにより(l,) → (l, 1) にして broadcast
-            psi_list[:, times, :] = np.argmax(temp_list, axis=1)
-            delta_list[:, times, :] = np.max(temp_list, axis=1) + logB[:, :, o[times]]
+            psi_list[:, counts, :] = np.argmax(temp_list, axis=1)
+            delta_list[:, counts, :] = np.max(temp_list, axis=1) + logB[:, :, o[counts]]
 
         # 対数尤度
         log_likelihood = np.max(delta_list[:, t - 1, :], axis=1)
@@ -163,7 +185,7 @@ def viterbi(datapath, output_dir):
     for i in range(5):
         print(pred_routes[i])
 
-    acc = accuracy_score(answer_models, pred_models)
+    accuracy = accuracy_score(answer_models, pred_models)
     cm = confusion_matrix(answer_models, pred_models)
     disp = ConfusionMatrixDisplay(
         confusion_matrix=cm, display_labels=[f"m{i}" for i in range(k)]
@@ -172,7 +194,7 @@ def viterbi(datapath, output_dir):
     plt.xlabel("Predicted models")
     plt.ylabel("Answer models")
     # データファイル名をタイトルに使う
-    title = f"{datapath.stem}:混合行列(Viterbi,Acc={acc:.4f})"
+    title = f"{datapath.stem}:混合行列(Viterbi,Acc={accuracy:.4f})"
     plt.title(title)
     output_dir.mkdir(parents=True, exist_ok=True)
     plt.savefig(output_dir / f"{datapath.stem}_cmvit.png")
