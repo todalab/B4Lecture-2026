@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """課題4 HMM Forwardアルゴリズム Viterbiアルゴリズム."""
 
+import os
 import pickle
 import time
 
@@ -47,11 +48,16 @@ def forward_algorithm(
     #                 np.sum(np.dot(forward_prob[k, :, t - 1], A[k, :, state]))
     #                 * B[k, state, output[t]]
     #             )
-    for k in range(K):
-        for t in range(1, T):
-            forward_prob[k, :, t] = (
-                forward_prob[k, :, t - 1] @ A[k, :, :] * B[k, :, output[t]]
-            )
+    # for k in range(K):
+    #     for t in range(1, T):
+    #         forward_prob[k, :, t] = (
+    #             forward_prob[k, :, t - 1] @ A[k, :, :] * B[k, :, output[t]]
+    #         )
+    # einsumを使ってみる
+    for t in range(1, T):
+        forward_prob[:, :, t] = (
+            np.einsum("ki, kij->kj", forward_prob[:, :, t - 1], A) * B[:, :, output[t]]
+        )
 
     return forward_prob
 
@@ -129,6 +135,9 @@ def evaluate_model_selection_by_forward_algorithm(
     im = ax.imshow(
         confusion_matrix, cmap="Blues"
     )  # imshowでデータを画像として、特にヒートマップのように表示
+    # クラスごとの分類なので軸を整数にする
+    ax.set_xticks(np.arange(K))
+    ax.set_yticks(np.arange(K))
     ax.set_xlabel("Predicted Model")
     ax.set_ylabel("True Model")
     ax.set_title(
@@ -185,21 +194,34 @@ def viterbi_algorithm(
         viterbi_prob[k, :, 0] = PI[k].reshape(L) * B[k, :, output[0]]
 
     # 帰納
-    for k in range(K):
-        for t in range(1, T):
-            for state in range(L):
-                prob = (
-                    viterbi_prob[k, :, t - 1] * A[k, :, state] * B[k, state, output[t]]
-                )
-                backpointer[k, state, t] = np.argmax(prob)
-                viterbi_prob[k, state, t] = np.max(prob)
+    # for k in range(K):
+    #     for t in range(1, T):
+    #         for state in range(L):
+    #             prob = (
+    #                 viterbi_prob[k, :, t - 1] * A[k, :, state] * B[k, state, output[t]]
+    #             )
+    #             backpointer[k, state, t] = np.argmax(prob)
+    #             viterbi_prob[k, state, t] = np.max(prob)
+    # [:, None]は縦ベクトル化（形を整える）
+    for t in range(1, T):
+        prob = (
+            viterbi_prob[:, :, t - 1][:, :, None] * A * B[:, :, output[t]][:, None, :]
+        )
+        backpointer[:, :, t] = np.argmax(prob, axis=1)
+        viterbi_prob[:, :, t] = np.max(prob, axis=1)
 
     # 最も尤もらしい状態系列の復元
     best_path = np.zeros((K, T), dtype=int)
-    for k in range(K):
-        best_path[k, T - 1] = np.argmax(viterbi_prob[k, :, T - 1])
-        for t in range(T - 2, -1, -1):
-            best_path[k, t] = backpointer[k, best_path[k, t + 1], t + 1]
+    # for k in range(K):
+    #     best_path[k, T - 1] = np.argmax(viterbi_prob[k, :, T - 1])
+    #     for t in range(T - 2, -1, -1):
+    #         best_path[k, t] = backpointer[k, best_path[k, t + 1], t + 1]
+    # ループをtだけにしてみる
+    # 全てのkについてまとめて最大値のインデックスを取得
+    best_path[:, T - 1] = np.argmax(viterbi_prob[:, :, T - 1], axis=1)
+    for t in range(T - 2, -1, -1):
+        # 全てのkについてまとめてbackpointerから最尤状態を取得
+        best_path[:, t] = backpointer[np.arange(K), best_path[:, t + 1], t + 1]
 
     return best_path, viterbi_prob
 
@@ -286,6 +308,9 @@ def evaluate_model_selection_by_viterbi_algorithm(
     im = ax.imshow(
         confusion_matrix, cmap="Blues"
     )  # imshowでデータを画像として、特にヒートマップのように表示
+    # クラスごとの分類なので軸を整数にする
+    ax.set_xticks(np.arange(K))
+    ax.set_yticks(np.arange(K))
     ax.set_xlabel("Predicted Model")
     ax.set_ylabel("True Model")
     ax.set_title(
@@ -324,6 +349,9 @@ def main():
     data2 = pickle.load(open("../data/data2.pickle", "rb"))
     data3 = pickle.load(open("../data/data3.pickle", "rb"))
     data4 = pickle.load(open("../data/data4.pickle", "rb"))
+
+    # 画像出力フォルダを作成
+    os.makedirs("output", exist_ok=True)
 
     all_data = [data1, data2, data3, data4]
     for i, data in enumerate(all_data, start=1):
