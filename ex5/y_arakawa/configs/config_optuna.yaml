@@ -1,0 +1,43 @@
+defaults:
+  - override hydra/sweeper: optuna
+  - override hydra/sweeper/sampler: tpe
+
+model:
+  hidden_channels: 16
+  latent_channels: 4
+
+dataset:
+  train_list: data/train.txt
+  val_list: data/val.txt
+  test_list: data/test.txt
+  sample_rate: 8000
+  n_fft: 512
+  hop_length: 160
+  n_mels: 40
+  target_frames: 40
+
+train:
+  seed: 42
+  epochs: 10
+  learning_rate: 0.001
+  batch_size: 32
+  epoch_per_val: 1
+  epoch_per_ckpt: 3
+  log_dir: tensorboard_logs
+  ckpt_dir: ckpts
+
+hydra:
+  mode: MULTIRUN
+  job:
+    chdir: True
+  sweeper:
+    sampler:
+      seed: 42
+    direction: minimize
+    n_trials: 10
+    params:
+      model.hidden_channels: int(interval(8, 32))
+      train.learning_rate: tag(log, interval(1e-4, 1e-2))
+  sweep:
+    dir: logs/mel_ae_optuna2
+    subdir: hidden${model.hidden_channels}_lr${round:${train.learning_rate}, 4}

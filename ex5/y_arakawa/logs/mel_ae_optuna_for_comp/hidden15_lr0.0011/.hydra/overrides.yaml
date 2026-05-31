@@ -1,0 +1,2 @@
+- model.hidden_channels=15
+- train.learning_rate=0.0011207606211860567
