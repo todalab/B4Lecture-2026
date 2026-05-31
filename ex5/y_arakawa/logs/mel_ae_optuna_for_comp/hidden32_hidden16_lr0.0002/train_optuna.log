@@ -1,40 +1,40 @@
-[2026-05-31 11:40:27,575][__main__][INFO] - Epoch 000 | loss 157.4610 | val 102.2960
-[2026-05-31 11:40:32,009][__main__][INFO] - Epoch 001 | loss 69.4215 | val 40.3708
-[2026-05-31 11:40:36,374][__main__][INFO] - Epoch 002 | loss 30.1511 | val 23.0786
-[2026-05-31 11:40:40,743][__main__][INFO] - Epoch 003 | loss 19.7607 | val 16.7937
-[2026-05-31 11:40:45,179][__main__][INFO] - Epoch 004 | loss 14.7441 | val 12.8113
-[2026-05-31 11:40:49,542][__main__][INFO] - Epoch 005 | loss 11.8566 | val 10.8797
-[2026-05-31 11:40:53,925][__main__][INFO] - Epoch 006 | loss 10.3859 | val 9.8148
-[2026-05-31 11:40:58,288][__main__][INFO] - Epoch 007 | loss 9.5634 | val 9.2346
-[2026-05-31 11:41:02,653][__main__][INFO] - Epoch 008 | loss 9.1421 | val 8.9394
-[2026-05-31 11:41:06,999][__main__][INFO] - Epoch 009 | loss 8.9125 | val 8.7498
-[2026-05-31 11:41:11,465][__main__][INFO] - Epoch 000 | loss 157.4636 | val 102.2993
-[2026-05-31 11:41:15,813][__main__][INFO] - Epoch 001 | loss 69.4230 | val 40.3681
-[2026-05-31 11:41:20,137][__main__][INFO] - Epoch 002 | loss 30.1549 | val 23.0867
-[2026-05-31 11:41:24,545][__main__][INFO] - Epoch 003 | loss 19.7684 | val 16.8014
-[2026-05-31 11:41:29,014][__main__][INFO] - Epoch 004 | loss 14.7527 | val 12.8130
-[2026-05-31 11:41:33,462][__main__][INFO] - Epoch 005 | loss 11.8595 | val 10.8829
-[2026-05-31 11:41:37,919][__main__][INFO] - Epoch 006 | loss 10.3889 | val 9.8184
-[2026-05-31 11:41:42,327][__main__][INFO] - Epoch 007 | loss 9.5706 | val 9.2430
-[2026-05-31 11:41:46,729][__main__][INFO] - Epoch 008 | loss 9.1481 | val 8.9433
-[2026-05-31 11:41:51,206][__main__][INFO] - Epoch 009 | loss 8.9156 | val 8.7528
-[2026-06-01 04:45:50,589][__main__][INFO] - Epoch 000 | loss 0.0185 | val 0.0092
-[2026-06-01 04:45:53,437][__main__][INFO] - Epoch 001 | loss 0.0047 | val 0.0036
-[2026-06-01 04:45:56,252][__main__][INFO] - Epoch 002 | loss 0.0032 | val 0.0030
-[2026-06-01 04:45:59,009][__main__][INFO] - Epoch 003 | loss 0.0028 | val 0.0027
-[2026-06-01 04:46:01,952][__main__][INFO] - Epoch 004 | loss 0.0027 | val 0.0026
-[2026-06-01 04:46:04,702][__main__][INFO] - Epoch 005 | loss 0.0026 | val 0.0025
-[2026-06-01 04:46:07,459][__main__][INFO] - Epoch 006 | loss 0.0024 | val 0.0024
-[2026-06-01 04:46:10,222][__main__][INFO] - Epoch 007 | loss 0.0023 | val 0.0023
-[2026-06-01 04:46:12,987][__main__][INFO] - Epoch 008 | loss 0.0022 | val 0.0022
-[2026-06-01 04:46:15,744][__main__][INFO] - Epoch 009 | loss 0.0022 | val 0.0021
-[2026-06-01 04:46:22,070][__main__][INFO] - Epoch 000 | loss 0.0185 | val 0.0092
-[2026-06-01 04:46:24,909][__main__][INFO] - Epoch 001 | loss 0.0047 | val 0.0036
-[2026-06-01 04:46:27,744][__main__][INFO] - Epoch 002 | loss 0.0032 | val 0.0030
-[2026-06-01 04:46:30,576][__main__][INFO] - Epoch 003 | loss 0.0028 | val 0.0027
-[2026-06-01 04:46:33,408][__main__][INFO] - Epoch 004 | loss 0.0027 | val 0.0026
-[2026-06-01 04:46:36,240][__main__][INFO] - Epoch 005 | loss 0.0026 | val 0.0025
-[2026-06-01 04:46:39,079][__main__][INFO] - Epoch 006 | loss 0.0024 | val 0.0024
-[2026-06-01 04:46:41,902][__main__][INFO] - Epoch 007 | loss 0.0023 | val 0.0023
-[2026-06-01 04:46:44,648][__main__][INFO] - Epoch 008 | loss 0.0022 | val 0.0022
-[2026-06-01 04:46:47,393][__main__][INFO] - Epoch 009 | loss 0.0022 | val 0.0021
+[2026-06-01 05:56:09,085][__main__][INFO] - Epoch 000 | train_total 0.0112 | train_normal 0.0025 | train_anomaly 0.0175 | val_total 0.0111
+[2026-06-01 05:56:10,759][__main__][INFO] - Epoch 001 | train_total 0.0109 | train_normal 0.0018 | train_anomaly 0.0182 | val_total 0.0108
+[2026-06-01 05:56:12,413][__main__][INFO] - Epoch 002 | train_total 0.0107 | train_normal 0.0014 | train_anomaly 0.0186 | val_total 0.0106
+[2026-06-01 05:56:14,077][__main__][INFO] - Epoch 003 | train_total 0.0106 | train_normal 0.0011 | train_anomaly 0.0189 | val_total 0.0105
+[2026-06-01 05:56:15,882][__main__][INFO] - Epoch 004 | train_total 0.0105 | train_normal 0.0010 | train_anomaly 0.0190 | val_total 0.0104
+[2026-06-01 05:56:17,532][__main__][INFO] - Epoch 005 | train_total 0.0104 | train_normal 0.0008 | train_anomaly 0.0192 | val_total 0.0104
+[2026-06-01 05:56:19,195][__main__][INFO] - Epoch 006 | train_total 0.0104 | train_normal 0.0008 | train_anomaly 0.0192 | val_total 0.0104
+[2026-06-01 05:56:20,849][__main__][INFO] - Epoch 007 | train_total 0.0104 | train_normal 0.0007 | train_anomaly 0.0193 | val_total 0.0103
+[2026-06-01 05:56:22,493][__main__][INFO] - Epoch 008 | train_total 0.0103 | train_normal 0.0007 | train_anomaly 0.0193 | val_total 0.0103
+[2026-06-01 05:56:24,138][__main__][INFO] - Epoch 009 | train_total 0.0103 | train_normal 0.0006 | train_anomaly 0.0194 | val_total 0.0103
+[2026-06-01 05:56:27,161][__main__][INFO] - Epoch 000 | train_total 0.0112 | train_normal 0.0025 | train_anomaly 0.0175 | val_total 0.0111
+[2026-06-01 05:56:28,809][__main__][INFO] - Epoch 001 | train_total 0.0109 | train_normal 0.0018 | train_anomaly 0.0182 | val_total 0.0108
+[2026-06-01 05:56:30,454][__main__][INFO] - Epoch 002 | train_total 0.0107 | train_normal 0.0014 | train_anomaly 0.0186 | val_total 0.0106
+[2026-06-01 05:56:32,100][__main__][INFO] - Epoch 003 | train_total 0.0106 | train_normal 0.0011 | train_anomaly 0.0189 | val_total 0.0105
+[2026-06-01 05:56:33,754][__main__][INFO] - Epoch 004 | train_total 0.0105 | train_normal 0.0010 | train_anomaly 0.0190 | val_total 0.0105
+[2026-06-01 05:56:35,409][__main__][INFO] - Epoch 005 | train_total 0.0104 | train_normal 0.0008 | train_anomaly 0.0192 | val_total 0.0104
+[2026-06-01 05:56:37,053][__main__][INFO] - Epoch 006 | train_total 0.0104 | train_normal 0.0008 | train_anomaly 0.0192 | val_total 0.0104
+[2026-06-01 05:56:38,716][__main__][INFO] - Epoch 007 | train_total 0.0104 | train_normal 0.0007 | train_anomaly 0.0193 | val_total 0.0103
+[2026-06-01 05:56:40,514][__main__][INFO] - Epoch 008 | train_total 0.0103 | train_normal 0.0007 | train_anomaly 0.0193 | val_total 0.0103
+[2026-06-01 05:56:42,161][__main__][INFO] - Epoch 009 | train_total 0.0103 | train_normal 0.0006 | train_anomaly 0.0194 | val_total 0.0103
+[2026-06-01 06:30:27,268][__main__][INFO] - Epoch 000 | train_total 0.0112 | train_normal 0.0023 | train_anomaly 0.0177 | val_total 0.0111
+[2026-06-01 06:30:29,008][__main__][INFO] - Epoch 001 | train_total 0.0108 | train_normal 0.0017 | train_anomaly 0.0183 | val_total 0.0108
+[2026-06-01 06:30:30,733][__main__][INFO] - Epoch 002 | train_total 0.0106 | train_normal 0.0013 | train_anomaly 0.0187 | val_total 0.0106
+[2026-06-01 06:30:32,472][__main__][INFO] - Epoch 003 | train_total 0.0105 | train_normal 0.0010 | train_anomaly 0.0190 | val_total 0.0105
+[2026-06-01 06:30:34,307][__main__][INFO] - Epoch 004 | train_total 0.0104 | train_normal 0.0008 | train_anomaly 0.0192 | val_total 0.0104
+[2026-06-01 06:30:35,990][__main__][INFO] - Epoch 005 | train_total 0.0104 | train_normal 0.0007 | train_anomaly 0.0193 | val_total 0.0103
+[2026-06-01 06:30:37,672][__main__][INFO] - Epoch 006 | train_total 0.0103 | train_normal 0.0006 | train_anomaly 0.0194 | val_total 0.0103
+[2026-06-01 06:30:39,356][__main__][INFO] - Epoch 007 | train_total 0.0103 | train_normal 0.0005 | train_anomaly 0.0195 | val_total 0.0103
+[2026-06-01 06:30:41,042][__main__][INFO] - Epoch 008 | train_total 0.0102 | train_normal 0.0005 | train_anomaly 0.0195 | val_total 0.0102
+[2026-06-01 06:30:42,803][__main__][INFO] - Epoch 009 | train_total 0.0102 | train_normal 0.0004 | train_anomaly 0.0195 | val_total 0.0103
+[2026-06-01 06:30:45,918][__main__][INFO] - Epoch 000 | train_total 0.0112 | train_normal 0.0023 | train_anomaly 0.0177 | val_total 0.0111
+[2026-06-01 06:30:47,722][__main__][INFO] - Epoch 001 | train_total 0.0108 | train_normal 0.0017 | train_anomaly 0.0183 | val_total 0.0108
+[2026-06-01 06:30:49,528][__main__][INFO] - Epoch 002 | train_total 0.0106 | train_normal 0.0013 | train_anomaly 0.0187 | val_total 0.0105
+[2026-06-01 06:30:51,330][__main__][INFO] - Epoch 003 | train_total 0.0105 | train_normal 0.0010 | train_anomaly 0.0190 | val_total 0.0105
+[2026-06-01 06:30:53,135][__main__][INFO] - Epoch 004 | train_total 0.0104 | train_normal 0.0008 | train_anomaly 0.0192 | val_total 0.0104
+[2026-06-01 06:30:54,939][__main__][INFO] - Epoch 005 | train_total 0.0104 | train_normal 0.0007 | train_anomaly 0.0193 | val_total 0.0103
+[2026-06-01 06:30:56,627][__main__][INFO] - Epoch 006 | train_total 0.0103 | train_normal 0.0006 | train_anomaly 0.0194 | val_total 0.0103
+[2026-06-01 06:30:58,359][__main__][INFO] - Epoch 007 | train_total 0.0103 | train_normal 0.0005 | train_anomaly 0.0195 | val_total 0.0103
+[2026-06-01 06:31:00,246][__main__][INFO] - Epoch 008 | train_total 0.0102 | train_normal 0.0005 | train_anomaly 0.0195 | val_total 0.0102
+[2026-06-01 06:31:01,971][__main__][INFO] - Epoch 009 | train_total 0.0102 | train_normal 0.0004 | train_anomaly 0.0195 | val_total 0.0103

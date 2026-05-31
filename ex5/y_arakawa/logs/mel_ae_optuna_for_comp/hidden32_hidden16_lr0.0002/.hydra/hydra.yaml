@@ -29,7 +29,7 @@ hydra:
     params:
       model.hidden_channels1: int(32)
       model.hidden_channels2: int(16)
-      train.learning_rate: tag(log, interval(1e-4, 1e-2))
+      train.learning_rate: tag(log, interval(1e-4, 5e-3))
     custom_search_space: null
   help:
     app_name: ${hydra.job.name}
@@ -132,13 +132,13 @@ hydra:
   overrides:
     hydra: []
     task:
-    - train.learning_rate=0.00020511104188433984
+    - train.learning_rate=0.00018408992080552527
     - model.hidden_channels1=32
     - model.hidden_channels2=16
   job:
     name: train_optuna
     chdir: true
-    override_dirname: model.hidden_channels1=32,model.hidden_channels2=16,train.learning_rate=0.00020511104188433984
+    override_dirname: model.hidden_channels1=32,model.hidden_channels2=16,train.learning_rate=0.00018408992080552527
     id: '5'
     num: 5
     config_name: config_optuna_for_comp

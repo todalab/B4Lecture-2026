@@ -85,6 +85,10 @@ class Encoder2(nn.Module):
             nn.Conv2d(in_channels=1, out_channels=32, kernel_size=4, stride=2, padding=1),
             nn.BatchNorm2d(32),
             nn.ReLU(),
+            # 入力: (32, 32, 20) -> 出力: (32, 32, 20)
+            nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm2d(32),
+            nn.ReLU(),
             # 入力: (32, 32, 20) -> 出力: (64, 16, 10)
             nn.Conv2d(in_channels=32, out_channels=64, kernel_size=4, stride=2, padding=1),
             nn.BatchNorm2d(64),
@@ -132,6 +136,10 @@ class Decoder2(nn.Module):
             nn.ReLU(),
             # 入力: (64, 16, 10) -> 出力: (32, 32, 20)
             nn.ConvTranspose2d(in_channels=64, out_channels=32, kernel_size=4, stride=2, padding=1),
+            nn.BatchNorm2d(32),
+            nn.ReLU(),
+            # 入力: (32, 32, 20) -> 出力: (32, 32, 20)
+            nn.ConvTranspose2d(in_channels=32, out_channels=32, kernel_size=3, stride=1, padding=1),
             nn.BatchNorm2d(32),
             nn.ReLU(),
             # 入力: (32, 32, 20) -> 出力: (1, 64, 40)
@@ -223,4 +231,4 @@ class Autoencoder(nn.Module):
         """
         z = self.encode(x)
         recon = self.decode(z)
-        return recon
+        return torch.clamp(x + 0.1 * recon, 0.0, 1.0)

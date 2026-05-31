@@ -1,5 +1,6 @@
 """Data loading utilities for mel-spectrogram autoencoder training."""
 
+from collections.abc import Sequence
 from pathlib import Path
 
 import librosa
@@ -29,7 +30,7 @@ class MelSpectrogramDataset(Dataset):
 
     def __init__(
         self,
-        file_list_path: str | Path,
+        file_list_path: str | Path | Sequence[str | Path],
         data_dir_path: str | Path | None,
         sample_rate: int,
         n_fft: int,
@@ -72,7 +73,9 @@ class MelSpectrogramDataset(Dataset):
         return mel
 
     @staticmethod
-    def _load_file_list(file_list_path: str | Path, data_dir_path: str | Path | None) -> list[Path]:
+    def _load_file_list(
+        file_list_path: str | Path | Sequence[str | Path], data_dir_path: str | Path | None
+    ) -> list[Path]:
         """Load a text file containing one audio path per line.
 
         Parameters
@@ -89,19 +92,25 @@ class MelSpectrogramDataset(Dataset):
             Resolved audio paths (relative paths are resolved to the list file directory).
         """
         files: list[Path] = []
-        list_path = Path(file_list_path)
-        base_dir = Path(data_dir_path) if data_dir_path is not None else list_path.parent
-        with open(list_path, "r") as f:
-            content = f.read()
-            for line in content.splitlines():
-                path = Path(line)
-                files.append(path if path.is_absolute() else (base_dir / path))
+        if isinstance(file_list_path, (str, Path)):
+            list_path = Path(file_list_path)
+            base_dir = Path(data_dir_path) if data_dir_path is not None else list_path.parent
+            with open(list_path, "r") as f:
+                content = f.read()
+                for line in content.splitlines():
+                    path = Path(line)
+                    files.append(path if path.is_absolute() else (base_dir / path))
+        else:
+            base_dir = Path(data_dir_path) if data_dir_path is not None else None
+            for file_item in file_list_path:
+                path = Path(file_item)
+                files.append(path if path.is_absolute() or base_dir is None else (base_dir / path))
         return files
 
     @classmethod
     def compute_db_min_max(
         cls,
-        file_list_path: str | Path,
+        file_list_path: str | Path | Sequence[str | Path],
         data_dir_path: str | Path | None,
         sample_rate: int,
         n_fft: int,
@@ -194,7 +203,7 @@ class MelSpectrogramDataset(Dataset):
 
 
 def create_dataloader(
-    file_list_path: str | Path,
+    file_list_path: str | Path | Sequence[str | Path],
     data_dir_path: str | Path | None = None,
     batch_size: int = 32,
     shuffle: bool = True,

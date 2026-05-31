@@ -21,14 +21,17 @@ dataset:
 
 dataset_normal_and_anomaly:
   # folderのパスはプログラムを実行した場所をルートとする（ex5/y_arakawa）
-  train_list: src/dataloaders/normal_and_anomaly_data_train
-  eval_list: src/dataloaders/normal_and_anomaly_data_eval
+  data_dir: ../data/dev
+  train_list: src/dataloaders/normal_and_anomaly_data_train.txt
+  eval_list: src/dataloaders/normal_and_anomaly_data_eval.txt
   # パラメータのパス
 
 train:
   seed: 42
   epochs: 10
   learning_rate: 0.001
+  margin: 0.02
+  lambda: 0.5
   batch_size: 128 # 一度に処理するデータの数.VRAMの容量によって変更する
   epoch_per_val: 1
   epoch_per_ckpt: 3
@@ -47,7 +50,7 @@ hydra:
     params:
       model.hidden_channels1: int(32) # optunaというフレームワークを使うことで指定した範囲から最適なパラメータを探索してくれる
       model.hidden_channels2: int(16) # optunaというフレームワークを使うことで指定した範囲から最適なパラメータを探索してくれる
-      train.learning_rate: tag(log, interval(1e-4, 1e-2))
+      train.learning_rate: tag(log, interval(1e-4, 5e-3))
   sweep:
     dir: logs/mel_ae_optuna_for_comp
     subdir: hidden${model.hidden_channels1}_hidden${model.hidden_channels2}_lr${round:${train.learning_rate}, 4}

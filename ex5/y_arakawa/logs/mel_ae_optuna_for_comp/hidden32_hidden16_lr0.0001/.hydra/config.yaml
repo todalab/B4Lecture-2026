@@ -13,12 +13,15 @@ dataset:
   n_mels: 64
   target_frames: 40
 dataset_normal_and_anomaly:
-  train_list: src/dataloaders/normal_and_anomaly_data_train
-  eval_list: src/dataloaders/normal_and_anomaly_data_eval
+  data_dir: ../data/dev
+  train_list: src/dataloaders/normal_and_anomaly_data_train.txt
+  eval_list: src/dataloaders/normal_and_anomaly_data_eval.txt
 train:
   seed: 42
   epochs: 10
-  learning_rate: 0.00013066739238053285
+  learning_rate: 0.00012551115172973836
+  margin: 0.02
+  lambda: 0.5
   batch_size: 128
   epoch_per_val: 1
   epoch_per_ckpt: 3

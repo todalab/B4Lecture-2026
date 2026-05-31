@@ -138,6 +138,8 @@ def main() -> None:
     plt.close(figure)
 
     recon_waveform = _mel_to_wav(recon_mel_cpu, cfg)
+    input_restored_waveform = _mel_to_wav(input_mel_cpu, cfg)
+    sf.write(OUTPUT_DIR / "input_restored.wav", input_restored_waveform, cfg["dataset"]["sample_rate"])
     sf.write(OUTPUT_DIR / "reconstructed.wav", recon_waveform, cfg["dataset"]["sample_rate"])
 
     print(f"input wav: {WAV_FILE_PATH}")

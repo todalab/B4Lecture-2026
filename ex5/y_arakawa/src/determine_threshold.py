@@ -98,10 +98,10 @@ def determine_threshold(config_path: str, train_file_list: str, eval_file_list: 
     y_true = np.array([])
     # モデルの出力と正解ラベルの誤差を格納するリスト
     y_score = np.array([])
-    # 誤差を求める
+    # 誤差を求める（評価データで閾値を決める）
     model.eval()  # DropoutやBatchNormを評価モードにする
     with torch.no_grad():  # 勾配を計算しない
-        for mels, label, _ in train_loader:  # バッチごとに返ってくる
+        for mels, label, _ in val_loader:  # 評価データを使う
             mels = mels.to(device)
             recon = model(mels)
             loss = loss_fn(recon, mels)
@@ -140,12 +140,15 @@ def determine_threshold(config_path: str, train_file_list: str, eval_file_list: 
 
     # 7. Plot ROC curve
     plots.draw_ROC_curve(fpr=fpr, tpr=tpr, opt_idx=idx_opt_from_pr, roc_auc_value=roc_auc_value)
+    plt.savefig(Path(log_dir) / Path("ROC_curve.png"))
 
     # 8. Draw Confusion Matrix
     plots.draw_confusion_matrix(Score_data=y_score, Label_data=y_true, threshold_opt=threshold_opt)
+    plt.savefig(Path(log_dir) / Path("confusion_matrix.png"))
 
     # 09. Draw Histogram with Threshold
     plots.draw_histogram(threshold_opt=threshold_opt)
+    plt.savefig(Path(log_dir) / Path("data_distribution_with_threshold.png"))
 
     plt.show()
 
