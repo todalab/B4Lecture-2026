@@ -10,6 +10,7 @@ import torch
 import torchaudio
 import yaml
 
+from dataloaders.dataloader import MelSpectrogramDataset, denormalize_mel_db, normalize_mel_db
 from models.autoencoder import Autoencoder
 from utils.visualize import plot_recon_pair
 
@@ -84,6 +85,21 @@ def _wav_to_mel(wav_path: Path, cfg: dict, device: torch.device) -> torch.Tensor
     return mel
 
 
+def _load_normalization_stats(cfg: dict) -> tuple[float, float]:
+    data_dir = cfg["dataset"].get("data_dir")
+    data_dir_path = Path(data_dir) if data_dir is not None else None
+    return MelSpectrogramDataset.compute_db_min_max(
+        Path(cfg["dataset"]["train_list"]),
+        data_dir_path,
+        sample_rate=cfg["dataset"]["sample_rate"],
+        n_fft=cfg["dataset"]["n_fft"],
+        hop_length=cfg["dataset"]["hop_length"],
+        n_mels=cfg["dataset"]["n_mels"],
+        target_frames=cfg["dataset"]["target_frames"],
+        device=torch.device("cpu"),
+    )
+
+
 def _mel_to_wav(mel_db: torch.Tensor, cfg: dict) -> np.ndarray:
     """Invert a dB-scaled mel spectrogram back to waveform with Griffin-Lim."""
     mel_power = librosa.db_to_power(mel_db.cpu().numpy())
@@ -107,18 +123,21 @@ def main() -> None:
     model = _load_model(cfg, OPTUNA_RESULTS_PATH, device)
     model.eval()
 
-    input_mel = _wav_to_mel(WAV_FILE_PATH, cfg, device)
+    db_min, db_max = _load_normalization_stats(cfg)
+
+    input_mel_db = _wav_to_mel(WAV_FILE_PATH, cfg, device)
+    input_mel = normalize_mel_db(input_mel_db, db_min, db_max).unsqueeze(0)
     with torch.no_grad():
         recon_mel = model(input_mel)
 
-    input_mel_cpu = input_mel.squeeze(0).cpu()
-    recon_mel_cpu = recon_mel.squeeze(0).cpu()
+    input_mel_cpu = denormalize_mel_db(input_mel.squeeze(0), db_min, db_max).squeeze(0).cpu()
+    recon_mel_cpu = denormalize_mel_db(recon_mel.squeeze(0), db_min, db_max).squeeze(0).cpu()
 
     figure = plot_recon_pair(input_mel_cpu, recon_mel_cpu)
     figure.savefig(OUTPUT_DIR / "mel_reconstruction.png", dpi=200, bbox_inches="tight")
     plt.close(figure)
 
-    recon_waveform = _mel_to_wav(recon_mel_cpu.squeeze(0), cfg)
+    recon_waveform = _mel_to_wav(recon_mel_cpu, cfg)
     sf.write(OUTPUT_DIR / "reconstructed.wav", recon_waveform, cfg["dataset"]["sample_rate"])
 
     print(f"input wav: {WAV_FILE_PATH}")

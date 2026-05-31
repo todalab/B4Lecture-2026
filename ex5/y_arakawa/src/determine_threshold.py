@@ -9,7 +9,7 @@ from matplotlib import pyplot as plt
 from sklearn.metrics import precision_recall_curve, roc_auc_score, roc_curve
 from torch import nn
 
-from dataloaders.dataloader import create_dataloader
+from dataloaders.dataloader import MelSpectrogramDataset, create_dataloader
 from make_plot import drawplots
 from models.autoencoder import Autoencoder
 
@@ -33,9 +33,23 @@ def determine_threshold(config_path: str, train_file_list: str, eval_file_list: 
     hidden_channels2 = 16  # data["best_params"]["model.hidden_channels"]
     learning_rate = data["best_params"]["train.learning_rate"]
 
+    train_list_path = Path(train_file_list)
+    eval_list_path = Path(eval_file_list)
+    data_dir_path = Path(data_dir)
+    db_min, db_max = MelSpectrogramDataset.compute_db_min_max(
+        train_list_path,
+        data_dir_path,
+        sample_rate=cfg["dataset"]["sample_rate"],
+        n_fft=cfg["dataset"]["n_fft"],
+        hop_length=cfg["dataset"]["hop_length"],
+        n_mels=cfg["dataset"]["n_mels"],
+        target_frames=cfg["dataset"]["target_frames"],
+        device=torch.device("cpu"),
+    )
+
     train_loader = create_dataloader(
-        Path(train_file_list),
-        Path(data_dir),
+        train_list_path,
+        data_dir_path,
         batch_size=1,
         shuffle=True,
         sample_rate=cfg["dataset"]["sample_rate"],
@@ -45,10 +59,12 @@ def determine_threshold(config_path: str, train_file_list: str, eval_file_list: 
         target_frames=cfg["dataset"]["target_frames"],
         seed=int(cfg["train"]["seed"]),
         device=device,
+        db_min=db_min,
+        db_max=db_max,
     )
     val_loader = create_dataloader(
-        Path(eval_file_list),
-        Path(data_dir),
+        eval_list_path,
+        data_dir_path,
         batch_size=1,  # 評価は1サンプルずつ行う
         shuffle=True,
         sample_rate=cfg["dataset"]["sample_rate"],
@@ -58,6 +74,8 @@ def determine_threshold(config_path: str, train_file_list: str, eval_file_list: 
         target_frames=cfg["dataset"]["target_frames"],
         seed=int(cfg["train"]["seed"]),
         device=device,
+        db_min=db_min,
+        db_max=db_max,
     )
 
     model = Autoencoder(

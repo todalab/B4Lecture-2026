@@ -11,18 +11,33 @@ from torch.utils.data import DataLoader, Dataset
 from utils.seed import make_seed_worker, make_torch_generator
 
 
+def normalize_mel_db(mel_db: torch.Tensor, db_min: float, db_max: float) -> torch.Tensor:
+    """Normalize dB-scaled mel spectrograms to the 0-1 range."""
+    db_range = db_max - db_min
+    if db_range <= 0:
+        return torch.zeros_like(mel_db)
+    return torch.clamp((mel_db - db_min) / db_range, 0.0, 1.0)
+
+
+def denormalize_mel_db(mel_norm: torch.Tensor, db_min: float, db_max: float) -> torch.Tensor:
+    """Restore 0-1 normalized mel spectrograms back to dB scale."""
+    return mel_norm * (db_max - db_min) + db_min
+
+
 class MelSpectrogramDataset(Dataset):
     """Dataset for mel spectrogram reconstruction."""
 
     def __init__(
         self,
         file_list_path: str | Path,
-        data_dir_path: str | Path,
+        data_dir_path: str | Path | None,
         sample_rate: int,
         n_fft: int,
         hop_length: int,
         n_mels: int,
         target_frames: int,
+        db_min: float | None = None,
+        db_max: float | None = None,
         device: torch.device | None = None,
     ) -> None:
         if device is None:
@@ -32,6 +47,8 @@ class MelSpectrogramDataset(Dataset):
         self.files = self._load_file_list(file_list_path, data_dir_path)
         self.sample_rate = sample_rate
         self.target_frames = target_frames
+        self.db_min = db_min
+        self.db_max = db_max
         self.mel = torchaudio.transforms.MelSpectrogram(
             sample_rate=sample_rate,
             n_fft=n_fft,
@@ -44,16 +61,18 @@ class MelSpectrogramDataset(Dataset):
     def __len__(self) -> int:
         return len(self.files)
 
-    # def _get_file_paths(self, folder_path: str | Path) -> list[Path]:
-    #     file_paths: list[Path] = []
-    #     path = Path(folder_path)
-    #     for root, _, files in os.walk(path):
-    #         for file in files:
-    #             file = Path(file)
-    #             file_paths.append(file if file.is_absolute() else (Path(root) / file))
-    #     return file_paths
+    @staticmethod
+    def _pad_or_trim_mel_tensor(mel: torch.Tensor, target_frames: int) -> torch.Tensor:
+        frames = mel.shape[-1]
+        if frames > target_frames:
+            return mel[..., :target_frames]
+        if frames < target_frames:
+            pad_amount = target_frames - frames
+            return F.pad(mel, (0, pad_amount))
+        return mel
 
-    def _load_file_list(self, file_list_path: str | Path, data_dir_path: str | Path) -> list[Path]:
+    @staticmethod
+    def _load_file_list(file_list_path: str | Path, data_dir_path: str | Path | None) -> list[Path]:
         """Load a text file containing one audio path per line.
 
         Parameters
@@ -71,13 +90,53 @@ class MelSpectrogramDataset(Dataset):
         """
         files: list[Path] = []
         list_path = Path(file_list_path)
-        base_dir = Path(data_dir_path)
+        base_dir = Path(data_dir_path) if data_dir_path is not None else list_path.parent
         with open(list_path, "r") as f:
             content = f.read()
             for line in content.splitlines():
                 path = Path(line)
                 files.append(path if path.is_absolute() else (base_dir / path))
         return files
+
+    @classmethod
+    def compute_db_min_max(
+        cls,
+        file_list_path: str | Path,
+        data_dir_path: str | Path | None,
+        sample_rate: int,
+        n_fft: int,
+        hop_length: int,
+        n_mels: int,
+        target_frames: int,
+        device: torch.device | None = None,
+    ) -> tuple[float, float]:
+        """Compute the global dB min/max over a file list."""
+        compute_device = device if device is not None else torch.device("cpu")
+        files = cls._load_file_list(file_list_path, data_dir_path)
+        if not files:
+            raise ValueError("file_list_path does not contain any audio files")
+
+        mel_transform = torchaudio.transforms.MelSpectrogram(
+            sample_rate=sample_rate,
+            n_fft=n_fft,
+            hop_length=hop_length,
+            n_mels=n_mels,
+            power=2.0,
+        ).to(compute_device)
+        db_transform = torchaudio.transforms.AmplitudeToDB(stype="power").to(compute_device)
+
+        min_db = float("inf")
+        max_db = float("-inf")
+        with torch.no_grad():
+            for file_path in files:
+                waveform_np, _ = librosa.load(file_path, sr=sample_rate)
+                waveform = torch.from_numpy(waveform_np).unsqueeze(0).to(compute_device)
+                mel_db = db_transform(mel_transform(waveform))
+                mel_db = cls._pad_or_trim_mel_tensor(mel_db, target_frames)
+                min_db = min(min_db, float(mel_db.amin().item()))
+                max_db = max(max_db, float(mel_db.amax().item()))
+
+        return min_db, max_db
 
     def _pad_or_trim_mel(self, mel: torch.Tensor) -> torch.Tensor:
         """メルスペクトログラムを既定のサイズに調節する.
@@ -92,13 +151,17 @@ class MelSpectrogramDataset(Dataset):
         mel : torch.Tensor
             Mel spectrogram padded or trimmed to target_frames.
         """
-        frames = mel.shape[-1]
-        if frames > self.target_frames:
-            return mel[..., : self.target_frames]
-        if frames < self.target_frames:
-            pad_amount = self.target_frames - frames
-            return F.pad(mel, (0, pad_amount))
-        return mel
+        return self._pad_or_trim_mel_tensor(mel, self.target_frames)
+
+    def _normalize(self, mel_db: torch.Tensor) -> torch.Tensor:
+        if self.db_min is None or self.db_max is None:
+            raise ValueError("db_min and db_max must be provided for normalization")
+        return normalize_mel_db(mel_db, self.db_min, self.db_max)
+
+    def denormalize(self, mel_norm: torch.Tensor) -> torch.Tensor:
+        if self.db_min is None or self.db_max is None:
+            raise ValueError("db_min and db_max must be provided for normalization")
+        return denormalize_mel_db(mel_norm, self.db_min, self.db_max)
 
     def __getitem__(self, index: int) -> tuple[torch.Tensor, int, str]:
         """Load one audio file, convert to mel, and return metadata.
@@ -124,14 +187,15 @@ class MelSpectrogramDataset(Dataset):
         waveform = torch.from_numpy(waveform_np).unsqueeze(0).to(self.device)  # 先頭に新たな次元を追加する
 
         # メルスペクトログラムを計算
-        mel = self.mel(waveform)  # torchの関数を使っている
-        mel = self.to_db(mel)  # デシベル単位に変換
-        return self._pad_or_trim_mel(mel), is_normal, model
+        mel_db = self.mel(waveform)  # torchの関数を使っている
+        mel_db = self.to_db(mel_db)  # デシベル単位に変換
+        mel_db = self._pad_or_trim_mel(mel_db)
+        return self._normalize(mel_db), is_normal, model
 
 
 def create_dataloader(
     file_list_path: str | Path,
-    data_dir_path: str | Path,
+    data_dir_path: str | Path | None = None,
     batch_size: int = 32,
     shuffle: bool = True,
     sample_rate: int = 8000,
@@ -140,6 +204,8 @@ def create_dataloader(
     n_mels: int = 40,
     target_frames: int = 40,
     seed: int = 42,
+    db_min: float | None = None,
+    db_max: float | None = None,
     device: torch.device | None = None,
 ) -> DataLoader:
     """Build a DataLoader for mel-spectrogram reconstruction.
@@ -175,6 +241,18 @@ def create_dataloader(
     if device is None:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+    if db_min is None or db_max is None:
+        db_min, db_max = MelSpectrogramDataset.compute_db_min_max(
+            file_list_path,
+            data_dir_path,
+            sample_rate=sample_rate,
+            n_fft=n_fft,
+            hop_length=hop_length,
+            n_mels=n_mels,
+            target_frames=target_frames,
+            device=torch.device("cpu"),
+        )
+
     generator = make_torch_generator(seed)
     seed_worker = make_seed_worker(seed)
     dataset = MelSpectrogramDataset(
@@ -185,6 +263,8 @@ def create_dataloader(
         hop_length=hop_length,
         n_mels=n_mels,
         target_frames=target_frames,
+        db_min=db_min,
+        db_max=db_max,
         device=device,
     )
     return DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, generator=generator, worker_init_fn=seed_worker)

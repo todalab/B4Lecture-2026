@@ -13,7 +13,7 @@ from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from tqdm.auto import tqdm
 
-from dataloaders.dataloader import create_dataloader
+from dataloaders.dataloader import MelSpectrogramDataset, create_dataloader
 from models.autoencoder import Autoencoder
 from utils.seed import set_seed
 from utils.visualize import plot_recon_pair
@@ -66,9 +66,25 @@ def train(cfg: DictConfig) -> None:
     # Set random seed for reproducibility
     set_seed(int(cfg.train.seed))
 
+    train_list_path = Path(to_absolute_path(str(cfg.dataset.train_list)))
+    val_list_path = Path(to_absolute_path(str(cfg.dataset.val_list)))
+    data_dir = cfg.dataset.get("data_dir")
+    data_dir_path = Path(to_absolute_path(str(data_dir))) if data_dir is not None else None
+    db_min, db_max = MelSpectrogramDataset.compute_db_min_max(
+        train_list_path,
+        data_dir_path,
+        sample_rate=cfg.dataset.sample_rate,
+        n_fft=cfg.dataset.n_fft,
+        hop_length=cfg.dataset.hop_length,
+        n_mels=cfg.dataset.n_mels,
+        target_frames=cfg.dataset.target_frames,
+        device=torch.device("cpu"),
+    )
+
     # Create data loaders for training and validation datasets
     train_loader = create_dataloader(
-        Path(to_absolute_path(str(cfg.dataset.train_list))),
+        train_list_path,
+        data_dir_path,
         batch_size=cfg.train.batch_size,
         shuffle=True,
         sample_rate=cfg.dataset.sample_rate,
@@ -77,9 +93,12 @@ def train(cfg: DictConfig) -> None:
         n_mels=cfg.dataset.n_mels,
         target_frames=cfg.dataset.target_frames,
         seed=int(cfg.train.seed),
+        db_min=db_min,
+        db_max=db_max,
     )
     val_loader = create_dataloader(
-        Path(to_absolute_path(str(cfg.dataset.val_list))),
+        val_list_path,
+        data_dir_path,
         batch_size=cfg.train.batch_size,
         shuffle=False,
         sample_rate=cfg.dataset.sample_rate,
@@ -88,6 +107,8 @@ def train(cfg: DictConfig) -> None:
         n_mels=cfg.dataset.n_mels,
         target_frames=cfg.dataset.target_frames,
         seed=int(cfg.train.seed),
+        db_min=db_min,
+        db_max=db_max,
     )
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

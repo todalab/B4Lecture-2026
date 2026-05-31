@@ -7,10 +7,10 @@ dataset:
   val_list: src/dataloaders/eval.txt
   test_list: src/dataloaders/test.txt
   data_dir: ../data/dev/abundant
-  sample_rate: 8000
-  n_fft: 512
-  hop_length: 160
-  n_mels: 40
+  sample_rate: 16000
+  n_fft: 1024
+  hop_length: 512
+  n_mels: 64
   target_frames: 40
 dataset_normal_and_anomaly:
   train_list: src/dataloaders/normal_and_anomaly_data_train
