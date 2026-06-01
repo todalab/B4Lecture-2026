@@ -22,6 +22,7 @@ EPS = 1e-6
 LEARING_RATE = 1e-4
 OUTPUT_MODEL = "fan_cnn.pth"
 SEED = 42
+THRESHOLD = 0.1
 
 
 def build_mel(sample_rate: int) -> MelSpectrogram:
@@ -157,12 +158,11 @@ def predict(file: str):
     model.load_state_dict(torch.load(OUTPUT_MODEL, map_location=DEVICE))
     model.eval()
     with torch.no_grad():
-        prob = torch.sigmoid(
+        probablity = torch.sigmoid(
             model(log_spectrogramme.unsqueeze(0).to(DEVICE)).squeeze(1)
         ).item()
 
-    print(f"{Path(file).name}: {prob:.3f} {'anomaly' if prob > 0.5 else 'normal'}")
-    return prob
+    return probablity
 
 
 if __name__ == "__main__":
