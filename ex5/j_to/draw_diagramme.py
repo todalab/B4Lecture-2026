@@ -1,14 +1,18 @@
+"""Helper to draw spectrogramme."""
+
 from pathlib import Path
-from main import build_mel, log_mel
+
 import torchaudio
-from matplotlib.pyplot import close, title, imshow, savefig
+from matplotlib.pyplot import close, imshow, savefig, title
+
+from mel import log_mel
 
 Path("fig").mkdir(parents=True, exist_ok=True)
 
 files = [
-    'data/dev/model_03_anomaly_00000162.wav',
-    'data/dev/model_03_anomaly_00000290.wav',
-    'data/dev/model_04_anomaly_00000324.wav',
+    "data/dev/model_03_anomaly_00000162.wav",
+    "data/dev/model_03_anomaly_00000290.wav",
+    "data/dev/model_04_anomaly_00000324.wav",
 ]
 
 for file in files:
@@ -20,5 +24,5 @@ for file in files:
 
     title(file)
     imshow(img, origin="lower", aspect="auto")
-    savefig('fig/' + path.name.replace("wav", "png"))
+    savefig("fig/" + path.name.replace("wav", "png"))
     close()
