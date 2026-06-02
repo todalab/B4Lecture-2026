@@ -1,6 +1,6 @@
-"""
-infer.py
-eval/ の全ファイルに異常スコアを付けて CSV 出力する.
+"""infer.py.
+
+Eval/ の全ファイルに異常スコアを付けて CSV 出力する.
 """
 
 import csv

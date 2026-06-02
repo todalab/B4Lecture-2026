@@ -1,7 +1,8 @@
-"""
-audio_processor.py
+"""audio_processor.py.
+
 音声ファイル → log-Mel スペクトログラム Tensor に変換する.
 外部依存: librosa, numpy, torch
+torch.nn は一切使わない.
 """
 
 from typing import Optional
@@ -17,8 +18,7 @@ def load_and_segment(
     segment_sec: float,
     hop_length_sec: Optional[float] = None,
 ) -> list:
-    """
-    wav ファイルを読み込み、固定長セグメントに分割する.
+    """音声ファイルを読み込み、固定長セグメントに分割する.
 
     Args:
         path: wav ファイルパス
@@ -28,6 +28,7 @@ def load_and_segment(
 
     Returns:
         list of (segment_samples,) ndarray
+
     """
     wave, _ = librosa.load(path, sr=sr, mono=True)
     seg_len = int(sr * segment_sec)
@@ -55,11 +56,11 @@ def wave_to_logmel(
     hop_length: int,
     n_mels: int,
 ) -> np.ndarray:
-    """
-    波形 → log-Mel スペクトログラム
+    """波形 → log-Mel スペクトログラム.
 
     Returns:
         (n_mels, T) float32 ndarray
+
     """
     mel = librosa.feature.melspectrogram(
         y=wave,
@@ -74,7 +75,7 @@ def wave_to_logmel(
 
 
 def normalize(log_mel: np.ndarray) -> np.ndarray:
-    """per-clip 正規化（mean=0, std=1）"""
+    """クリップ単位の正規化（mean=0, std=1）を適用する."""
     mu = log_mel.mean()
     sigma = log_mel.std() + 1e-8
     return (log_mel - mu) / sigma
@@ -88,11 +89,11 @@ def process_file(
     n_mels: int,
     segment_sec: float,
 ) -> list:
-    """
-    wav ファイル 1 本 → Tensor リスト
+    """音声ファイル 1 本を処理して Tensor リストを返す.
 
     Returns:
         list of Tensor (1, n_mels, T)  ← 1ch 画像として扱う
+
     """
     segments = load_and_segment(path, sr, segment_sec)
     tensors = []

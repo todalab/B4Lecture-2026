@@ -1,7 +1,7 @@
-"""
-dataset.py
-  学習 : abundant/model_XX_normal のみ
-  評価 : dev/model_XX_normal + dev/model_XX_anomaly
+"""dataset.py.
+
+学習 : abundant/model_XX_normal のみ
+評価 : dev/model_XX_normal + dev/model_XX_anomaly
 """
 
 import re
@@ -19,12 +19,13 @@ def extract_model_id(filename: str) -> str:
 
 
 class NormalDataset(Dataset):
-    """
-    学習用：abundant/ の正常音のみ.
+    """学習用：abundant/ の正常音のみ.
+
     model_id でフィルタリング.
     """
 
     def __init__(self, data_cfg, model_id: str):
+        """データ設定と model_id を受け取り初期化する."""
         self.cfg = data_cfg
         self.model_id = model_id
         self.tensors = self._load_all()
@@ -38,7 +39,7 @@ class NormalDataset(Dataset):
         return tensors
 
     def _process(self, path: str) -> list:
-        """wav ファイルを Tensor リストに変換する."""
+        """音声ファイルを Tensor リストに変換する."""
         return process_file(
             path,
             sr=self.cfg.sr,
@@ -53,17 +54,18 @@ class NormalDataset(Dataset):
         return len(self.tensors)
 
     def __getitem__(self, idx: int) -> torch.Tensor:
-        """idx 番目の Tensor (1, n_mels, T) を返す."""
+        """指定インデックスの Tensor (1, n_mels, T) を返す."""
         return self.tensors[idx]
 
 
 class EvalDataset(Dataset):
-    """
-    評価用：dev/ の正常 + 異常.
+    """評価用：dev/ の正常 + 異常.
+
     model_id でフィルタリング.
     """
 
     def __init__(self, data_cfg, model_id: str):
+        """データ設定と model_id を受け取り初期化する."""
         self.cfg = data_cfg
         self.model_id = model_id
         self.samples = self._collect()  # list of (tensor, label)
@@ -81,7 +83,7 @@ class EvalDataset(Dataset):
         return samples
 
     def _process(self, path: str) -> list:
-        """wav ファイルを Tensor リストに変換する."""
+        """音声ファイルを Tensor リストに変換する."""
         return process_file(
             path,
             sr=self.cfg.sr,
@@ -96,6 +98,6 @@ class EvalDataset(Dataset):
         return len(self.samples)
 
     def __getitem__(self, idx: int) -> tuple:
-        """idx 番目の (tensor, label) を返す."""
+        """指定インデックスの (tensor, label) を返す."""
         tensor, label = self.samples[idx]
         return tensor, label

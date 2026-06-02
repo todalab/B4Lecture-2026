@@ -1,5 +1,5 @@
-"""
-evaluate.py
+"""evaluate.py.
+
 学習済みモデルの最終評価・閾値決定.
 閾値はdevデータでF1を最大化するように最適化する.
 """
@@ -20,12 +20,12 @@ log = logging.getLogger(__name__)
 
 
 def find_best_threshold(all_scores: list, all_labels: list) -> tuple:
-    """
-    ROC曲線の全閾値候補からF1を最大化する閾値を探す.
+    """ROC曲線の全閾値候補からF1を最大化する閾値を探す.
 
     Returns:
         best_threshold: float
         best_f1       : float
+
     """
     _, _, thresholds = roc_curve(all_labels, all_scores)
 

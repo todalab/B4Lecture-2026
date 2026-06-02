@@ -1,6 +1,6 @@
-"""
-train.py
-model_id ごとに独立した AnomalyDetector（CNN Encoder + Real-NVP）を学習する.
+"""train.py.
+
+Model_id ごとに独立した AnomalyDetector（CNN Encoder + Real-NVP）を学習する.
 学習: abundant/model_XX_normal のみ
 評価: dev/model_XX_normal + dev/model_XX_anomaly
 """
@@ -31,11 +31,13 @@ def set_seed(seed: int) -> None:
 def evaluate(
     model: AnomalyDetector, data_cfg, model_id: str, device: torch.device
 ) -> tuple:
-    """
+    """モデルを dev データで評価し、AUC とスコア分布を返す.
+
     Returns:
         auc         : float
         normal_scores : list of float
         anomaly_scores: list of float
+
     """
     eval_ds = EvalDataset(data_cfg, model_id)
     if len(eval_ds) == 0:
@@ -63,11 +65,11 @@ def evaluate(
 def train_one_model(
     model_id: str, cfg: DictConfig, device: torch.device, writer: SummaryWriter
 ) -> float:
-    """
-    指定した model_id の AnomalyDetector を学習し、最良の AUC を返す.
+    """指定した model_id の AnomalyDetector を学習し、最良の AUC を返す.
 
     Returns:
         best_auc: float（データなしの場合は None）
+
     """
     log.info(f"\n{'=' * 50}")
     log.info(f"Training model_{model_id}")
@@ -193,7 +195,3 @@ def main(cfg: DictConfig) -> None:
         log.info(f"  model_{mid}: AUC {auc:.4f}")
     if results:
         log.info(f"  Mean AUC : {np.mean(list(results.values())):.4f}")
-
-
-if __name__ == "__main__":
-    main()

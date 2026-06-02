@@ -1,6 +1,6 @@
-"""
-eval_final.py
-eval-groundtruth-labeled/ を使った最終評価.
+"""eval_final.py.
+
+Eval-groundtruth-labeled/ を使った最終評価.
 手法・モデル・閾値は変更しない.
 evaluate.py で決定した threshold_XX.pt をそのまま使う.
 """
@@ -28,9 +28,10 @@ def extract_model_id(filename: str) -> str:
 
 
 class EvalGroundTruthDataset(Dataset):
-    """eval-groundtruth-labeled/ のデータセット"""
+    """Eval-groundtruth-labeled/ のデータセット."""
 
     def __init__(self, data_cfg, model_id: str):
+        """データ設定と model_id を受け取り初期化する."""
         self.cfg = data_cfg
         self.samples = self._collect(model_id)
 
@@ -56,7 +57,7 @@ class EvalGroundTruthDataset(Dataset):
         return len(self.samples)
 
     def __getitem__(self, idx: int) -> tuple:
-        """idx 番目の (tensor, label) を返す."""
+        """指定インデックスの (tensor, label) を返す."""
         return self.samples[idx]
 
 
