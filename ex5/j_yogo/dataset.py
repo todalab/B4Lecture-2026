@@ -8,9 +8,8 @@ import re
 from pathlib import Path
 
 import torch
-from torch.utils.data import Dataset
-
 from audio_processor import process_file
+from torch.utils.data import Dataset
 
 
 def extract_model_id(filename: str) -> str:
@@ -26,9 +25,9 @@ class NormalDataset(Dataset):
     """
 
     def __init__(self, data_cfg, model_id: str):
-        self.cfg      = data_cfg
+        self.cfg = data_cfg
         self.model_id = model_id
-        self.tensors  = self._load_all()
+        self.tensors = self._load_all()
 
     def _load_all(self) -> list:
         """abundant/ 配下の正常音ファイルを全て読み込み Tensor リストを返す."""
@@ -65,9 +64,9 @@ class EvalDataset(Dataset):
     """
 
     def __init__(self, data_cfg, model_id: str):
-        self.cfg      = data_cfg
+        self.cfg = data_cfg
         self.model_id = model_id
-        self.samples  = self._collect()  # list of (tensor, label)
+        self.samples = self._collect()  # list of (tensor, label)
 
     def _collect(self) -> list:
         """dev/ 配下の正常・異常ファイルを収集し (tensor, label) リストを返す."""

@@ -8,16 +8,15 @@ model_id ごとに独立した AnomalyDetector（CNN Encoder + Real-NVP）を学
 import logging
 import random
 
+import hydra
 import numpy as np
 import torch
+from dataset import EvalDataset, NormalDataset
+from flow_model import AnomalyDetector
+from omegaconf import DictConfig
+from sklearn.metrics import roc_auc_score
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
-from sklearn.metrics import roc_auc_score
-import hydra
-from omegaconf import DictConfig
-
-from flow_model import AnomalyDetector
-from dataset import NormalDataset, EvalDataset
 
 log = logging.getLogger(__name__)
 
@@ -29,8 +28,9 @@ def set_seed(seed: int) -> None:
     torch.manual_seed(seed)
 
 
-def evaluate(model: AnomalyDetector, data_cfg, model_id: str,
-             device: torch.device) -> tuple:
+def evaluate(
+    model: AnomalyDetector, data_cfg, model_id: str, device: torch.device
+) -> tuple:
     """
     Returns:
         auc         : float
@@ -53,22 +53,23 @@ def evaluate(model: AnomalyDetector, data_cfg, model_id: str,
 
     model.train()
 
-    normal_scores  = [s for s, l in zip(all_scores, all_labels) if l == 0]
-    anomaly_scores = [s for s, l in zip(all_scores, all_labels) if l == 1]
+    normal_scores = [s for s, lbl in zip(all_scores, all_labels) if lbl == 0]
+    anomaly_scores = [s for s, lbl in zip(all_scores, all_labels) if lbl == 1]
     auc = roc_auc_score(all_labels, all_scores) if len(set(all_labels)) == 2 else 0.0
 
     return auc, normal_scores, anomaly_scores
 
 
-def train_one_model(model_id: str, cfg: DictConfig,
-                    device: torch.device, writer: SummaryWriter) -> float:
+def train_one_model(
+    model_id: str, cfg: DictConfig, device: torch.device, writer: SummaryWriter
+) -> float:
     """
     指定した model_id の AnomalyDetector を学習し、最良の AUC を返す.
 
     Returns:
         best_auc: float（データなしの場合は None）
     """
-    log.info(f"\n{'='*50}")
+    log.info(f"\n{'=' * 50}")
     log.info(f"Training model_{model_id}")
 
     train_ds = NormalDataset(cfg.data, model_id)
@@ -100,7 +101,7 @@ def train_one_model(model_id: str, cfg: DictConfig,
         optimizer, T_max=cfg.train.epochs
     )
 
-    best_auc    = 0.0
+    best_auc = 0.0
     global_step = 0
 
     for epoch in range(cfg.train.epochs):
@@ -108,7 +109,7 @@ def train_one_model(model_id: str, cfg: DictConfig,
         epoch_loss = 0.0
 
         for batch in loader:
-            x    = batch.to(device)
+            x = batch.to(device)
             loss = model.loss(x)  # -log_likelihood
 
             optimizer.zero_grad()
@@ -117,7 +118,7 @@ def train_one_model(model_id: str, cfg: DictConfig,
             torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
             optimizer.step()
 
-            epoch_loss  += loss.item()
+            epoch_loss += loss.item()
             global_step += 1
             writer.add_scalar(f"loss_step/model_{model_id}", loss.item(), global_step)
 
@@ -133,18 +134,28 @@ def train_one_model(model_id: str, cfg: DictConfig,
             writer.add_scalar(f"auc/model_{model_id}", auc, epoch)
 
             if normal_scores:
-                writer.add_histogram(f"anomaly_score/model_{model_id}_normal",
-                                     torch.tensor(normal_scores), epoch)
-                writer.add_scalar(f"score_mean/model_{model_id}_normal",
-                                  np.mean(normal_scores), epoch)
+                writer.add_histogram(
+                    f"anomaly_score/model_{model_id}_normal",
+                    torch.tensor(normal_scores),
+                    epoch,
+                )
+                writer.add_scalar(
+                    f"score_mean/model_{model_id}_normal", np.mean(normal_scores), epoch
+                )
             if anomaly_scores:
-                writer.add_histogram(f"anomaly_score/model_{model_id}_anomaly",
-                                     torch.tensor(anomaly_scores), epoch)
-                writer.add_scalar(f"score_mean/model_{model_id}_anomaly",
-                                  np.mean(anomaly_scores), epoch)
+                writer.add_histogram(
+                    f"anomaly_score/model_{model_id}_anomaly",
+                    torch.tensor(anomaly_scores),
+                    epoch,
+                )
+                writer.add_scalar(
+                    f"score_mean/model_{model_id}_anomaly",
+                    np.mean(anomaly_scores),
+                    epoch,
+                )
 
             log.info(
-                f"  epoch {epoch+1:3d} | loss {avg_loss:.4f} | AUC {auc:.4f} | "
+                f"  epoch {epoch + 1:3d} | loss {avg_loss:.4f} | AUC {auc:.4f} | "
                 f"normal_score {np.mean(normal_scores):.4f} | "
                 f"anomaly_score {np.mean(anomaly_scores):.4f}"
             )
@@ -153,7 +164,7 @@ def train_one_model(model_id: str, cfg: DictConfig,
                 torch.save(model.state_dict(), f"model_{model_id}_best.pt")
                 log.info(f"  → saved best (AUC {best_auc:.4f})")
         else:
-            log.info(f"  epoch {epoch+1:3d} | loss {avg_loss:.4f}")
+            log.info(f"  epoch {epoch + 1:3d} | loss {avg_loss:.4f}")
 
     log.info(f"model_{model_id} done. Best AUC: {best_auc:.4f}")
     return best_auc
@@ -166,7 +177,7 @@ def main(cfg: DictConfig) -> None:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     log.info(f"device: {device}")
 
-    writer  = SummaryWriter(log_dir="runs")
+    writer = SummaryWriter(log_dir="runs")
     results = {}
 
     for model_id in cfg.data.target_models:
@@ -176,7 +187,7 @@ def main(cfg: DictConfig) -> None:
 
     writer.close()
 
-    log.info("\n" + "="*50)
+    log.info("\n" + "=" * 50)
     log.info("Final Results:")
     for mid, auc in results.items():
         log.info(f"  model_{mid}: AUC {auc:.4f}")

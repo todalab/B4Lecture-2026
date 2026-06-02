@@ -2,13 +2,12 @@
 audio_processor.py
 音声ファイル → log-Mel スペクトログラム Tensor に変換する.
 外部依存: librosa, numpy, torch
-torch.nn は一切使わない.
 """
 
 from typing import Optional
 
-import numpy as np
 import librosa
+import numpy as np
 import torch
 
 

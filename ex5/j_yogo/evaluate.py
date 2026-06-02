@@ -7,15 +7,14 @@ evaluate.py
 import logging
 from pathlib import Path
 
+import hydra
 import numpy as np
 import torch
-from torch.utils.data import DataLoader
-from sklearn.metrics import roc_auc_score, f1_score, confusion_matrix, roc_curve
-import hydra
-from omegaconf import DictConfig
-
-from flow_model import AnomalyDetector
 from dataset import EvalDataset
+from flow_model import AnomalyDetector
+from omegaconf import DictConfig
+from sklearn.metrics import confusion_matrix, f1_score, roc_auc_score, roc_curve
+from torch.utils.data import DataLoader
 
 log = logging.getLogger(__name__)
 
@@ -35,7 +34,7 @@ def find_best_threshold(all_scores: list, all_labels: list) -> tuple:
 
     for threshold in thresholds:
         preds = [1 if s > threshold else 0 for s in all_scores]
-        f1    = f1_score(all_labels, preds, zero_division=0)
+        f1 = f1_score(all_labels, preds, zero_division=0)
         if f1 > best_f1:
             best_f1 = f1
             best_threshold = threshold
@@ -46,9 +45,9 @@ def find_best_threshold(all_scores: list, all_labels: list) -> tuple:
 @hydra.main(config_path="conf", config_name="config", version_base=None)
 def main(cfg: DictConfig) -> None:
     """学習済みモデルを評価し、最適閾値を threshold_XX.pt に保存する."""
-    device   = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     all_aucs = {}
-    all_f1s  = {}
+    all_f1s = {}
 
     for model_id in cfg.data.target_models:
         ckpt_path = Path(f"model_{model_id}_best.pt")
@@ -66,7 +65,7 @@ def main(cfg: DictConfig) -> None:
         model.eval()
 
         eval_ds = EvalDataset(cfg.data, model_id)
-        loader  = DataLoader(eval_ds, batch_size=32, shuffle=False)
+        loader = DataLoader(eval_ds, batch_size=32, shuffle=False)
 
         all_scores, all_labels = [], []
         with torch.no_grad():
@@ -79,20 +78,23 @@ def main(cfg: DictConfig) -> None:
             log.warning(f"model_{model_id}: ラベルが1種類のみ、スキップ")
             continue
 
-        normal_scores  = [s for s, l in zip(all_scores, all_labels) if l == 0]
-        anomaly_scores = [s for s, l in zip(all_scores, all_labels) if l == 1]
+        normal_scores = [s for s, lbl in zip(all_scores, all_labels) if lbl == 0]
+        anomaly_scores = [s for s, lbl in zip(all_scores, all_labels) if lbl == 1]
 
         auc = roc_auc_score(all_labels, all_scores)
         best_threshold, best_f1 = find_best_threshold(all_scores, all_labels)
 
         preds = [1 if s > best_threshold else 0 for s in all_scores]
-        cm    = confusion_matrix(all_labels, preds)
+        cm = confusion_matrix(all_labels, preds)
 
         log.info(f"\nmodel_{model_id}")
         log.info(f"  AUC            : {auc:.4f}")
         log.info(f"  F1  (best)     : {best_f1:.4f}")
         log.info(f"  threshold      : {best_threshold:.4f}")
-        log.info(f"  normal_score   mean={np.mean(normal_scores):.4f} std={np.std(normal_scores):.4f}")
+        log.info(
+            f"  normal_score   mean={np.mean(normal_scores):.4f}"
+            f" std={np.std(normal_scores):.4f}"
+        )
         log.info(f"  anomaly_score  mean={np.mean(anomaly_scores):.4f}")
         log.info(f"  confusion matrix:\n{cm}")
 
@@ -101,10 +103,10 @@ def main(cfg: DictConfig) -> None:
             f"threshold_{model_id}.pt",
         )
         all_aucs[model_id] = auc
-        all_f1s[model_id]  = best_f1
+        all_f1s[model_id] = best_f1
 
     # 調和平均を計算
-    log.info("\n" + "="*40)
+    log.info("\n" + "=" * 40)
     log.info("Summary:")
     for mid in all_aucs:
         log.info(f"  model_{mid}: AUC {all_aucs[mid]:.4f}  F1 {all_f1s[mid]:.4f}")

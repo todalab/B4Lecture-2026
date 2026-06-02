@@ -9,10 +9,10 @@ CNN Encoder + Normalizing Flow (Real-NVP) による異常検知.
 import torch
 import torch.nn as nn
 
-
 # ------------------------------------------------------------------ #
 #  CNN Encoder                                                         #
 # ------------------------------------------------------------------ #
+
 
 class CNNEncoder(nn.Module):
     """
@@ -25,7 +25,7 @@ class CNNEncoder(nn.Module):
     def __init__(self, channels: list, emb_dim: int):
         super().__init__()
         layers = []
-        in_ch  = 1
+        in_ch = 1
         for out_ch in channels:
             layers += [
                 nn.Conv2d(in_ch, out_ch, kernel_size=3, padding=1, bias=False),
@@ -34,9 +34,9 @@ class CNNEncoder(nn.Module):
                 nn.MaxPool2d(2),
             ]
             in_ch = out_ch
-        self.cnn  = nn.Sequential(*layers)
+        self.cnn = nn.Sequential(*layers)
         self.pool = nn.AdaptiveAvgPool2d(1)
-        self.fc   = nn.Linear(channels[-1], emb_dim)
+        self.fc = nn.Linear(channels[-1], emb_dim)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.cnn(x)
@@ -49,6 +49,7 @@ class CNNEncoder(nn.Module):
 # ------------------------------------------------------------------ #
 #  Real-NVP Affine Coupling Layer                                      #
 # ------------------------------------------------------------------ #
+
 
 class AffineCouplingLayer(nn.Module):
     """
@@ -85,22 +86,22 @@ class AffineCouplingLayer(nn.Module):
             z_out    : (B, dim) 変換後
             log_det_J: (B,) log|det Jacobian|
         """
-        z_a, z_b = z[:, :self.dim_a], z[:, self.dim_a:]
-        st       = self.net(z_a)
-        s, t     = st[:, :self.dim_b], st[:, self.dim_b:]
-        s        = torch.tanh(s)  # s を [-1, 1] に制限して数値安定化
+        z_a, z_b = z[:, : self.dim_a], z[:, self.dim_a :]
+        st = self.net(z_a)
+        s, t = st[:, : self.dim_b], st[:, self.dim_b :]
+        s = torch.tanh(s)  # s を [-1, 1] に制限して数値安定化
 
-        z_b_out   = z_b * torch.exp(s) + t
+        z_b_out = z_b * torch.exp(s) + t
         log_det_J = s.sum(dim=1)
 
         return torch.cat([z_a, z_b_out], dim=1), log_det_J
 
     def inverse(self, z: torch.Tensor) -> torch.Tensor:
         """変換後の z から元の z を復元する（逆変換）."""
-        z_a, z_b = z[:, :self.dim_a], z[:, self.dim_a:]
-        st       = self.net(z_a)
-        s, t     = st[:, :self.dim_b], st[:, self.dim_b:]
-        s        = torch.tanh(s)
+        z_a, z_b = z[:, : self.dim_a], z[:, self.dim_a :]
+        st = self.net(z_a)
+        s, t = st[:, : self.dim_b], st[:, self.dim_b :]
+        s = torch.tanh(s)
 
         z_b_orig = (z_b - t) * torch.exp(-s)
         return torch.cat([z_a, z_b_orig], dim=1)
@@ -110,6 +111,7 @@ class AffineCouplingLayer(nn.Module):
 #  Real-NVP                                                            #
 # ------------------------------------------------------------------ #
 
+
 class RealNVP(nn.Module):
     """
     複数の AffineCouplingLayer を積み重ねた Normalizing Flow.
@@ -118,13 +120,13 @@ class RealNVP(nn.Module):
 
     def __init__(self, dim: int, n_layers: int, hidden_dim: int):
         super().__init__()
-        self.layers = nn.ModuleList([
-            AffineCouplingLayer(dim, hidden_dim)
-            for _ in range(n_layers)
-        ])
+        self.layers = nn.ModuleList(
+            [AffineCouplingLayer(dim, hidden_dim) for _ in range(n_layers)]
+        )
         # 奇数層では次元を入れ替えて分割方向を変える
         self.perms = [
-            torch.arange(dim) if i % 2 == 0
+            torch.arange(dim)
+            if i % 2 == 0
             else torch.cat([torch.arange(dim // 2, dim), torch.arange(dim // 2)])
             for i in range(n_layers)
         ]
@@ -154,8 +156,7 @@ class RealNVP(nn.Module):
         z_out, log_det = self.forward(z)
 
         # 標準正規分布の log-likelihood
-        dim       = z_out.shape[1]
-        log_p_z   = -0.5 * (z_out ** 2 + torch.log(torch.tensor(2 * torch.pi))).sum(dim=1)
+        log_p_z = -0.5 * (z_out**2 + torch.log(torch.tensor(2 * torch.pi))).sum(dim=1)
 
         return log_p_z + log_det  # (B,)
 
@@ -163,6 +164,7 @@ class RealNVP(nn.Module):
 # ------------------------------------------------------------------ #
 #  AnomalyDetector: Encoder + Flow をまとめたモデル                    #
 # ------------------------------------------------------------------ #
+
 
 class AnomalyDetector(nn.Module):
     """
@@ -172,17 +174,18 @@ class AnomalyDetector(nn.Module):
     推論：  anomaly_score = -log_likelihood（高いほど異常）
     """
 
-    def __init__(self, channels: list, emb_dim: int,
-                 flow_layers: int, flow_hidden_dim: int):
+    def __init__(
+        self, channels: list, emb_dim: int, flow_layers: int, flow_hidden_dim: int
+    ):
         super().__init__()
         self.encoder = CNNEncoder(channels, emb_dim)
-        self.flow    = RealNVP(emb_dim, flow_layers, flow_hidden_dim)
+        self.flow = RealNVP(emb_dim, flow_layers, flow_hidden_dim)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
         Returns: (B,) log-likelihood（高いほど正常）
         """
-        z  = self.encoder(x)
+        z = self.encoder(x)
         ll = self.flow.log_likelihood(z)
         return ll
 
