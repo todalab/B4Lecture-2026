@@ -15,3 +15,6 @@ wheels/
 # results
 outputs/
 runs/
+
+# casche
+pycache/
