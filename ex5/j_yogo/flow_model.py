@@ -128,9 +128,11 @@ class RealNVP(nn.Module):
         )
         # 奇数層では次元を入れ替えて分割方向を変える
         self.perms = [
-            torch.arange(dim)
-            if i % 2 == 0
-            else torch.cat([torch.arange(dim // 2, dim), torch.arange(dim // 2)])
+            (
+                torch.arange(dim)
+                if i % 2 == 0
+                else torch.cat([torch.arange(dim // 2, dim), torch.arange(dim // 2)])
+            )
             for i in range(n_layers)
         ]
 
