@@ -1,0 +1,4 @@
+channels: [32, 64, 128]
+emb_dim: 64
+flow_layers: 8
+flow_hidden_dim: 128

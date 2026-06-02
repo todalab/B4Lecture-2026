@@ -1,0 +1,6 @@
+epochs: 50
+lr: 1e-3
+weight_decay: 1e-4
+batch_size: 16
+val_interval: 5   # 何エポックごとに検証するか
+seed: 42
