@@ -2,6 +2,7 @@
 
 import torch
 import torchaudio
+from fan import Fan, log_mel
 from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import train_test_split
 from torch import nn, tensor
@@ -10,8 +11,6 @@ from torch.optim.lr_scheduler import StepLR
 from torch.utils.data import DataLoader
 from torchaudio.pipelines._tts.interface import Optional
 from torchvision.models import ResNet18_Weights, resnet18
-
-from fan import Fan, log_mel
 
 BATCH_SIZE = 16
 DEVICE = (

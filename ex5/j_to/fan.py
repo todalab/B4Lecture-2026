@@ -3,9 +3,8 @@
 from pathlib import Path
 
 import torchaudio
-from torch.utils.data import Dataset
-
 from mel import build_mel, log_mel
+from torch.utils.data import Dataset
 
 
 class Fan(Dataset):

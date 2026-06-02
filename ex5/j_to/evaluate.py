@@ -2,10 +2,9 @@
 
 from pathlib import Path
 
+from cnn import THRESHOLD, predict
 from pandas import read_csv
 from sklearn.metrics import classification_report, f1_score
-
-from cnn import THRESHOLD, predict
 
 DATA_DIR = Path("data/eval")
 INDICES = ["03", "04", "05", "06"]

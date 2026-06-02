@@ -4,7 +4,6 @@ from pathlib import Path
 
 import torchaudio
 from matplotlib.pyplot import close, imshow, savefig, title
-
 from mel import log_mel
 
 Path("fig").mkdir(parents=True, exist_ok=True)
