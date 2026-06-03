@@ -85,7 +85,7 @@ def _split_normal_and_anomaly_paths(
 
 
 def _infinite_loader(loader: DataLoader):
-    """Yield batches from a loader forever by restarting it when exhausted."""
+    """Yield batches from a loader forever by restarting it when exhausted.yieldは値を返すごとに一時停止する."""
     while True:
         for batch in loader:
             yield batch

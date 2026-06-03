@@ -9,8 +9,9 @@ import torch
 import yaml
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import auc, roc_curve
+from sklearn.model_selection import GridSearchCV
 from sklearn.neural_network import MLPClassifier
-from sklearn.pipeline import make_pipeline
+from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 from torch.utils.data import DataLoader
@@ -39,12 +40,7 @@ def _load_model(cfg: dict, optuna_results_path: Path, device: torch.device) -> A
     learning_rate = float(best_params.get("train.learning_rate", cfg["train"]["learning_rate"]))
 
     log_dir = Path(cfg["hydra"]["sweep"]["dir"])
-    ckpt_path = (
-        log_dir
-        / Path(f"hidden{hidden_channels1}_hidden{hidden_channels2}_lr{round(learning_rate, 4)}")
-        / "ckpts"
-        / "model_epoch_0009.pt"
-    )
+    ckpt_path = log_dir / Path(f"lr{round(learning_rate, 4)}") / "ckpts" / "model_epoch_0009.pt"
 
     print(f"Loading model from: {ckpt_path}")
     model = Autoencoder(
@@ -135,6 +131,24 @@ def _collect_features_and_labels(
         np.concatenate(flat_mel_list, axis=0),
         np.concatenate(label_list, axis=0),
     )
+
+
+def run_mlp_hypersearch(train_X: np.ndarray, train_y: np.ndarray, cv: int = 3) -> Pipeline:
+    """Grid-search small MLP hyperparameters and return best pipeline.
+
+    Returns a fitted Pipeline with steps ('scaler','mlp').
+    """
+    pipe = Pipeline([("scaler", StandardScaler()), ("mlp", MLPClassifier(max_iter=2000, random_state=0))])
+    param_grid = {
+        "mlp__hidden_layer_sizes": [(32,), (64,), (64, 32)],
+        "mlp__alpha": [1e-4, 1e-3, 1e-2],
+        "mlp__learning_rate_init": [1e-3, 1e-4],
+        "mlp__activation": ["relu"],
+    }
+    gs = GridSearchCV(pipe, param_grid, cv=cv, scoring="roc_auc", n_jobs=1)
+    gs.fit(train_X, train_y)
+    print(f"Best MLP params: {gs.best_params_}, best CV ROC-AUC: {gs.best_score_:.4f}")
+    return gs.best_estimator_
 
 
 def _collect_engineered_features(
@@ -317,6 +331,7 @@ def main() -> None:
         "latent_svm_score": [],
         "latent_mlp_score": [],
         "engineered_mlp_score": [],
+        "latent_meta_mlp_score": [],
         "label": [],
         "model_id": [],
     }
@@ -369,6 +384,24 @@ def main() -> None:
     eval_engineered_feat, _ = _collect_engineered_features(model, eval_dataset, device, latent_stats)
     engineered_mlp.fit(train_engineered_feat, train_engineered_y)
 
+    # --- MLP hyperparameter search on latent features ---
+    try:
+        best_latent_pipe = run_mlp_hypersearch(train_latent_feat, train_y, cv=3)
+        latent_mlp_hs_scores = best_latent_pipe.predict_proba(eval_latent_feat)[:, 1]
+    except Exception as e:
+        print(f"MLP hypersearch on latent failed: {e}")
+        latent_mlp_hs_scores = latent_mlp_scores
+
+    # --- Combine latent + engineered features and run hypersearch ---
+    try:
+        train_meta_feat = np.hstack([train_latent_feat, train_engineered_feat])
+        eval_meta_feat = np.hstack([eval_latent_feat, eval_engineered_feat])
+        best_meta_pipe = run_mlp_hypersearch(train_meta_feat, train_engineered_y, cv=3)
+        meta_mlp_scores = best_meta_pipe.predict_proba(eval_meta_feat)[:, 1]
+    except Exception as e:
+        print(f"Meta MLP hypersearch failed: {e}")
+        meta_mlp_scores = engineered_mlp_scores
+
     latent_logreg_scores = latent_clf.predict_proba(eval_latent_feat)[:, 1]
     flat_logreg_scores = flat_clf.predict_proba(eval_flat_feat)[:, 1]
     latent_svm_scores = latent_svm.predict_proba(eval_latent_feat)[:, 1]
@@ -395,6 +428,7 @@ def main() -> None:
             all_scores["latent_svm_score"].append(float(latent_svm_scores[batch_idx]))
             all_scores["latent_mlp_score"].append(float(latent_mlp_scores[batch_idx]))
             all_scores["engineered_mlp_score"].append(float(engineered_mlp_scores[batch_idx]))
+            all_scores["latent_meta_mlp_score"].append(float(meta_mlp_scores[batch_idx]))
             all_scores["label"].append(int(label.item()))
             all_scores["model_id"].append(str(model_id[0]))
             if batch_idx % 50 == 0:
@@ -412,6 +446,7 @@ def main() -> None:
     latent_svm_scores = np.array(all_scores["latent_svm_score"])
     latent_mlp_scores = np.array(all_scores["latent_mlp_score"])
     engineered_mlp_scores = np.array(all_scores["engineered_mlp_score"])
+    latent_meta_mlp_scores = np.array(all_scores["latent_meta_mlp_score"])
 
     # Compute AUCs
     fpr_norm, tpr_norm, _ = roc_curve(labels, normalized_mses)
@@ -436,6 +471,8 @@ def main() -> None:
     auc_latent_mlp = auc(fpr_latent_mlp, tpr_latent_mlp)
     fpr_engineered_mlp, tpr_engineered_mlp, _ = roc_curve(labels, engineered_mlp_scores)
     auc_engineered_mlp = auc(fpr_engineered_mlp, tpr_engineered_mlp)
+    fpr_meta_mlp, tpr_meta_mlp, _ = roc_curve(labels, latent_meta_mlp_scores)
+    auc_meta_mlp = auc(fpr_meta_mlp, tpr_meta_mlp)
 
     print("\n=== AUC Scores ===")
     print(f"Normalized MSE AUC: {auc_norm:.4f}")
@@ -449,6 +486,7 @@ def main() -> None:
     print(f"Latent RBF-SVM AUC: {auc_latent_svm:.4f}")
     print(f"Latent MLP AUC: {auc_latent_mlp:.4f}")
     print(f"Engineered-Feature MLP AUC: {auc_engineered_mlp:.4f}")
+    print(f"Latent+Engineered Meta-MLP AUC: {auc_meta_mlp:.4f}")
 
     # Save CSV
     df = pd.DataFrame(
@@ -467,6 +505,7 @@ def main() -> None:
             "latent_svm_score": all_scores["latent_svm_score"],
             "latent_mlp_score": all_scores["latent_mlp_score"],
             "engineered_mlp_score": all_scores["engineered_mlp_score"],
+            "latent_meta_mlp_score": all_scores["latent_meta_mlp_score"],
         }
     )
     csv_path = OUTPUT_DIR / "debug_thresholds.csv"
@@ -488,6 +527,7 @@ def main() -> None:
             "latent_svm_score": latent_svm_scores,
             "latent_mlp_score": latent_mlp_scores,
             "engineered_mlp_score": engineered_mlp_scores,
+            "latent_meta_mlp_score": latent_meta_mlp_scores,
         },
         OUTPUT_DIR,
     )

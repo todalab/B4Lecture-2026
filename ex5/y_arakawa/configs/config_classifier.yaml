@@ -1,0 +1,68 @@
+# Config for training an MLP classifier on top of AE latents.
+# Run from ex5/y_arakawa:
+#   python src/train_classifier.py
+# or:
+#   python src/train_classifier.py classifier.ae_ckpt=ckpts/model_epoch_0039.pt
+
+model:
+  # Must match the architecture of the loaded AE checkpoint.
+  hidden_channels1: 32
+  hidden_channels2: 16
+  latent_channels: 8
+  variant: fc # "fc" -> Encoder2/Decoder2, "conv" -> Encoder1/Decoder1
+
+dataset:
+  train_list: src/dataloaders/train.txt
+  val_list: src/dataloaders/eval.txt
+  test_list: src/dataloaders/test.txt
+  data_dir: ../data/dev/abundant
+  sample_rate: 16000
+  n_fft: 1024
+  hop_length: 512
+  n_mels: 64
+  target_frames: 40
+
+dataset_normal_and_anomaly:
+  data_dir: ../data/dev
+  train_list: src/dataloaders/normal_and_anomaly_data_train.txt
+  eval_list: src/dataloaders/normal_and_anomaly_data_eval.txt
+  test_list: src/dataloaders/normal_and_anomaly_data_test.txt
+
+classifier:
+  # Path to a pretrained AE checkpoint (state_dict saved via torch.save(model.state_dict(), ...)).
+  ae_ckpt: logs/mel_ae_optuna_for_comp/lr0.0041/ckpts/model_epoch_0057.pt
+  # Whether to freeze the AE encoder and only train the MLP head.
+  # AUC が低い場合は false にして encoder も同時に fine-tune すると改善しやすい。
+  freeze_encoder: false
+  hidden_dims: [128, 64]
+  dropout: 0.2
+  # 学習データのクラス不均衡を BCEWithLogitsLoss の pos_weight で補正する。
+  use_pos_weight: true
+
+train:
+  seed: 42
+  epochs: 30
+  learning_rate: 0.001
+  weight_decay: 1.0e-4
+  batch_size: 128
+  epoch_per_val: 1
+  epoch_per_ckpt: 5
+  log_dir: tensorboard_logs_classifier
+  ckpt_dir: ckpts_classifier
+
+eval:
+  # 評価対象のテストリスト名（dataset_normal_and_anomaly の中のキー）
+  test_list_key: test_list
+  # train_classifier.py が保存した combined checkpoint (autoencoder + classifier) を指定
+  # best AUC チェックポイントを使うのがおすすめ
+  classifier_ckpt: ckpts_classifier/classifier_best.pt
+  # しきい値選択:
+  #   "fixed"        -> 下の threshold をそのまま使う
+  #   "youden_val"   -> 検証セットの Youden's J で自動選択
+  #   "f1_hmean_val" -> 検証セットでモデルごとの F1 の調和平均を最大化するしきい値を選択
+  threshold_mode: f1_hmean_val
+  threshold: 0.5
+  # f1_hmean_val 用のしきい値スイープ点数 (0.01〜0.99 の等間隔)
+  f1_grid_size: 991
+  # ROC 曲線や CSV の保存先
+  output_dir: outputs/eval_classifier

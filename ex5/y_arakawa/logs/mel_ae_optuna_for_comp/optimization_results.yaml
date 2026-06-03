@@ -1,4 +1,4 @@
 name: optuna
 best_params:
   train.learning_rate: 0.004123206532618728
-best_value: 0.01000046543776989
+best_value: 0.010000103153288364

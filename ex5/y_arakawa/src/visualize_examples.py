@@ -32,7 +32,7 @@ def _load_model(cfg, device):
     h2 = int(best.get("model.hidden_channels2", cfg["model"].get("hidden_channels2", 16)))
     lr = float(best.get("train.learning_rate", cfg["train"]["learning_rate"]))
     log_dir = Path(cfg["hydra"]["sweep"]["dir"])
-    ckpt = log_dir / Path(f"hidden{h1}_hidden{h2}_lr{round(lr, 4)}") / "ckpts" / "model_epoch_0009.pt"
+    ckpt = log_dir / Path(f"lr{round(lr, 4)}") / "ckpts" / "model_epoch_0009.pt"
     model = Autoencoder(
         in_channels=1, hidden_channels1=h1, hidden_channels2=h2, latent_channels=cfg["model"]["latent_channels"]
     ).to(device)

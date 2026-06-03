@@ -85,12 +85,7 @@ def determine_threshold(config_path: str, train_file_list: str, eval_file_list: 
         latent_channels=cfg["model"]["latent_channels"],
     ).to(device)
     model.load_state_dict(
-        torch.load(
-            Path(log_dir)
-            / Path(f"hidden{hidden_channels1}_hidden{hidden_channels2}_lr{round(learning_rate, 4)}")
-            / Path("ckpts")
-            / Path("model_epoch_0009.pt")
-        )
+        torch.load(Path(log_dir) / Path(f"lr{round(learning_rate, 4)}") / Path("ckpts") / Path("model_epoch_0009.pt"))
     )
     loss_fn = nn.MSELoss()
 

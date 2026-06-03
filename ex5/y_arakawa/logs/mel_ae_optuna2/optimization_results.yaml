@@ -1,5 +1,0 @@
-name: optuna
-best_params:
-  model.hidden_channels: 23
-  train.learning_rate: 0.0026070247583707684
-best_value: 3.3889816064100997

@@ -28,7 +28,7 @@ dataset_normal_and_anomaly:
 
 train:
   seed: 42
-  epochs: 10
+  epochs: 40
   learning_rate: 0.001
   margin: 0.02
   lambda: 0.5
@@ -46,11 +46,11 @@ hydra:
     sampler:
       seed: 42
     direction: minimize
-    n_trials: 10
+    n_trials: 4
     params:
       model.hidden_channels1: int(32) # optunaというフレームワークを使うことで指定した範囲から最適なパラメータを探索してくれる
       model.hidden_channels2: int(16) # optunaというフレームワークを使うことで指定した範囲から最適なパラメータを探索してくれる
       train.learning_rate: tag(log, interval(1e-4, 5e-3))
   sweep:
     dir: logs/mel_ae_optuna_for_comp
-    subdir: hidden${model.hidden_channels1}_hidden${model.hidden_channels2}_lr${round:${train.learning_rate}, 4}
+    subdir: lr${round:${train.learning_rate}, 4}

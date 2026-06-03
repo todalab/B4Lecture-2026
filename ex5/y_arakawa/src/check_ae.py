@@ -48,12 +48,7 @@ def _load_model(cfg: dict, optuna_results_path: Path, device: torch.device) -> A
     learning_rate = float(best_params.get("train.learning_rate", cfg["train"]["learning_rate"]))
 
     log_dir = Path(cfg["hydra"]["sweep"]["dir"])
-    ckpt_path = (
-        log_dir
-        / Path(f"hidden{hidden_channels1}_hidden{hidden_channels2}_lr{round(learning_rate, 4)}")
-        / "ckpts"
-        / "model_epoch_0009.pt"
-    )
+    ckpt_path = log_dir / Path(f"lr{round(learning_rate, 4)}") / "ckpts" / "model_epoch_0009.pt"
 
     model = Autoencoder(
         in_channels=1,

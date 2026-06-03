@@ -1,0 +1,6 @@
+threshold=0.045636
+f1_model_03=0.952909
+f1_model_04=0.874372
+f1_model_05=0.944928
+f1_model_06=0.967568
+f1_harmonic_mean=0.933511

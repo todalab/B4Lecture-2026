@@ -167,24 +167,53 @@ class Decoder2(nn.Module):
 
 
 class Autoencoder(nn.Module):
-    """Convolutional autoencoder for mel spectrograms."""
+    """Convolutional autoencoder for mel spectrograms.
+
+    Parameters
+    ----------
+    variant : str
+        'fc' uses the fully-connected bottleneck (`Encoder2`/`Decoder2`),
+        'conv' uses spatial conv bottleneck (`Encoder1`/`Decoder1`).
+    """
 
     def __init__(
-        self, in_channels: int = 1, hidden_channels1: int = 16, hidden_channels2: int = 8, latent_channels: int = 4
+        self,
+        in_channels: int = 1,
+        hidden_channels1: int = 16,
+        hidden_channels2: int = 8,
+        latent_channels: int = 4,
+        variant: str = "fc",
     ) -> None:
         super().__init__()
-        self.encoder = Encoder2(
-            in_channels=in_channels,
-            hidden_channels1=hidden_channels1,
-            hidden_channels2=hidden_channels2,
-            latent_channels=latent_channels,
-        )
-        self.decoder = Decoder2(
-            out_channels=in_channels,
-            hidden_channels1=hidden_channels1,
-            hidden_channels2=hidden_channels2,
-            latent_channels=latent_channels,
-        )
+        self.variant = variant
+        if variant == "conv":
+            # conv variant: Encoder1/Decoder1 keep spatial maps
+            self.encoder = Encoder1(
+                in_channels=in_channels,
+                hidden_channels1=hidden_channels1,
+                hidden_channels2=hidden_channels2,
+                latent_channels=latent_channels,
+            )
+            self.decoder = Decoder1(
+                out_channels=in_channels,
+                hidden_channels1=hidden_channels1,
+                hidden_channels2=hidden_channels2,
+                latent_channels=latent_channels,
+            )
+        else:
+            # default: fully-connected bottleneck
+            self.encoder = Encoder2(
+                in_channels=in_channels,
+                hidden_channels1=hidden_channels1,
+                hidden_channels2=hidden_channels2,
+                latent_channels=latent_channels,
+            )
+            self.decoder = Decoder2(
+                out_channels=in_channels,
+                hidden_channels1=hidden_channels1,
+                hidden_channels2=hidden_channels2,
+                latent_channels=latent_channels,
+            )
 
     def encode(self, x: torch.Tensor) -> torch.Tensor:
         """Encode input mel spectrograms into latent feature maps.
@@ -231,4 +260,5 @@ class Autoencoder(nn.Module):
         """
         z = self.encode(x)
         recon = self.decode(z)
+        # Keep the same residual blending behavior; works for both variants
         return torch.clamp(x + 0.1 * recon, 0.0, 1.0)

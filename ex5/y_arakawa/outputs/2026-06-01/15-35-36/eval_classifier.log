@@ -1,0 +1,16 @@
+[2026-06-01 15:35:39,405][__main__][INFO] - Test list: /home/arakawa26/workspace/B4Lecture-2026/ex5/y_arakawa/src/dataloaders/normal_and_anomaly_data_test.txt (n=238)
+[2026-06-01 15:35:39,555][__main__][INFO] - Latent shape: (1, 128) -> MLP input_dim=128
+[2026-06-01 15:35:39,556][__main__][INFO] - Loading classifier checkpoint from /home/arakawa26/workspace/B4Lecture-2026/ex5/y_arakawa/ckpts_classifier/classifier_best.pt
+[2026-06-01 15:35:39,881][__main__][INFO] - Selected threshold from val F1 harmonic mean: 0.0456 (H-mean F1=0.9298)
+[2026-06-01 15:35:39,881][__main__][INFO] -   val F1[00] @ 0.0456 = 0.8889
+[2026-06-01 15:35:39,881][__main__][INFO] -   val F1[01] @ 0.0456 = 0.9394
+[2026-06-01 15:35:39,881][__main__][INFO] -   val F1[02] @ 0.0456 = 0.9296
+[2026-06-01 15:35:39,881][__main__][INFO] -   val F1[03] @ 0.0456 = 0.9189
+[2026-06-01 15:35:39,881][__main__][INFO] -   val F1[04] @ 0.0456 = 0.8718
+[2026-06-01 15:35:39,881][__main__][INFO] -   val F1[05] @ 0.0456 = 1.0000
+[2026-06-01 15:35:39,882][__main__][INFO] -   val F1[06] @ 0.0456 = 0.9730
+[2026-06-01 15:35:39,883][__main__][INFO] - Saved predictions: outputs/eval_classifier/test_predictions.csv
+[2026-06-01 15:35:39,940][__main__][INFO] - Saved ROC curve: outputs/eval_classifier/roc_curve.png
+[2026-06-01 15:35:39,999][__main__][INFO] - Saved probability histogram: outputs/eval_classifier/prob_histogram.png
+[2026-06-01 15:35:40,039][__main__][INFO] - Saved probability boxplot: outputs/eval_classifier/prob_boxplot.png
+[2026-06-01 15:35:40,088][__main__][INFO] - Saved confusion matrix: outputs/eval_classifier/confusion_matrix.png
