@@ -1,8 +1,9 @@
 """Utilities for computing log-Mel spectrogrammes from audio waveforms."""
 
+from typing import Optional
+
 import torch
 from torch import Tensor
-from torchaudio.pipelines._tts.interface import Optional
 from torchaudio.transforms import MelSpectrogram
 
 EPS = 1e-6

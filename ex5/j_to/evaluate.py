@@ -17,20 +17,21 @@ def evaluate():
 
     f1_final_denom = 0.0
     for index in INDICES:
-        paths = sorted(DATA_DIR.glob(f"model_{index}_*.wav"))
+        files = f"model_{index}_*.wav"
+        paths = sorted(DATA_DIR.glob(files))
         if not paths:
-            exit(1)
+            raise FileNotFoundError(f"No audio files found for {files}")
 
         labels, predictions = [], []
         for path in paths:
-            probablity = predict(str(path))
+            probability = predict(str(path))
             label = int("anomaly" in laballed[path.name])
             labels.append(label)
-            prediction = int(probablity > THRESHOLD)
+            prediction = int(probability > THRESHOLD)
             predictions.append(prediction)
             if prediction != label:
                 print(
-                    f"{path.name}, {probablity:.4f}, {"anomaly" if label else "normal"}"
+                    f"{path.name}, {probability:.4f}, {"anomaly" if label else "normal"}"
                 )
 
         f1 = f1_score(labels, predictions)

@@ -1,5 +1,7 @@
 """Train and run a ResNet18-based anomaly classifier C.N.N."""
 
+from typing import Optional
+
 import torch
 import torchaudio
 from fan import Fan, log_mel
@@ -9,7 +11,6 @@ from torch import nn, tensor
 from torch.optim import Adam
 from torch.optim.lr_scheduler import StepLR
 from torch.utils.data import DataLoader
-from torchaudio.pipelines._tts.interface import Optional
 from torchvision.models import ResNet18_Weights, resnet18
 
 BATCH_SIZE = 16
