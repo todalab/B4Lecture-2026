@@ -1,0 +1,13 @@
+convolutional neural networks are particularly effective for image recognition tasks
+recurrent neural networks are designed to work with sequential data like text and time series
+long short term memory networks are a type of recurrent neural network that can learn long dependencies
+generative adversarial networks consist of two competing neural networks trained simultaneously
+autoencoders are neural networks that learn to compress and reconstruct input data
+support vector machines are a classical machine learning algorithm for classification tasks
+random forests combine multiple decision trees to improve prediction accuracy
+clustering algorithms group similar data points together without using labels
+dimensionality reduction techniques help visualize and compress high dimensional data
+principal component analysis is a popular method for reducing the number of features
+the bias variance tradeoff is a fundamental concept in machine learning model selection
+ensemble methods combine multiple models to achieve better performance than individual models
+hyperparameter tuning is the process of finding optimal settings for machine learning algorithms

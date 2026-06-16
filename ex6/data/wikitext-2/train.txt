@@ -1,0 +1,24 @@
+artificial intelligence is a field of computer science that aims to create intelligent machines
+machine learning is a subset of artificial intelligence that enables computers to learn without being explicitly programmed
+deep learning is a subset of machine learning that uses neural networks with multiple layers
+natural language processing is a branch of artificial intelligence that helps computers understand human language
+computer vision is a field that trains computers to interpret and understand visual information
+transformers are a type of neural network architecture that has revolutionized natural language processing
+attention mechanisms allow models to focus on different parts of the input when making predictions
+the transformer architecture was introduced in the paper attention is all you need
+bert and gpt are popular transformer models that have achieved state of the art results
+large language models are trained on massive amounts of text data to learn language patterns
+neural networks are computing systems inspired by biological neural networks
+backpropagation is an algorithm used to train neural networks by computing gradients
+gradient descent is an optimization algorithm used to minimize loss functions
+overfitting occurs when a model learns the training data too well and fails to generalize
+regularization techniques help prevent overfitting by adding constraints to the model
+cross validation is a technique used to assess how well a model will generalize to unseen data
+data preprocessing is an important step that involves cleaning and preparing data for training
+feature engineering is the process of selecting and transforming input variables for machine learning
+supervised learning uses labeled data to train models for prediction tasks
+unsupervised learning finds patterns in data without using labeled examples
+reinforcement learning trains agents to make decisions through trial and error
+python is a popular programming language for machine learning and data science
+pytorch and tensorflow are widely used deep learning frameworks
+jupyter notebooks provide an interactive environment for data analysis and experimentation

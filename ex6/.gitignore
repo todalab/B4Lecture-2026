@@ -19,16 +19,16 @@ coverage.xml
 .pytest_cache
 .hypothesis
 
-# Data files
-*.txt
+# Generated / downloaded data (data/ is provided in repo, don't ignore)
 *.zip
-data/
-wikitext-2/
 
-# Model checkpoints
+# Model checkpoints and logs
 *.pt
 *.pth
 checkpoints/
+*.log
+results/
+fig/
 
 # Jupyter
 .ipynb_checkpoints
