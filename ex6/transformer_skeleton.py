@@ -22,23 +22,17 @@ class PositionalEncoding(nn.Module):
         self.d_model = d_model
         self.max_seq_len = max_seq_len
 
-        # ★ 実装箇所 5: Sinusoidal positional encoding
-        # ヒント:
-        # - pe = torch.zeros(max_seq_len, d_model) でエンコーディング行列を作成
-        # - position = torch.arange(0, max_seq_len).unsqueeze(1) で位置インデックス
-        # - div_term で周波数項を計算
-        # - 偶数インデックスにsin、奇数インデックスにcosを適用
-        # - register_buffer でpe を登録
+        pe = torch.zeros(max_seq_len, d_model)
+        position = torch.arange(0, max_seq_len).unsqueeze(1).float()
+        div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model))
 
-        # TODO: ここに実装
-        pass
+        pe[:, 0::2] = torch.sin(position * div_term)
+        pe[:, 1::2] = torch.cos(position * div_term)
+
+        self.register_buffer('pe', pe)
 
     def forward(self, x):
-        # ★ 実装箇所 5-2: エンコーディングを入力に加算
-        # ヒント: x + self.pe[:x.size(1), :] のようにして加算
-
-        # TODO: ここに実装
-        return x
+        return x + self.pe[:x.size(1), :]
 
 
 class MultiHeadAttention(nn.Module):
@@ -47,95 +41,52 @@ class MultiHeadAttention(nn.Module):
     def __init__(self, d_model, n_heads, dropout=0.1):
         super().__init__()
 
-        # ★ 実装箇所 1: 必要なパラメータの初期化
-        # ヒント:
-        # - d_model % n_heads == 0 をチェック
-        # - self.d_k = d_model // n_heads で各ヘッドの次元数
-        # - Query, Key, Value用のLinear層を定義（w_q, w_k, w_v）
-        # - 出力用のLinear層を定義（w_o）
-        # - Dropout層を定義
-
         assert d_model % n_heads == 0, "d_model must be divisible by n_heads"
 
         self.d_model = d_model
         self.n_heads = n_heads
-        # TODO: self.d_k = ?
+        self.d_k = d_model // n_heads
 
-        # TODO: Linear layers を定義
-        # self.w_q = nn.Linear(?, ?)
-        # self.w_k = nn.Linear(?, ?)
-        # self.w_v = nn.Linear(?, ?)
-        # self.w_o = nn.Linear(?, ?)
+        self.w_q = nn.Linear(d_model, d_model)
+        self.w_k = nn.Linear(d_model, d_model)
+        self.w_v = nn.Linear(d_model, d_model)
+        self.w_o = nn.Linear(d_model, d_model)
 
-        # TODO: Dropout layer
-        # self.dropout = nn.Dropout(?)
+        self.dropout = nn.Dropout(dropout)
 
     def scaled_dot_product_attention(self, q, k, v, mask=None):
         """Scaled Dot-Product Attention"""
-        # ★ 実装箇所 2-1: Attention の計算
-        # ヒント:
-        # - scores = torch.matmul(q, k.transpose(-2, -1)) / math.sqrt(d_k)
-        # - マスクがある場合は大きな負の値で置換
-        # - softmax で正規化
-        # - v と掛け合わせて出力
-
         d_k = q.size(-1)
 
-        # TODO: Attention scores の計算
-        # scores = ?
+        scores = torch.matmul(q, k.transpose(-2, -1)) / math.sqrt(d_k)
 
-        # TODO: マスク適用（もしある場合）
-        # if mask is not None:
-        #     scores = scores.masked_fill(mask == 0, -1e9)
+        if mask is not None:
+            scores = scores.masked_fill(mask == 0, -1e9)
 
-        # TODO: Softmax + Dropout
-        # attention_weights = F.softmax(scores, dim=-1)
-        # attention_weights = self.dropout(attention_weights)
+        attention_weights = F.softmax(scores, dim=-1)
+        attention_weights = self.dropout(attention_weights)
 
-        # TODO: Attentionの適用
-        # output = torch.matmul(attention_weights, v)
+        output = torch.matmul(attention_weights, v)
 
-        # return output, attention_weights
-
-        # 暫定的に入力をそのまま返す（実装後に削除）
-        return q, None
+        return output, attention_weights
 
     def forward(self, query, key, value, mask=None):
         """Multi-Head Attention の forward pass"""
-        # ★ 実装箇所 2: Multi-Head機構の実装
-        # ヒント:
-        # 1. Linear変換でQ,K,Vを作成
-        # 2. (batch, seq_len, d_model) → (batch, n_heads, seq_len, d_k) に変形
-        # 3. scaled_dot_product_attention を呼び出し
-        # 4. (batch, n_heads, seq_len, d_k) → (batch, seq_len, d_model) に戻す
-        # 5. 最終Linear層を適用
-
         batch_size = query.size(0)
         seq_len = query.size(1)
 
-        # TODO: Linear変換
-        # q = self.w_q(query)  # (batch, seq_len, d_model)
-        # k = self.w_k(key)
-        # v = self.w_v(value)
+        q = self.w_q(query).view(batch_size, seq_len, self.n_heads, self.d_k).transpose(1, 2)
+        k = self.w_k(key).view(batch_size, seq_len, self.n_heads, self.d_k).transpose(1, 2)
+        v = self.w_v(value).view(batch_size, seq_len, self.n_heads, self.d_k).transpose(1, 2)
 
-        # TODO: Multi-head用に変形
-        # q = q.view(batch_size, seq_len, self.n_heads, self.d_k).transpose(1, 2)
-        # k = k.view(batch_size, seq_len, self.n_heads, self.d_k).transpose(1, 2)
-        # v = v.view(batch_size, seq_len, self.n_heads, self.d_k).transpose(1, 2)
-        # → (batch, n_heads, seq_len, d_k)
+        attn_output, attn_weights = self.scaled_dot_product_attention(q, k, v, mask)
 
-        # TODO: Attention適用
-        # attn_output, attn_weights = self.scaled_dot_product_attention(q, k, v, mask)
+        attn_output = attn_output.transpose(1, 2).contiguous()
+        attn_output = attn_output.view(batch_size, seq_len, self.d_model)
 
-        # TODO: 形状を元に戻す
-        # attn_output = attn_output.transpose(1, 2).contiguous()
-        # attn_output = attn_output.view(batch_size, seq_len, self.d_model)
+        output = self.w_o(attn_output)
 
-        # TODO: 最終Linear層
-        # output = self.w_o(attn_output)
-
-        # 暫定的に入力をそのまま返す（実装後に削除）
-        return query, None
+        return output, attn_weights
 
 
 class FeedForward(nn.Module):
@@ -157,38 +108,20 @@ class TransformerBlock(nn.Module):
     def __init__(self, d_model, n_heads, d_ff, dropout=0.1):
         super().__init__()
 
-        # ★ 実装箇所 3: レイヤーの定義
-        # ヒント:
-        # - MultiHeadAttention インスタンスを作成
-        # - FeedForward インスタンスを作成（完成版があります）
-        # - LayerNormalization を2つ作成（norm1, norm2）
-        # - Dropout を作成
-
-        # TODO: 各レイヤーを定義
-        # self.attention = MultiHeadAttention(?, ?, ?)
-        # self.feed_forward = FeedForward(?, ?, ?)
-        # self.norm1 = nn.LayerNorm(?)
-        # self.norm2 = nn.LayerNorm(?)
-        # self.dropout = nn.Dropout(?)
+        self.attention = MultiHeadAttention(d_model, n_heads, dropout)
+        self.feed_forward = FeedForward(d_model, d_ff, dropout)
+        self.norm1 = nn.LayerNorm(d_model)
+        self.norm2 = nn.LayerNorm(d_model)
+        self.dropout = nn.Dropout(dropout)
 
     def forward(self, x, mask=None):
         """TransformerBlock の forward pass"""
-        # ★ 実装箇所 4: Residual Connection + Layer Normalization
-        # ヒント:
-        # 1. Self-attention: norm(x + attention(x))
-        # 2. Feed-forward: norm(x + feed_forward(x))
-        # Pre-normalization と Post-normalization の2つの方式があります
-        # ここではPost-normalization（原論文）を実装してください
+        attn_output, _ = self.attention(x, x, x, mask)
+        x = self.norm1(x + self.dropout(attn_output))
 
-        # TODO: Self-attention with residual connection
-        # attn_output, _ = self.attention(x, x, x, mask)
-        # x = self.norm1(x + self.dropout(attn_output))
+        ff_output = self.feed_forward(x)
+        x = self.norm2(x + self.dropout(ff_output))
 
-        # TODO: Feed-forward with residual connection
-        # ff_output = self.feed_forward(x)
-        # x = self.norm2(x + self.dropout(ff_output))
-
-        # 暫定的に入力をそのまま返す（実装後に削除）
         return x
 
 
@@ -263,6 +196,30 @@ class LanguageModel(nn.Module):
 
         return logits, loss
 
+    def generate(self, context, max_tokens, temperature=1.0, top_k=None):
+        """テキストを自己回帰的に生成"""
+        self.eval()
+        generated = context.clone()
+
+        for _ in range(max_tokens):
+            with torch.no_grad():
+                logits, _ = self.forward(generated)
+                logits = logits[:, -1, :] / temperature
+
+                if top_k is not None:
+                    v, _ = torch.topk(logits, top_k)
+                    logits[logits < v[:, [-1]]] = -float('inf')
+
+                probs = F.softmax(logits, dim=-1)
+                next_token = torch.multinomial(probs, 1)
+
+                generated = torch.cat([generated, next_token], dim=1)
+
+                if generated.size(1) >= self.max_seq_len:
+                    break
+
+        return generated
+
 
 def get_model_config(model_size):
     """モデルサイズ設定（完成版）"""
@@ -275,28 +232,28 @@ def get_model_config(model_size):
     return configs[model_size]
 
 
+def count_parameters(model):
+    """モデルのパラメータ数をカウント"""
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)
+
+
 if __name__ == "__main__":
-    # 基本テスト用のコード
-    print("Transformer Skeleton テスト")
+    print("Transformer 実装テスト")
 
-    config = get_model_config('tiny')
-    model = LanguageModel(
-        vocab_size=1000,
-        d_model=config['d_model'],
-        n_heads=config['n_heads'],
-        n_layers=config['n_layers'],
-        d_ff=config['d_ff'],
-        max_seq_len=128
-    )
+    for size in ['tiny', 'small']:
+        config = get_model_config(size)
+        model = LanguageModel(
+            vocab_size=1000,
+            d_model=config['d_model'],
+            n_heads=config['n_heads'],
+            n_layers=config['n_layers'],
+            d_ff=config['d_ff'],
+            max_seq_len=128
+        )
 
-    # テスト用データ
-    x = torch.randint(0, 1000, (2, 32))  # (batch_size=2, seq_len=32)
+        param_count = count_parameters(model)
+        print(f"{size.title()} model: {param_count:,} parameters ({param_count/1e6:.2f}M)")
 
-    print(f"Input shape: {x.shape}")
-    try:
-        logits, loss = model(x, x)  # 自分自身をターゲットとして使用
-        print(f"Output shape: {logits.shape}")
-        print(f"Model test successful!")
-    except Exception as e:
-        print(f"実装が必要です: {e}")
-        print("★マークの箇所を実装してから再実行してください")
+        x = torch.randint(0, 1000, (2, 32))
+        logits, loss = model(x, x)
+        print(f"  Output shape: {logits.shape}, Loss: {loss.item():.4f}")
