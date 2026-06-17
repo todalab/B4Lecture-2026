@@ -1,237 +1,208 @@
 #!/usr/bin/env python3
-"""
-Implementation Test for Ex6 B4 Lecture
-学生が実装した箇所をテストするスクリプト
+"""Implementation Test.
+
+実装した Transformer の各コンポーネントをテストするスクリプト
+
+使用方法:
+    python test_implementation.py
 """
 
-import torch
-import numpy as np
-import sys
 import traceback
+import torch
+
+from transformer_skeleton import MultiHeadAttention, PositionalEncoding, TranslationModel, DecoderBlock, EncoderBlock
+from transformer_skeleton import get_model_config
+
 
 def test_positional_encoding():
     """PositionalEncoding のテスト"""
-    print("Testing PositionalEncoding...")
+    print("Testing PositionalEncoding ...")
     try:
-        from transformer_skeleton import PositionalEncoding
+        pe = PositionalEncoding(d_model=128, dropout=0.0, max_seq_len=100)
+        x = torch.randn(2, 50, 128)
+        out = pe(x)
 
-        pos_enc = PositionalEncoding(d_model=128, max_seq_len=100)
-        x = torch.randn(1, 50, 128)  # (batch, seq_len, d_model)
+        assert out.shape == x.shape, f"Shape mismatch: {out.shape} != {x.shape}"
+        assert not torch.equal(out, x), "Output should differ from input (PE not added)"
 
-        output = pos_enc(x)
-
-        if output is None or torch.equal(output, x):
-            print("  ❌ PositionalEncoding: 実装が必要です")
-            return False
-
-        if output.shape != x.shape:
-            print(f"  ❌ PositionalEncoding: 出力形状が間違っています {output.shape} != {x.shape}")
-            return False
+        # 偶数チャンネルは sin、奇数は cos → sin(0) = 0, cos(0) = 1
+        pe_val = pe.pe[0, 0, :]  # position=0 の PE
+        assert abs(pe_val[0].item()) < 1e-5, "pe[pos=0, i=0] should be sin(0) = 0"
+        assert abs(pe_val[1].item() - 1.0) < 1e-5, "pe[pos=0, i=1] should be cos(0) = 1"
 
         print("  ✅ PositionalEncoding: OK")
         return True
-
     except Exception as e:
-        print(f"  ❌ PositionalEncoding: エラー - {e}")
+        print(f"  ❌ PositionalEncoding: {e}")
+        traceback.print_exc()
         return False
 
-def test_multihead_attention():
-    """MultiHeadAttention のテスト"""
-    print("Testing MultiHeadAttention...")
+
+def test_multihead_attention_self():
+    """MultiHeadAttention の self-attention テスト"""
+    print("Testing MultiHeadAttention (self-attention) ...")
     try:
-        from transformer_skeleton import MultiHeadAttention
+        attn = MultiHeadAttention(d_model=128, n_heads=4, dropout=0.0)
+        x = torch.randn(2, 10, 128)
+        out, weights = attn(x, x, x)
 
-        attention = MultiHeadAttention(d_model=128, n_heads=4)
-        x = torch.randn(2, 10, 128)  # (batch, seq_len, d_model)
+        assert out.shape == x.shape, f"Output shape: {out.shape}"
+        assert weights.shape == (2, 4, 10, 10), f"Weights shape: {weights.shape}"
+        assert not torch.equal(out, x), "Output should differ from input"
 
-        output, attn_weights = attention(x, x, x)
+        # Attention weights の合計は 1 に近いはず
+        row_sum = weights.sum(dim=-1)
+        assert torch.allclose(row_sum, torch.ones_like(row_sum), atol=1e-4), \
+            "Attention weights should sum to 1"
 
-        if output is None or torch.equal(output, x):
-            print("  ❌ MultiHeadAttention: 実装が必要です")
-            return False
-
-        if output.shape != x.shape:
-            print(f"  ❌ MultiHeadAttention: 出力形状が間違っています {output.shape} != {x.shape}")
-            return False
-
-        print("  ✅ MultiHeadAttention: OK")
+        print("  ✅ MultiHeadAttention (self-attention): OK")
         return True
-
     except Exception as e:
-        print(f"  ❌ MultiHeadAttention: エラー - {e}")
+        print(f"  ❌ MultiHeadAttention (self-attention): {e}")
+        traceback.print_exc()
         return False
 
-def test_transformer_block():
-    """TransformerBlock のテスト"""
-    print("Testing TransformerBlock...")
+
+def test_multihead_attention_cross():
+    """MultiHeadAttention の cross-attention テスト (encoder出力を参照)"""
+    print("Testing MultiHeadAttention (cross-attention) ...")
     try:
-        from transformer_skeleton import TransformerBlock
+        attn = MultiHeadAttention(d_model=128, n_heads=4, dropout=0.0)
+        query = torch.randn(2, 8, 128)   # decoder side (tgt_len=8)
+        encoder_out = torch.randn(2, 15, 128)  # encoder side (src_len=15)
 
-        block = TransformerBlock(d_model=128, n_heads=4, d_ff=512)
-        x = torch.randn(2, 10, 128)  # (batch, seq_len, d_model)
+        out, weights = attn(query, encoder_out, encoder_out)
 
-        output = block(x)
+        assert out.shape == (2, 8, 128), f"Output shape: {out.shape}"
+        assert weights.shape == (2, 4, 8, 15), f"Weights shape: {weights.shape}"
 
-        if output is None or torch.equal(output, x):
-            print("  ❌ TransformerBlock: 実装が必要です")
-            return False
-
-        if output.shape != x.shape:
-            print(f"  ❌ TransformerBlock: 出力形状が間違っています {output.shape} != {x.shape}")
-            return False
-
-        print("  ✅ TransformerBlock: OK")
+        print("  ✅ MultiHeadAttention (cross-attention): OK")
         return True
-
     except Exception as e:
-        print(f"  ❌ TransformerBlock: エラー - {e}")
+        print(f"  ❌ MultiHeadAttention (cross-attention): {e}")
+        traceback.print_exc()
         return False
 
-def test_language_model():
-    """LanguageModel のテスト"""
-    print("Testing LanguageModel...")
-    try:
-        from transformer_skeleton import LanguageModel, get_model_config
 
-        config = get_model_config('tiny')
-        model = LanguageModel(
-            vocab_size=1000,
-            d_model=config['d_model'],
-            n_heads=config['n_heads'],
-            n_layers=config['n_layers'],
-            d_ff=config['d_ff'],
-            max_seq_len=64
+def test_encoder_block():
+    """EncoderBlock のテスト"""
+    print("Testing EncoderBlock ...")
+    try:
+        block = EncoderBlock(d_model=128, n_heads=4, d_ff=512, dropout=0.0)
+        x = torch.randn(2, 20, 128)
+        out = block(x)
+
+        assert out.shape == x.shape, f"Shape mismatch: {out.shape}"
+        assert not torch.equal(out, x), "Output should differ from input"
+
+        print("  ✅ EncoderBlock: OK")
+        return True
+    except Exception as e:
+        print(f"  ❌ EncoderBlock: {e}")
+        traceback.print_exc()
+        return False
+
+
+def test_decoder_block():
+    """DecoderBlock のテスト (cross-attention を含む)"""
+    print("Testing DecoderBlock ...")
+    try:
+        block = DecoderBlock(d_model=128, n_heads=4, d_ff=512, dropout=0.0)
+        x = torch.randn(2, 10, 128)            # decoder input  (tgt_len=10)
+        encoder_out = torch.randn(2, 20, 128)  # encoder output (src_len=20)
+        out = block(x, encoder_out)
+
+        assert out.shape == x.shape, f"Shape mismatch: {out.shape}"
+        assert not torch.equal(out, x), "Output should differ from input"
+
+        print("  ✅ DecoderBlock: OK")
+        return True
+    except Exception as e:
+        print(f"  ❌ DecoderBlock: {e}")
+        traceback.print_exc()
+        return False
+
+
+def test_translation_model():
+    """TranslationModel のフルフォワードテスト"""
+    print("Testing TranslationModel ...")
+    try:
+        config = get_model_config("tiny")
+        model = TranslationModel(
+            src_vocab_size=500,
+            tgt_vocab_size=600,
+            d_model=config["d_model"],
+            n_heads=config["n_heads"],
+            n_encoder_layers=config["n_encoder_layers"],
+            n_decoder_layers=config["n_decoder_layers"],
+            d_ff=config["d_ff"],
+            max_seq_len=64,
         )
 
-        x = torch.randint(0, 1000, (2, 32))  # (batch, seq_len)
-        y = torch.randint(0, 1000, (2, 32))  # targets
+        src = torch.randint(1, 500, (2, 20))
+        tgt = torch.randint(1, 600, (2, 15))
+        tgt_out = torch.randint(1, 600, (2, 15))
 
-        logits, loss = model(x, y)
+        logits, loss = model(src, tgt, targets=tgt_out)
 
-        if logits is None:
-            print("  ❌ LanguageModel: 出力が None です")
-            return False
-
-        expected_shape = (2, 32, 1000)
-        if logits.shape != expected_shape:
-            print(f"  ❌ LanguageModel: 出力形状が間違っています {logits.shape} != {expected_shape}")
-            return False
-
-        if loss is None or not torch.is_tensor(loss):
-            print("  ❌ LanguageModel: 損失が計算されていません")
-            return False
+        assert logits.shape == (2, 15, 600), f"logits shape: {logits.shape}"
+        assert loss is not None and loss.item() > 0, "Loss should be positive"
 
         # 勾配計算テスト
         loss.backward()
-        has_grad = any(p.grad is not None and p.grad.abs().sum() > 0
-                      for p in model.parameters() if p.requires_grad)
+        has_grad = any(
+            p.grad is not None and p.grad.abs().sum() > 0
+            for p in model.parameters()
+            if p.requires_grad
+        )
+        assert has_grad, "Gradients should flow through the model"
 
-        if not has_grad:
-            print("  ❌ LanguageModel: 勾配が計算されていません")
-            return False
-
-        print("  ✅ LanguageModel: OK")
+        print("  ✅ TranslationModel: OK")
         return True
-
     except Exception as e:
-        print(f"  ❌ LanguageModel: エラー - {e}")
+        print(f"  ❌ TranslationModel: {e}")
         traceback.print_exc()
         return False
 
-def test_data_loader():
-    """DataLoader のテスト"""
-    print("Testing DataLoader...")
+def test_generate():
+    """生成 (greedy decoding) のテスト"""
+    print("Testing generate (greedy decoding) ...")
     try:
-        from data_loader import create_data_loaders
-
-        # Shakespeare データテスト
-        train_loader, val_loader, vocab_size, encode_fn, decode_fn = create_data_loaders(
-            "shakespeare", seq_len=32, batch_size=2, data_dir="data"
+        model = TranslationModel(
+            src_vocab_size=100, tgt_vocab_size=100,
+            d_model=64, n_heads=4, n_encoder_layers=1, n_decoder_layers=1,
+            d_ff=128, max_seq_len=32,
         )
+        model.eval()
 
-        # データ取得テスト
-        for x, y in train_loader:
-            if x.shape[0] != 2 or x.shape[1] != 32:
-                print(f"  ❌ DataLoader: バッチ形状が間違っています {x.shape}")
-                return False
+        src = torch.randint(1, 100, (2, 10))
+        generated = model.generate(src, bos_idx=2, eos_idx=3, max_len=20)
 
-            # デコードテスト
-            text = decode_fn(x[0].tolist())
-            if not isinstance(text, str) or len(text) == 0:
-                print("  ❌ DataLoader: デコード機能が動作しません")
-                return False
+        assert generated.shape[0] == 2, f"Batch size: {generated.shape[0]}"
+        assert (generated[:, 0] == 2).all(), "Generated should start with BOS"
+        assert generated.shape[1] <= 21, f"Max length exceeded: {generated.shape[1]}"
 
-            break
-
-        print("  ✅ DataLoader: OK")
+        print("  ✅ Generate: OK")
         return True
-
     except Exception as e:
-        print(f"  ❌ DataLoader: エラー - {e}")
-        print("     データファイルが存在することを確認してください:")
-        print("     - data/shakespeare.txt")
-        print("     - data/wikitext-2/train.txt")
-        print("     - data/wikitext-2/valid.txt")
-        return False
-
-def test_training_step():
-    """一回の学習ステップをテスト"""
-    print("Testing Training Step...")
-    try:
-        from transformer_skeleton import LanguageModel, get_model_config
-        from data_loader import create_data_loaders
-
-        # 小さなモデルでテスト
-        config = get_model_config('tiny')
-        config['d_model'] = 64  # さらに小さく
-
-        model = LanguageModel(
-            vocab_size=100,
-            d_model=config['d_model'],
-            n_heads=config['n_heads'],
-            n_layers=2,  # レイヤー数も減らす
-            d_ff=config['d_ff'],
-            max_seq_len=32
-        )
-
-        optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
-
-        # ダミーデータ
-        x = torch.randint(0, 100, (4, 16))
-        y = torch.randint(0, 100, (4, 16))
-
-        # 学習ステップ
-        model.train()
-        optimizer.zero_grad()
-
-        logits, loss = model(x, y)
-        loss.backward()
-
-        # 勾配クリッピング
-        torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
-
-        optimizer.step()
-
-        print("  ✅ Training Step: OK")
-        return True
-
-    except Exception as e:
-        print(f"  ❌ Training Step: エラー - {e}")
+        print(f"  ❌ Generate: {e}")
         traceback.print_exc()
         return False
+
 
 def main():
-    print("=" * 50)
-    print("Ex6 Implementation Test")
-    print("=" * 50)
+    print("=" * 55)
+    print("Ex6 Translation Transformer - Implementation Test")
+    print("=" * 55)
 
     tests = [
         test_positional_encoding,
-        test_multihead_attention,
-        test_transformer_block,
-        test_language_model,
-        test_data_loader,
-        test_training_step
+        test_multihead_attention_self,
+        test_multihead_attention_cross,
+        test_encoder_block,
+        test_decoder_block,
+        test_translation_model,
+        test_generate,
     ]
 
     results = []
@@ -239,34 +210,24 @@ def main():
         try:
             result = test()
             results.append(result)
-            print()
         except Exception as e:
             print(f"  ❌ テスト実行エラー: {e}")
             results.append(False)
-            print()
+        print()
 
-    print("=" * 50)
-    print("Test Results:")
-    print("=" * 50)
-
+    print("=" * 55)
     passed = sum(results)
     total = len(results)
 
     if passed == total:
         print(f"🎉 All tests passed! ({passed}/{total})")
-        print("実装が完了しています。main.py で学習を開始できます。")
+        print("実装完了です。main.py で学習を開始できます。")
         print("\n推奨コマンド:")
-        print("python main.py --model_size tiny --dataset shakespeare --epochs 5")
+        print("  python main.py --model_size tiny --epochs 10")
     else:
         print(f"⚠️  {total - passed} tests failed. ({passed}/{total})")
-        print("\n実装が必要な箇所:")
-        print("- transformer_skeleton.py の ★ マークの箇所を実装してください")
-        print("- data/ ディレクトリにデータファイルがあることを確認してください")
+        print("transformer_skeleton.py の ★ 箇所を確認してください。")
 
-    print("\n詳細なヘルプ:")
-    print("- README.md の実装仕様を確認")
-    print("- transformer_skeleton.py のコメントを読む")
-    print("- 質問があれば TA や先輩に相談")
 
 if __name__ == "__main__":
     main()
