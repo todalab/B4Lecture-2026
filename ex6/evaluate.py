@@ -1,321 +1,267 @@
 """
-Evaluation and Visualization for Ex6 B4 Lecture - 完成版
-スケーリング実験と結果可視化
+Evaluation and Visualization for Ex6 B4 Lecture - Translation Task
+BLEU スコアの計算と学習曲線の可視化
+
+使用例:
+    python evaluate.py --checkpoint checkpoints/translation_small_best.pt \
+                       --model_size small --num_samples 500
 """
 
+import argparse
+import json
+import logging
+import os
+from typing import List, Optional
+
+import matplotlib.pyplot as plt
+import numpy as np
 import torch
 import torch.nn as nn
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-import json
-import os
-import logging
-from typing import List, Dict, Tuple
-import argparse
-import glob
-
-# 日本語フォント設定（matplotlib用）
-plt.rcParams['font.family'] = ['DejaVu Sans', 'Arial Unicode MS', 'Hiragino Sans']
 
 logger = logging.getLogger(__name__)
 
+# sacrebleu が利用可能なら使用、なければ簡易実装にフォールバック
+try:
+    import sacrebleu as _sacrebleu
 
-def load_model_checkpoint(checkpoint_path: str, model: nn.Module, device: torch.device) -> Dict:
-    """チェックポイントからモデルを読み込み"""
-    checkpoint = torch.load(checkpoint_path, map_location=device)
-    model.load_state_dict(checkpoint['model_state_dict'])
-    logger.info(f"Model loaded from {checkpoint_path}")
-    return checkpoint
+    def compute_bleu(hypotheses: List[str], references: List[str]) -> float:
+        """BLEU スコアを計算する (sacrebleu 使用)"""
+        result = _sacrebleu.corpus_bleu(hypotheses, [references])
+        return result.score
+
+except ImportError:
+    from collections import Counter
+
+    def _ngram_counts(tokens: List[str], n: int) -> Counter:
+        return Counter(tuple(tokens[i : i + n]) for i in range(len(tokens) - n + 1))
+
+    def compute_bleu(hypotheses: List[str], references: List[str], max_n: int = 4) -> float:
+        """簡易 BLEU スコア (sacrebleu 未インストール時のフォールバック)"""
+        precisions = []
+        for n in range(1, max_n + 1):
+            correct, total = 0, 0
+            for hyp, ref in zip(hypotheses, references):
+                hyp_counts = _ngram_counts(hyp.split(), n)
+                ref_counts = _ngram_counts(ref.split(), n)
+                clipped = {k: min(v, ref_counts[k]) for k, v in hyp_counts.items()}
+                correct += sum(clipped.values())
+                total += sum(hyp_counts.values())
+            precisions.append(correct / max(total, 1))
+
+        if min(precisions) == 0:
+            return 0.0
+
+        # Brevity penalty
+        hyp_len = sum(len(h.split()) for h in hypotheses)
+        ref_len = sum(len(r.split()) for r in references)
+        bp = 1.0 if hyp_len >= ref_len else np.exp(1 - ref_len / max(hyp_len, 1))
+
+        score = bp * np.exp(sum(np.log(p) for p in precisions) / max_n)
+        return score * 100.0
 
 
-def evaluate_model(model: nn.Module, val_loader, device: torch.device) -> Tuple[float, float]:
-    """モデルを評価"""
+def translate_sentence(
+    model: nn.Module,
+    src_sentence: str,
+    src_tokenizer,
+    tgt_tokenizer,
+    device: torch.device,
+    max_len: int = 100,
+    bos_idx: int = 2,
+    eos_idx: int = 3,
+) -> str:
+    """1 文を翻訳する (greedy decoding)"""
     model.eval()
-    total_loss = 0
-    total_tokens = 0
+    src_ids = src_tokenizer.encode(src_sentence, add_eos=True, max_len=max_len)
+    src_tensor = torch.tensor(src_ids, dtype=torch.long).unsqueeze(0).to(device)
 
     with torch.no_grad():
-        for x, y in val_loader:
-            x, y = x.to(device), y.to(device)
-            logits, loss = model(x, y)
+        generated = model.generate(src_tensor, bos_idx, eos_idx, max_len=max_len)
 
-            batch_size, seq_len = y.shape
-            total_loss += loss.item() * batch_size * seq_len
-            total_tokens += batch_size * seq_len
-
-    avg_loss = total_loss / total_tokens
-    perplexity = np.exp(avg_loss)
-
-    return avg_loss, perplexity
+    return tgt_tokenizer.decode(generated[0].cpu().tolist())
 
 
-def generate_text(model: nn.Module, encode_fn, decode_fn, prompt: str,
-                  max_tokens: int = 100, temperature: float = 0.8,
-                  top_k: int = 50, device: torch.device = None) -> str:
-    """テキスト生成"""
+def evaluate_bleu(
+    model: nn.Module,
+    val_loader,
+    src_tokenizer,
+    tgt_tokenizer,
+    device: torch.device,
+    num_samples: int = 500,
+    max_len: int = 100,
+) -> float:
+    """検証データで BLEU スコアを計算する
+
+    Args:
+        num_samples: 評価するサンプル数 (多いほど正確だが時間がかかる)
+
+    Returns:
+        BLEU スコア (0~100)
+    """
+    from data_loader import BOS_IDX, EOS_IDX
+
     model.eval()
-
-    # プロンプトをエンコード
-    context = encode_fn(prompt)
-    context = torch.tensor(context, dtype=torch.long).unsqueeze(0)
-
-    if device:
-        context = context.to(device)
-
-    generated = context.clone()
+    hypotheses, references = [], []
+    count = 0
 
     with torch.no_grad():
-        for _ in range(max_tokens):
-            # 最大シーケンス長を超えないようにトリミング
-            if generated.size(1) >= model.max_seq_len:
-                generated = generated[:, -model.max_seq_len//2:]
+        for src, _, tgt_out in val_loader:
+            src = src.to(device)
+            generated = model.generate(src, BOS_IDX, EOS_IDX, max_len=max_len)
 
-            logits, _ = model(generated)
-            logits = logits[:, -1, :] / temperature
+            for i in range(src.size(0)):
+                hyp = tgt_tokenizer.decode(generated[i].cpu().tolist())
+                ref = tgt_tokenizer.decode(tgt_out[i].tolist())
+                hypotheses.append(hyp)
+                references.append(ref)
+                count += 1
+                if count >= num_samples:
+                    break
 
-            # Top-k sampling
-            if top_k > 0:
-                v, _ = torch.topk(logits, top_k)
-                logits[logits < v[:, [-1]]] = -float('inf')
+            if count >= num_samples:
+                break
 
-            probs = torch.softmax(logits, dim=-1)
-            next_token = torch.multinomial(probs, 1)
-
-            generated = torch.cat([generated, next_token], dim=1)
-
-    # デコード
-    generated_text = decode_fn(generated[0].cpu().tolist())
-    return generated_text
+    bleu = compute_bleu(hypotheses, references)
+    logger.info(f"BLEU score ({count} samples): {bleu:.2f}")
+    return bleu
 
 
-def plot_training_curves(metrics_paths: List[str], model_names: List[str], save_path: str = None):
+def plot_training_curves(
+    metrics_paths: List[str],
+    model_names: List[str],
+    save_path: Optional[str] = None,
+):
     """学習曲線をプロット"""
-    fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(15, 10))
+    fig, axes = plt.subplots(1, 3, figsize=(15, 5))
 
     for metrics_path, model_name in zip(metrics_paths, model_names):
         if not os.path.exists(metrics_path):
-            logger.warning(f"Metrics file not found: {metrics_path}")
+            logger.warning(f"Not found: {metrics_path}")
             continue
 
-        with open(metrics_path, 'r') as f:
+        with open(metrics_path) as f:
             metrics = json.load(f)
 
-        epochs = list(range(1, len(metrics['train_losses']) + 1))
+        epochs = list(range(1, len(metrics["train_losses"]) + 1))
 
-        # 訓練・検証損失
-        ax1.plot(epochs, metrics['train_losses'], label=f'{model_name} (Train)', linestyle='-')
-        ax1.plot(epochs, metrics['val_losses'], label=f'{model_name} (Val)', linestyle='--')
+        axes[0].plot(epochs, metrics["train_losses"], label=f"{model_name} (train)", linestyle="-")
+        axes[0].plot(epochs, metrics["val_losses"], label=f"{model_name} (val)", linestyle="--")
+        axes[1].plot(epochs, metrics["val_perplexities"], label=model_name)
+        axes[2].plot(epochs, metrics["learning_rates"], label=model_name)
 
-        # Perplexity
-        ax2.plot(epochs, metrics['val_perplexities'], label=model_name)
+    for ax, title, ylabel in zip(
+        axes,
+        ["Loss", "Validation Perplexity", "Learning Rate"],
+        ["Loss", "Perplexity", "LR"],
+    ):
+        ax.set_xlabel("Epoch")
+        ax.set_ylabel(ylabel)
+        ax.set_title(title)
+        ax.legend()
+        ax.grid(True)
 
-        # 学習率
-        ax3.plot(epochs, metrics['learning_rates'], label=model_name)
-
-        # エポック時間
-        ax4.plot(epochs, metrics['epoch_times'], label=model_name)
-
-    ax1.set_xlabel('Epoch')
-    ax1.set_ylabel('Loss')
-    ax1.set_title('Training and Validation Loss')
-    ax1.legend()
-    ax1.grid(True)
-
-    ax2.set_xlabel('Epoch')
-    ax2.set_ylabel('Perplexity')
-    ax2.set_title('Validation Perplexity')
-    ax2.set_yscale('log')
-    ax2.legend()
-    ax2.grid(True)
-
-    ax3.set_xlabel('Epoch')
-    ax3.set_ylabel('Learning Rate')
-    ax3.set_title('Learning Rate Schedule')
-    ax3.set_yscale('log')
-    ax3.legend()
-    ax3.grid(True)
-
-    ax4.set_xlabel('Epoch')
-    ax4.set_ylabel('Time (seconds)')
-    ax4.set_title('Training Time per Epoch')
-    ax4.legend()
-    ax4.grid(True)
+    axes[1].set_yscale("log")
+    axes[2].set_yscale("log")
 
     plt.tight_layout()
-
     if save_path:
-        plt.savefig(save_path, dpi=300, bbox_inches='tight')
-        logger.info(f"Training curves saved to {save_path}")
-
+        plt.savefig(save_path, dpi=150, bbox_inches="tight")
+        logger.info(f"Saved: {save_path}")
     plt.show()
 
 
-def plot_scaling_law(model_results: List[Dict], save_path: str = None):
-    """スケーリング法則をプロット"""
-    if len(model_results) < 2:
-        logger.warning("Need at least 2 models for scaling law analysis")
-        return
-
-    # データの抽出
-    param_counts = [result['param_count'] for result in model_results]
-    perplexities = [result['perplexity'] for result in model_results]
-    model_names = [result['name'] for result in model_results]
-
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
-
-    # 線形プロット
-    ax1.plot(param_counts, perplexities, 'o-', markersize=8, linewidth=2)
-    ax1.set_xlabel('Parameters (Millions)')
-    ax1.set_ylabel('Perplexity')
-    ax1.set_title('Scaling Law: Perplexity vs Model Size')
-    ax1.grid(True)
-
-    # 各点にラベルを追加
-    for i, (x, y, name) in enumerate(zip(param_counts, perplexities, model_names)):
-        ax1.annotate(name, (x, y), xytext=(5, 5), textcoords='offset points')
-
-    # 対数プロット
-    ax2.loglog(param_counts, perplexities, 'o-', markersize=8, linewidth=2)
-    ax2.set_xlabel('Parameters (Millions)')
-    ax2.set_ylabel('Perplexity')
-    ax2.set_title('Scaling Law (Log-Log Scale)')
-    ax2.grid(True)
-
-    # パワーローの フィッティング
-    if len(param_counts) >= 3:
-        log_params = np.log(param_counts)
-        log_perplexities = np.log(perplexities)
-
-        # 線形回帰: log(perplexity) = a + b * log(params)
-        coeffs = np.polyfit(log_params, log_perplexities, 1)
-        b, a = coeffs  # b is the power law exponent
-
-        # フィット線をプロット
-        x_fit = np.logspace(np.log10(min(param_counts)), np.log10(max(param_counts)), 100)
-        y_fit = np.exp(a) * (x_fit ** b)
-        ax2.plot(x_fit, y_fit, '--', alpha=0.7, color='red',
-                label=f'Power Law: y = {np.exp(a):.2f} * x^{b:.3f}')
-        ax2.legend()
-
-        logger.info(f"Scaling law fitted: Perplexity = {np.exp(a):.2f} * (Params)^{b:.3f}")
-
-    plt.tight_layout()
-
-    if save_path:
-        plt.savefig(save_path, dpi=300, bbox_inches='tight')
-        logger.info(f"Scaling law plot saved to {save_path}")
-
-    plt.show()
-
-
-def run_scaling_experiments(config: Dict) -> List[Dict]:
-    """スケーリング実験を実行"""
-    results = []
-
-    for model_name in config['model_sizes']:
-        logger.info(f"Evaluating {model_name} model...")
-
-        # モデル設定を読み込み
-        model_config = config['model_configs'][model_name]
-
-        try:
-            # チェックポイントパス
-            checkpoint_path = os.path.join(config['checkpoint_dir'], f"{model_name}_best.pt")
-
-            if not os.path.exists(checkpoint_path):
-                logger.warning(f"Checkpoint not found: {checkpoint_path}")
-                continue
-
-            # モデル作成（簡略化 - 実際にはtransformer_skeleton.pyから読み込み）
-            # ここでは仮のパラメータ数を設定
-            param_counts = {'tiny': 0.8, 'small': 4.8, 'medium': 76.7, 'large': 162.3}
-            param_count = param_counts.get(model_name, 1.0)
-
-            # 仮の結果（実際の実装では真の評価を行う）
-            # 実際にはevaluate_model()を使用
-            mock_perplexities = {'tiny': 47.2, 'small': 30.4, 'medium': 20.3, 'large': 16.1}
-            perplexity = mock_perplexities.get(model_name, 50.0)
-
-            result = {
-                'name': model_name,
-                'param_count': param_count,
-                'perplexity': perplexity,
-                'config': model_config
-            }
-
-            results.append(result)
-            logger.info(f"  {model_name}: {param_count}M params, Perplexity: {perplexity:.1f}")
-
-        except Exception as e:
-            logger.error(f"Error evaluating {model_name}: {e}")
-
-    return results
+def show_sample_translations(
+    model: nn.Module,
+    src_sentences: List[str],
+    src_tokenizer,
+    tgt_tokenizer,
+    device: torch.device,
+    max_len: int = 64,
+):
+    """サンプル文の翻訳結果を表示する"""
+    print("\n=== Sample Translations ===")
+    for src in src_sentences:
+        tgt = translate_sentence(
+            model, src, src_tokenizer, tgt_tokenizer, device, max_len
+        )
+        print(f"  EN: {src}")
+        print(f"  JA: {tgt}")
+        print()
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Evaluate Transformer scaling experiments")
-    parser.add_argument("--config", type=str, default="config.json",
-                       help="Configuration file path")
-    parser.add_argument("--checkpoint_dir", type=str, default="checkpoints",
-                       help="Directory containing model checkpoints")
-    parser.add_argument("--output_dir", type=str, default="results",
-                       help="Directory to save results")
-    parser.add_argument("--plot_training", action="store_true",
-                       help="Plot training curves")
-    parser.add_argument("--plot_scaling", action="store_true",
-                       help="Plot scaling law")
-    parser.add_argument("--generate_text", action="store_true",
-                       help="Generate text samples")
-
+    parser = argparse.ArgumentParser(description="Evaluate translation model")
+    parser.add_argument("--checkpoint", required=True, help="Path to checkpoint file")
+    parser.add_argument(
+        "--model_size",
+        choices=["tiny", "small", "medium", "large"],
+        default="small",
+    )
+    parser.add_argument("--num_samples", type=int, default=500, help="Samples for BLEU eval")
+    parser.add_argument("--max_len", type=int, default=64)
+    parser.add_argument("--batch_size", type=int, default=64)
+    parser.add_argument("--output_dir", default="results")
+    parser.add_argument("--plot_training", action="store_true")
     args = parser.parse_args()
 
-    # ロギング設定
     logging.basicConfig(level=logging.INFO)
-
-    # 出力ディレクトリ作成
     os.makedirs(args.output_dir, exist_ok=True)
 
-    # 設定例
-    config = {
-        'model_sizes': ['tiny', 'small', 'medium', 'large'],
-        'model_configs': {
-            'tiny': {'n_layers': 4, 'd_model': 128, 'n_heads': 4, 'd_ff': 512},
-            'small': {'n_layers': 6, 'd_model': 256, 'n_heads': 8, 'd_ff': 1024},
-            'medium': {'n_layers': 8, 'd_model': 512, 'n_heads': 8, 'd_ff': 2048},
-            'large': {'n_layers': 12, 'd_model': 768, 'n_heads': 12, 'd_ff': 3072}
-        },
-        'checkpoint_dir': args.checkpoint_dir
-    }
+    from data_loader import create_data_loaders
+    from training_utils import get_device
+    from transformer_skeleton import TranslationModel, get_model_config
 
+    device = get_device()
+
+    # データ読み込み
+    logger.info("Loading data ...")
+    _, val_loader, src_tokenizer, tgt_tokenizer = create_data_loaders(
+        max_len=args.max_len, batch_size=args.batch_size
+    )
+
+    # モデル読み込み
+    config = get_model_config(args.model_size)
+    model = TranslationModel(
+        src_vocab_size=len(src_tokenizer),
+        tgt_vocab_size=len(tgt_tokenizer),
+        d_model=config["d_model"],
+        n_heads=config["n_heads"],
+        n_encoder_layers=config["n_encoder_layers"],
+        n_decoder_layers=config["n_decoder_layers"],
+        d_ff=config["d_ff"],
+        max_seq_len=args.max_len * 2,
+    ).to(device)
+
+    checkpoint = torch.load(args.checkpoint, map_location=device)
+    model.load_state_dict(checkpoint["model_state_dict"])
+    logger.info(f"Loaded checkpoint: {args.checkpoint}")
+
+    # BLEU 評価
+    bleu = evaluate_bleu(model, val_loader, src_tokenizer, tgt_tokenizer, device, args.num_samples)
+    print(f"\nBLEU score: {bleu:.2f}")
+
+    # サンプル翻訳
+    sample_sentences = [
+        "I will check the schedule .",
+        "Thank you for your help .",
+        "Please send me the report .",
+        "The meeting is at three o'clock .",
+    ]
+    show_sample_translations(model, sample_sentences, src_tokenizer, tgt_tokenizer, device)
+
+    # 学習曲線
     if args.plot_training:
-        # 学習曲線をプロット
-        logger.info("Plotting training curves...")
-        metrics_paths = [os.path.join(args.checkpoint_dir, f"{name}_metrics.json")
-                        for name in config['model_sizes']]
-        plot_training_curves(metrics_paths, config['model_sizes'],
-                           save_path=os.path.join(args.output_dir, "training_curves.png"))
-
-    if args.plot_scaling:
-        # スケーリング実験
-        logger.info("Running scaling experiments...")
-        results = run_scaling_experiments(config)
-
-        if results:
-            # 結果を保存
-            results_path = os.path.join(args.output_dir, "scaling_results.json")
-            with open(results_path, 'w') as f:
-                json.dump(results, f, indent=2)
-            logger.info(f"Results saved to {results_path}")
-
-            # スケーリング法則をプロット
-            plot_scaling_law(results, save_path=os.path.join(args.output_dir, "scaling_law.png"))
-
-    if args.generate_text:
-        logger.info("Text generation feature coming soon...")
-        # TODO: 実装（モデルとデータローダーが必要）
-
-    logger.info("Evaluation completed!")
+        checkpoint_dir = os.path.dirname(args.checkpoint)
+        metrics_paths = [
+            os.path.join(checkpoint_dir, f"translation_{size}_metrics.json")
+            for size in ["tiny", "small", "medium", "large"]
+        ]
+        names = ["tiny", "small", "medium", "large"]
+        plot_training_curves(
+            metrics_paths,
+            names,
+            save_path=os.path.join(args.output_dir, "training_curves.png"),
+        )
 
 
 if __name__ == "__main__":
