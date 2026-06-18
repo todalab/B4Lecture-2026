@@ -14,14 +14,14 @@
 
 ## 背景・課題設定
 
-Transformerは、2017年に提案された Self-Attention を中核とするアーキテクチャで、機械翻訳・言語モデリング・画像認識など幅広いタスクで最高性能を達成している。
+Transformerは、2017年に提案された Self-Attention を中核とするアーキテクチャで、言語・画像・音声・音楽分野でも有力などの幅広いタスクで最高性能を達成している。
 
 本課題を通じて、以下の目標を達成することが望まれる：
 
 ### **目標**
 1. **Attentionの式の数学的な意味・解釈と長所を説明できる**
 2. **Transformerとは何か説明できる**
-3. **LLMの本質，SSLの本質について説明できる**
+3. **LLMの本質について説明できる**
 
 ---
 
@@ -65,7 +65,7 @@ data_loader - INFO -  Val:  1200 pairs  (19 batches)
 
 ### 6-1 Transformer の実装
 
-`transformer_skeleton.py` 内の `#TODO` を埋めて、以下のクラスを完成させてください。
+`transformer_skeleton.py` 内の `#TODO` を埋めて、以下のクラスを完成させてください。完成後、`raise NotImplementedError`を削除することを忘れないでください。
 
 #### **6-1-1 PositionalEncoding**
 
@@ -125,7 +125,7 @@ data_loader - INFO -  Val:  1200 pairs  (19 batches)
 | `transformer_skeleton.py` | 実装箇所（`#TODO`）が明示されたTransformer |
 | `data_loader.py` | BSD コーパスのロード・トークナイズ・DataLoader |
 | `training_utils.py` | 学習ループ・ロギング・サンプル翻訳表示関数の集合 |
-| `evaluate.py` | 評価・可視化スクリプト |
+| `test_implementation.py` | 実装の妥当性をテストするスクリプト |
 | `main.py` | 学習実行スクリプト |
 
 ### **実行コマンド**
@@ -212,11 +212,12 @@ LR_LARGE  = 1e-4
 
 ## 発展課題（任意）
 
-### **実験験の拡張**
+### **実験の拡張**
 - BLEU スコアによる翻訳品質の定量評価（Tokenizerの変更）
-- データサイズを変えたときの性能変化
+- データサイズを変えたときの性能変化の観察
 - より大きな語彙・長い系列での実験（別コーパスの適用）
 - 別タスクへの応用（Q&Aボット、画像認識など）
+- 学習率を変えることによるLossや性能の変化の観察
 
 ---
 
@@ -231,7 +232,8 @@ LR_LARGE  = 1e-4
 
 2. **スケーリング実験の結果**
    - モデルサイズと Perplexity の関係
-   - 学習時間・GPU メモリ使用量の比較
+   - 学習時間・GPU メモリ使用量の比較  
+     （ヒント: 学習後に `torch.cuda.max_memory_allocated()` で最大使用量を確認できる）
 
 3. **考察・今後の展望**
    - 翻訳結果を見た所感
