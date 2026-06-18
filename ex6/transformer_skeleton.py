@@ -21,13 +21,14 @@ Ex6 B4講義 - 翻訳タスク用 Transformer
     - forward
     - generate
 """
+
 import torch
 import torch.nn as nn
 
 
 class PositionalEncoding(nn.Module):
     """位置エンコーディング (Sinusoidal Positional Encoding).
-    
+
     Args:
         d_model(int): 埋め込み次元
         dropout(float): ドロップアウト率
@@ -36,7 +37,7 @@ class PositionalEncoding(nn.Module):
     Functions:
         __init__(d_model, dropout, max_seq_len): 初期化コンストラクタ
         forward(x): 順伝播計算
-    
+
     Returns:
         torch.Tensor: 位置エンコーディング行列 (1, max_seq_len, d_model)
 
@@ -49,11 +50,15 @@ class PositionalEncoding(nn.Module):
         super().__init__()
         self.dropout = nn.Dropout(p=dropout)
 
-        #TODO: (max_seq_len, d_model) の位置エンコーディング行列を作成
+        # TODO: (max_seq_len, d_model) の位置エンコーディング行列を作成
         positional_encoding = torch.zeros(max_seq_len, d_model)
 
-        raise NotImplementedError("PositionalEncoding.__init__ の TODO を実装してください")
-        self.register_buffer("pe", positional_encoding) # GPU 上で定数テンソルとして保持
+        raise NotImplementedError(
+            "PositionalEncoding.__init__ の TODO を実装してください"
+        )
+        self.register_buffer(
+            "pe", positional_encoding
+        )  # GPU 上で定数テンソルとして保持
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """生成したエンコーディングの順伝播計算
@@ -62,10 +67,13 @@ class PositionalEncoding(nn.Module):
         Returns:
             output(batch, seq_len, d_model): 位置エンコーディングが加算された出力
         """
-        #TODO
+        # TODO
 
-        raise NotImplementedError("PositionalEncoding.forward の TODO を実装してください")
+        raise NotImplementedError(
+            "PositionalEncoding.forward の TODO を実装してください"
+        )
         return output
+
 
 class MultiHeadAttention(nn.Module):
     """マルチヘッドアテンション (Multi-Head Attention).
@@ -79,7 +87,7 @@ class MultiHeadAttention(nn.Module):
         __init__(d_model, n_heads, dropout): 初期化コンストラクタ
         scaled_dot_product_attention(q, k, v, mask): スケールドドットプロダクトアテンションの計算
         forward(query, key, value, mask=None): アテンションの順伝播計算
-    
+
     (ヒント) Multi-Head Attention の計算:
         self-attention  の場合: query = key = value = x
         cross-attention の場合: query = x, key = value = (encoderの出力)
@@ -116,10 +124,12 @@ class MultiHeadAttention(nn.Module):
             output(batch, heads, seq_len, d_k): アテンション出力
             attn_weights(batch, heads, seq_len, seq_len): アテンション重み
         """
-        #TODO
+        # TODO
         d_k = q.size(-1)
 
-        raise NotImplementedError("MultiHeadAttention.scaled_dot_product_attention の TODO を実装してください")
+        raise NotImplementedError(
+            "MultiHeadAttention.scaled_dot_product_attention の TODO を実装してください"
+        )
         return output, attention_weights
 
     def forward(
@@ -142,10 +152,11 @@ class MultiHeadAttention(nn.Module):
         """
         batch_size = query.size(0)
 
-        #TODO
+        # TODO
 
-
-        raise NotImplementedError("MultiHeadAttention.forward の TODO を実装してください")
+        raise NotImplementedError(
+            "MultiHeadAttention.forward の TODO を実装してください"
+        )
         return output, attn_weights
 
 
@@ -182,7 +193,7 @@ class FeedForward(nn.Module):
         Returns:
             output(batch, seq_len, d_model): 出力
         """
-        #TODO
+        # TODO
 
         raise NotImplementedError("FeedForward.forward の TODO を実装してください")
         return output
@@ -225,7 +236,7 @@ class EncoderBlock(nn.Module):
         Returns:
             (batch, src_len, d_model): 出力
         """
-        #TODO
+        # TODO
 
         raise NotImplementedError("EncoderBlock.forward の TODO を実装してください")
         return x
@@ -281,7 +292,7 @@ class DecoderBlock(nn.Module):
         Returns:
             torch.Tensor(batch, tgt_len, d_model): 出力
         """
-        #TODO
+        # TODO
 
         raise NotImplementedError("DecoderBlock.forward の TODO を実装してください")
         return x
@@ -337,10 +348,16 @@ class TranslationModel(nn.Module):
         self.pos_encoding = PositionalEncoding(d_model, dropout, max_seq_len)
 
         self.encoder_blocks = nn.ModuleList(
-            [EncoderBlock(d_model, n_heads, d_ff, dropout) for _ in range(n_encoder_layers)]
+            [
+                EncoderBlock(d_model, n_heads, d_ff, dropout)
+                for _ in range(n_encoder_layers)
+            ]
         )
         self.decoder_blocks = nn.ModuleList(
-            [DecoderBlock(d_model, n_heads, d_ff, dropout) for _ in range(n_decoder_layers)]
+            [
+                DecoderBlock(d_model, n_heads, d_ff, dropout)
+                for _ in range(n_decoder_layers)
+            ]
         )
 
         self.output_proj = nn.Linear(d_model, tgt_vocab_size)
@@ -398,7 +415,7 @@ class TranslationModel(nn.Module):
         Returns:
             torch.Tensor(batch, src_len, d_model): encoder の出力表現
         """
-        #TODO
+        # TODO
 
         raise NotImplementedError("TranslationModel.encode の TODO を実装してください")
         return x
@@ -422,7 +439,7 @@ class TranslationModel(nn.Module):
         Returns:
             torch.Tensor(batch, tgt_len, d_model): decoder の出力表現
         """
-        #TODO
+        # TODO
 
         raise NotImplementedError("TranslationModel.decode の TODO を実装してください")
         return x
@@ -440,11 +457,11 @@ class TranslationModel(nn.Module):
             targets(batch, tgt_len): ターゲット正解  (EOS で終わる, None なら損失計算なし)
 
         Returns:
-            logits(batch, tgt_len, tgt_vocab_size): 
+            logits(batch, tgt_len, tgt_vocab_size):
             loss(float): 損失値
         """
-        #TODO
-        
+        # TODO
+
         raise NotImplementedError("TranslationModel.forward の TODO を実装してください")
         return logits, loss
 
@@ -468,18 +485,44 @@ class TranslationModel(nn.Module):
             generated(batch, generated_len): BOS を含む
         """
         self.eval()
-        
-        #TODO
 
-        raise NotImplementedError("TranslationModel.generate の TODO を実装してください")
+        # TODO
+
+        raise NotImplementedError(
+            "TranslationModel.generate の TODO を実装してください"
+        )
         return generated
 
 
 def get_model_config(model_size: str) -> dict:
     configs = {
-        "tiny":   {"n_encoder_layers": 2, "n_decoder_layers": 2, "d_model": 128, "n_heads": 4, "d_ff": 512},
-        "small":  {"n_encoder_layers": 3, "n_decoder_layers": 3, "d_model": 256, "n_heads": 8, "d_ff": 1024},
-        "medium": {"n_encoder_layers": 4, "n_decoder_layers": 4, "d_model": 256, "n_heads": 8, "d_ff": 1024},
-        "large":  {"n_encoder_layers": 6, "n_decoder_layers": 6, "d_model": 512, "n_heads": 8, "d_ff": 2048},
+        "tiny": {
+            "n_encoder_layers": 2,
+            "n_decoder_layers": 2,
+            "d_model": 128,
+            "n_heads": 4,
+            "d_ff": 512,
+        },
+        "small": {
+            "n_encoder_layers": 3,
+            "n_decoder_layers": 3,
+            "d_model": 256,
+            "n_heads": 8,
+            "d_ff": 1024,
+        },
+        "medium": {
+            "n_encoder_layers": 4,
+            "n_decoder_layers": 4,
+            "d_model": 256,
+            "n_heads": 8,
+            "d_ff": 1024,
+        },
+        "large": {
+            "n_encoder_layers": 6,
+            "n_decoder_layers": 6,
+            "d_model": 512,
+            "n_heads": 8,
+            "d_ff": 2048,
+        },
     }
     return configs[model_size]

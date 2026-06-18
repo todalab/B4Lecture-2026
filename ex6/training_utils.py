@@ -189,7 +189,16 @@ def evaluate(
     return avg_loss, perplexity
 
 
-def _show_sample_translations(model, sample_sentences, src_tokenizer, tgt_tokenizer, device, max_len, bos_idx, eos_idx):
+def _show_sample_translations(
+    model,
+    sample_sentences,
+    src_tokenizer,
+    tgt_tokenizer,
+    device,
+    max_len,
+    bos_idx,
+    eos_idx,
+):
     """エポック終了時にサンプル翻訳を表示する"""
     model.eval()
     with torch.no_grad():
@@ -219,7 +228,9 @@ def train_model(
     sample_max_len: int = 64,
 ) -> TrainingMetrics:
     """モデル学習のメイン関数"""
-    logger.info(f"Starting training: {epochs} epochs, lr={learning_rate}, device={device}")
+    logger.info(
+        f"Starting training: {epochs} epochs, lr={learning_rate}, device={device}"
+    )
 
     os.makedirs(save_dir, exist_ok=True)
 
@@ -227,7 +238,9 @@ def train_model(
         model.parameters(), lr=learning_rate, betas=(0.9, 0.98), eps=1e-9
     )
     total_steps = len(train_loader) * epochs // grad_accumulation_steps
-    scheduler = LearningRateScheduler(optimizer, warmup_steps, total_steps, learning_rate)
+    scheduler = LearningRateScheduler(
+        optimizer, warmup_steps, total_steps, learning_rate
+    )
     metrics = TrainingMetrics()
     best_val_loss = float("inf")
 
@@ -251,10 +264,17 @@ def train_model(
 
         if sample_sentences and src_tokenizer and tgt_tokenizer:
             from data_loader import BOS_IDX, EOS_IDX
+
             logger.info(f"--- Sample translations (epoch {epoch + 1}) ---")
             _show_sample_translations(
-                model, sample_sentences, src_tokenizer, tgt_tokenizer,
-                device, sample_max_len, BOS_IDX, EOS_IDX,
+                model,
+                sample_sentences,
+                src_tokenizer,
+                tgt_tokenizer,
+                device,
+                sample_max_len,
+                BOS_IDX,
+                EOS_IDX,
             )
 
         checkpoint = {
