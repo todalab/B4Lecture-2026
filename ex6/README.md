@@ -138,6 +138,9 @@ data_loader - INFO -  Val:  1200 pairs  (19 batches)
 ### **実行コマンド**
 
 ```bash
+# 実装のチェック
+python test_implementation.py
+
 # tiny モデルで動作確認（推奨スタート）
 python main.py --model_size tiny --epochs 10
 
