@@ -65,25 +65,32 @@ data_loader - INFO -  Val:  1200 pairs  (19 batches)
 
 ### 6-1 Transformer の実装
 
-`transformer_skeleton.py` 内の `#TODO` を埋めて、以下のクラスを完成させてください。完成後、`raise NotImplementedError`を削除することを忘れないでください。
+`transformer_skeleton.py` 内の `#TODO` を埋めて、以下のクラスを完成させてください。各項に掲載している参照先にある数式を読み取って実装に反映させてみてください。
+※ 完成後、`raise NotImplementedError`を削除することを忘れないでください。
 
 #### **6-1-1 PositionalEncoding**
+`Attention is All You Need`の`3.5 Positional Encoding`を参照
 
 #### **6-1-2 MultiHeadAttention**
+`Attention is All You Need`の`3.2 Attention`を参照
 
 #### **6-1-3 FeedForward**
+`Attention is All You Need`の`3.3 Position-wise Feed-Forward Networks`を参照
 
 #### **6-1-4 EncoderBlock**
+`Attention is All You Need`の`3.1 Encoder and Decoder Stacks` — Encoder の段落を参照
 
 #### **6-1-5 DecoderBlock**
+`Attention is All You Need`の`3.1 Encoder and Decoder Stacks` — Decoder の段落を参照
 
 #### **6-1-6 TranslationModel**
+`Attention is All You Need`の`3 Model Architecture` および `Figure 1` を参照
 
 ---
 
 ### 6-2 スケーリング実験
 
-異なるモデルサイズで翻訳性能を比較する。そのための評価スクリプトevaluate.pyを作成し、評価を行ってください。以下の3点を出力してください。
+異なるモデルサイズで翻訳性能を比較します。そのための評価スクリプトevaluate.pyを作成し、評価を行ってください。以下の3点を出力してください。
 
 #### **評価指標**
 - **Perplexity（困惑度）**: 低いほど性能が良い
@@ -104,7 +111,7 @@ data_loader - INFO -  Val:  1200 pairs  (19 batches)
 
 ### 6-3 効率化手法の試行
 
-`training_utils.py` に完成版が提供されています。コードを読んで仕組みを理解し、自分で調整をして精度や効率が変化するか観察してください。
+`training_utils.py` に完成されたコードが提供されています。以下の2点について、コードを読んで仕組みを理解し、自分で調整をして精度や効率が変化するか観察してください。
 
 #### **6-3-1 Gradient Accumulation**
 - バッチサイズを疑似的に大きくする手法
@@ -227,7 +234,7 @@ LR_LARGE  = 1e-4
 
 1. **実装した Transformer アーキテクチャの説明**
    - Self-Attention・Cross-Attention の仕組み
-   - Encoder-Decoder 構造と因果マスクの役割
+   - Encoder-Decoder 構造とその役割
    - 実装で工夫した点・苦労した点
 
 2. **スケーリング実験の結果**
