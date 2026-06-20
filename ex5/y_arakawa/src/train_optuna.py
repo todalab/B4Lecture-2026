@@ -307,6 +307,8 @@ def train(cfg: DictConfig) -> float:
         hidden_channels1=cfg.model.hidden_channels1,
         hidden_channels2=cfg.model.hidden_channels2,
         latent_channels=cfg.model.latent_channels,
+        n_mels=cfg.dataset.n_mels,
+        target_frames=cfg.dataset.target_frames,
     ).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=cfg.train.learning_rate)
     loss_fn = nn.MSELoss()

@@ -34,7 +34,12 @@ def _load_model(cfg, device):
     log_dir = Path(cfg["hydra"]["sweep"]["dir"])
     ckpt = log_dir / Path(f"lr{round(lr, 4)}") / "ckpts" / "model_epoch_0009.pt"
     model = Autoencoder(
-        in_channels=1, hidden_channels1=h1, hidden_channels2=h2, latent_channels=cfg["model"]["latent_channels"]
+        in_channels=1,
+        hidden_channels1=h1,
+        hidden_channels2=h2,
+        latent_channels=cfg["model"]["latent_channels"],
+        n_mels=cfg["dataset"]["n_mels"],
+        target_frames=cfg["dataset"]["target_frames"],
     ).to(device)
     state = torch.load(ckpt, map_location=device)
     model.load_state_dict(state)

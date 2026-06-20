@@ -48,6 +48,8 @@ def _load_model(cfg: dict, optuna_results_path: Path, device: torch.device) -> A
         hidden_channels1=hidden_channels1,
         hidden_channels2=hidden_channels2,
         latent_channels=cfg["model"]["latent_channels"],
+        n_mels=cfg["dataset"]["n_mels"],
+        target_frames=cfg["dataset"]["target_frames"],
     ).to(device)
     state_dict = torch.load(ckpt_path, map_location=device)
     model.load_state_dict(state_dict)

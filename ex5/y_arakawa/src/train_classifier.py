@@ -63,6 +63,37 @@ def _resolve_ckpt_path(path_like: str | Path) -> Path:
     raise FileNotFoundError(f"AE checkpoint not found: {raw_path}")
 
 
+def _resolve_best_ae_ckpt_path() -> Path:
+    """Optuna の最適化結果から AE チェックポイントのパスを動的に解決する。
+
+    パス書式:
+        logs/mel_ae_optuna_for_comp/lr{best_lr を小数第4位に四捨五入}/ckpts/model_epoch_{E:04d}.pt
+        ただし E = ((epochs - 1) // epoch_per_ckpt) * epoch_per_ckpt
+    """
+    repo_root = Path(__file__).resolve().parent.parent  # = ex5/y_arakawa
+    sweep_root = repo_root / "logs" / "mel_ae_optuna_for_comp"
+    optuna_results_path = sweep_root / "optimization_results.yaml"
+    optuna_cfg_path = repo_root / "configs" / "config_optuna_for_comp.yaml"
+
+    results = OmegaConf.load(optuna_results_path)
+    sweep_cfg = OmegaConf.load(optuna_cfg_path)
+
+    best_lr = float(results.best_params["train.learning_rate"])
+    # sweep の subdir 命名 `lr${round:${train.learning_rate}, 4}` と同じ整形を行う。
+    lr_dir = f"lr{round(best_lr, 4)}"
+
+    epochs = int(sweep_cfg.train.epochs)
+    epoch_per_ckpt = int(sweep_cfg.train.epoch_per_ckpt)
+    # epochs-1 以下で最も大きい epoch_per_ckpt の倍数のエポック。
+    best_epoch = ((epochs - 1) // epoch_per_ckpt) * epoch_per_ckpt
+    ckpt_name = f"model_epoch_{best_epoch:04d}.pt"
+
+    ckpt_path = sweep_root / lr_dir / "ckpts" / ckpt_name
+    if not ckpt_path.exists():
+        raise FileNotFoundError(f"Auto-resolved AE checkpoint not found: {ckpt_path}")
+    return ckpt_path.resolve()
+
+
 def _encode(autoencoder: Autoencoder, mels: torch.Tensor, freeze_encoder: bool) -> torch.Tensor:
     """AEのエンコーダを実行する。必要に応じて勾配追跡を無効化する。"""
     if freeze_encoder:
@@ -172,9 +203,16 @@ def train(cfg: DictConfig) -> float:
         hidden_channels2=cfg.model.hidden_channels2,
         latent_channels=cfg.model.latent_channels,
         variant=variant,
+        n_mels=cfg.dataset.n_mels,
+        target_frames=cfg.dataset.target_frames,
     ).to(device)
 
-    ae_ckpt_path = _resolve_ckpt_path(cfg.classifier.ae_ckpt)
+    ae_ckpt_cfg = cfg.classifier.get("ae_ckpt", None)
+    if ae_ckpt_cfg is None or str(ae_ckpt_cfg).strip().lower() in ("", "auto", "null", "none"):
+        ae_ckpt_path = _resolve_best_ae_ckpt_path()
+        logger.info(f"Auto-resolved AE checkpoint from Optuna results: {ae_ckpt_path}")
+    else:
+        ae_ckpt_path = _resolve_ckpt_path(ae_ckpt_cfg)
     state_dict = torch.load(ae_ckpt_path, map_location=device)
     autoencoder.load_state_dict(state_dict)
     logger.info(f"Loaded AE checkpoint from {ae_ckpt_path}")

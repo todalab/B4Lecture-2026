@@ -19,7 +19,7 @@ dataset:
   sample_rate: 16000
   n_fft: 1024
   hop_length: 512
-  n_mels: 64
+  n_mels: 128
   target_frames: 40
 
 dataset_normal_and_anomaly:
@@ -29,8 +29,12 @@ dataset_normal_and_anomaly:
   test_list: src/dataloaders/normal_and_anomaly_data_test.txt
 
 classifier:
-  # Path to a pretrained AE checkpoint (state_dict saved via torch.save(model.state_dict(), ...)).
-  ae_ckpt: logs/mel_ae_optuna_for_comp/lr0.0041/ckpts/model_epoch_0057.pt
+  # AE チェックポイントの指定。
+  # "auto" (または null/未指定) にすると logs/mel_ae_optuna_for_comp/optimization_results.yaml と
+  # configs/config_optuna_for_comp.yaml から best LR と最大保存エポックを解決して
+  # logs/mel_ae_optuna_for_comp/lr{best_lr_round4}/ckpts/model_epoch_{E:04d}.pt を読み込む。
+  # 任意の特定チェックポイントを使いたい場合はそのパスを指定する。
+  ae_ckpt: auto
   # Whether to freeze the AE encoder and only train the MLP head.
   # AUC が低い場合は false にして encoder も同時に fine-tune すると改善しやすい。
   freeze_encoder: false

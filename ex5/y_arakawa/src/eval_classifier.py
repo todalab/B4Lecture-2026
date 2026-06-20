@@ -333,6 +333,8 @@ def evaluate(cfg: DictConfig) -> float:
         hidden_channels2=cfg.model.hidden_channels2,
         latent_channels=cfg.model.latent_channels,
         variant=variant,
+        n_mels=cfg.dataset.n_mels,
+        target_frames=cfg.dataset.target_frames,
     ).to(device)
 
     # 潜在次元をダミー入力で確認する。

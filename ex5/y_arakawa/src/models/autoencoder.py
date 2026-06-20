@@ -74,34 +74,78 @@ class Decoder1(nn.Module):
 
 
 class Encoder2(nn.Module):
-    """畳み込みエンコーダー.BatchNormを使用する."""
+    """畳み込みエンコーダー.BatchNormを使用する.
+
+    線形層の形状（Flatten後5120 -> 128）を一定に保つため、入力の n_mels が
+    64 より大きい場合は H 方向のみ stride=2 でダウンサンプリングする中間層を
+    追加する。
+    """
+
+    BASE_FEAT_H = 8
+    BASE_FEAT_W = 5
+    BOTTLENECK_CHANNELS = 128
 
     def __init__(
-        self, in_channels: int = 1, hidden_channels1: int = 32, hidden_channels2: int = 16, latent_channels: int = 8
+        self,
+        in_channels: int = 1,
+        hidden_channels1: int = 32,
+        hidden_channels2: int = 16,
+        latent_channels: int = 8,
+        n_mels: int = 64,
+        target_frames: int = 40,
     ) -> None:
         super().__init__()
-        self.net = nn.Sequential(
-            # 入力: (1, 64, 40) -> 出力: (32, 32, 20)
+        # 3回の stride=2 ダウンサンプリングで H, W は 1/8 になる
+        h_after_base = n_mels // 8
+        if h_after_base < self.BASE_FEAT_H or h_after_base % self.BASE_FEAT_H != 0:
+            raise ValueError(
+                f"n_mels={n_mels} は BASE_FEAT_H={self.BASE_FEAT_H} の 8 の倍数倍 (64, 128, ...) である必要があります"
+            )
+        # H を BASE_FEAT_H まで落とすために必要な追加 stride=2 (H 方向のみ) の段数
+        self.extra_h_down = 0
+        h_remaining = h_after_base
+        while h_remaining > self.BASE_FEAT_H:
+            h_remaining //= 2
+            self.extra_h_down += 1
+
+        flatten_size = self.BOTTLENECK_CHANNELS * self.BASE_FEAT_H * self.BASE_FEAT_W
+
+        base_layers: list[nn.Module] = [
+            # 入力: (1, n_mels, frames) -> 出力: (32, n_mels/2, frames/2)
             nn.Conv2d(in_channels=1, out_channels=32, kernel_size=4, stride=2, padding=1),
             nn.BatchNorm2d(32),
             nn.ReLU(),
-            # 入力: (32, 32, 20) -> 出力: (32, 32, 20)
+            # 入力: (32, n_mels/2, frames/2) -> 出力: (32, n_mels/2, frames/2)
             nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3, stride=1, padding=1),
             nn.BatchNorm2d(32),
             nn.ReLU(),
-            # 入力: (32, 32, 20) -> 出力: (64, 16, 10)
+            # 入力: (32, n_mels/2, frames/2) -> 出力: (64, n_mels/4, frames/4)
             nn.Conv2d(in_channels=32, out_channels=64, kernel_size=4, stride=2, padding=1),
             nn.BatchNorm2d(64),
             nn.ReLU(),
-            # 入力: (64, 16, 10) -> 出力: (128, 8, 5)
+            # 入力: (64, n_mels/4, frames/4) -> 出力: (128, n_mels/8, frames/8)
             nn.Conv2d(in_channels=64, out_channels=128, kernel_size=4, stride=2, padding=1),
             nn.BatchNorm2d(128),
             nn.ReLU(),
-            # ここで2次元のマップを1次元に平坦化 (128 * 8 * 5 = 5120次元)
-            nn.Flatten(),
-            # 潜在空間（ボトルネック）へ圧縮
-            nn.Linear(in_features=128 * 8 * 5, out_features=128),
+        ]
+        # H 方向のみ stride=2 で追加ダウンサンプリング
+        for _ in range(self.extra_h_down):
+            base_layers.extend(
+                [
+                    nn.Conv2d(in_channels=128, out_channels=128, kernel_size=(4, 3), stride=(2, 1), padding=(1, 1)),
+                    nn.BatchNorm2d(128),
+                    nn.ReLU(),
+                ]
+            )
+        base_layers.extend(
+            [
+                # ここで2次元のマップを1次元に平坦化 (128 * 8 * 5 = 5120次元)
+                nn.Flatten(),
+                # 潜在空間（ボトルネック）へ圧縮
+                nn.Linear(in_features=flatten_size, out_features=128),
+            ]
         )
+        self.net = nn.Sequential(*base_layers)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Encode input mel spectrograms into latent feature maps.
@@ -120,32 +164,75 @@ class Encoder2(nn.Module):
 
 
 class Decoder2(nn.Module):
-    """畳み込みデコーダー.BatchNormを使用する."""
+    """畳み込みデコーダー.BatchNormを使用する.
+
+    Encoder2 と対称になるよう、n_mels が 64 より大きい場合は H 方向のみの
+    ConvTranspose アップサンプリング層を追加する。
+    """
+
+    BASE_FEAT_H = 8
+    BASE_FEAT_W = 5
+    BOTTLENECK_CHANNELS = 128
 
     def __init__(
-        self, out_channels: int = 1, hidden_channels1: int = 32, hidden_channels2: int = 16, latent_channels: int = 8
+        self,
+        out_channels: int = 1,
+        hidden_channels1: int = 32,
+        hidden_channels2: int = 16,
+        latent_channels: int = 8,
+        n_mels: int = 64,
+        target_frames: int = 40,
     ) -> None:
         super().__init__()
-        self.net = nn.Sequential(
-            # 潜在空間から平坦化された特徴量へ逆変換
-            nn.Linear(in_features=128, out_features=128 * 8 * 5),
-            nn.ReLU(),
-            # 入力: (128, 8, 5) -> 出力: (64, 16, 10)
-            nn.ConvTranspose2d(in_channels=128, out_channels=64, kernel_size=4, stride=2, padding=1),
-            nn.BatchNorm2d(64),
-            nn.ReLU(),
-            # 入力: (64, 16, 10) -> 出力: (32, 32, 20)
-            nn.ConvTranspose2d(in_channels=64, out_channels=32, kernel_size=4, stride=2, padding=1),
-            nn.BatchNorm2d(32),
-            nn.ReLU(),
-            # 入力: (32, 32, 20) -> 出力: (32, 32, 20)
-            nn.ConvTranspose2d(in_channels=32, out_channels=32, kernel_size=3, stride=1, padding=1),
-            nn.BatchNorm2d(32),
-            nn.ReLU(),
-            # 入力: (32, 32, 20) -> 出力: (1, 64, 40)
-            nn.ConvTranspose2d(in_channels=32, out_channels=1, kernel_size=4, stride=2, padding=1),
-            nn.Sigmoid(),  # 出力を0-1の範囲に制限
+        h_after_base = n_mels // 8
+        if h_after_base < self.BASE_FEAT_H or h_after_base % self.BASE_FEAT_H != 0:
+            raise ValueError(
+                f"n_mels={n_mels} は BASE_FEAT_H={self.BASE_FEAT_H} の 8 の倍数倍 (64, 128, ...) である必要があります"
+            )
+        self.extra_h_up = 0
+        h_remaining = h_after_base
+        while h_remaining > self.BASE_FEAT_H:
+            h_remaining //= 2
+            self.extra_h_up += 1
+
+        flatten_size = self.BOTTLENECK_CHANNELS * self.BASE_FEAT_H * self.BASE_FEAT_W
+
+        # 潜在空間から平坦化された特徴量へ逆変換
+        self.linear = nn.Linear(in_features=128, out_features=flatten_size)
+        self.activation = nn.ReLU()
+
+        deconv_layers: list[nn.Module] = []
+        # H 方向のみ stride=2 のアップサンプリング (Encoder2 の追加層と対称)
+        for _ in range(self.extra_h_up):
+            deconv_layers.extend(
+                [
+                    nn.ConvTranspose2d(
+                        in_channels=128, out_channels=128, kernel_size=(4, 3), stride=(2, 1), padding=(1, 1)
+                    ),
+                    nn.BatchNorm2d(128),
+                    nn.ReLU(),
+                ]
+            )
+        deconv_layers.extend(
+            [
+                # 入力: (128, n_mels/8, frames/8) -> 出力: (64, n_mels/4, frames/4)
+                nn.ConvTranspose2d(in_channels=128, out_channels=64, kernel_size=4, stride=2, padding=1),
+                nn.BatchNorm2d(64),
+                nn.ReLU(),
+                # 入力: (64, n_mels/4, frames/4) -> 出力: (32, n_mels/2, frames/2)
+                nn.ConvTranspose2d(in_channels=64, out_channels=32, kernel_size=4, stride=2, padding=1),
+                nn.BatchNorm2d(32),
+                nn.ReLU(),
+                # 入力: (32, n_mels/2, frames/2) -> 出力: (32, n_mels/2, frames/2)
+                nn.ConvTranspose2d(in_channels=32, out_channels=32, kernel_size=3, stride=1, padding=1),
+                nn.BatchNorm2d(32),
+                nn.ReLU(),
+                # 入力: (32, n_mels/2, frames/2) -> 出力: (1, n_mels, frames)
+                nn.ConvTranspose2d(in_channels=32, out_channels=1, kernel_size=4, stride=2, padding=1),
+                nn.Sigmoid(),  # 出力を0-1の範囲に制限
+            ]
         )
+        self.deconv = nn.Sequential(*deconv_layers)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Decode latent feature maps back to mel spectrograms.
@@ -160,9 +247,10 @@ class Decoder2(nn.Module):
         recon : torch.Tensor
             Reconstructed mel spectrograms. (B, 1, n_mels, frames)
         """
-        x = self.net[0](x)  # Linear層を通す
-        x = x.view(-1, 128, 8, 5)  # 平坦化された特徴量を2次元マップに変換
-        x = self.net[1:](x)  # 残りのConvTranspose層を通す
+        x = self.linear(x)
+        x = self.activation(x)
+        x = x.view(-1, self.BOTTLENECK_CHANNELS, self.BASE_FEAT_H, self.BASE_FEAT_W)
+        x = self.deconv(x)
         return x
 
 
@@ -183,6 +271,8 @@ class Autoencoder(nn.Module):
         hidden_channels2: int = 8,
         latent_channels: int = 4,
         variant: str = "fc",
+        n_mels: int = 64,
+        target_frames: int = 40,
     ) -> None:
         super().__init__()
         self.variant = variant
@@ -207,12 +297,16 @@ class Autoencoder(nn.Module):
                 hidden_channels1=hidden_channels1,
                 hidden_channels2=hidden_channels2,
                 latent_channels=latent_channels,
+                n_mels=n_mels,
+                target_frames=target_frames,
             )
             self.decoder = Decoder2(
                 out_channels=in_channels,
                 hidden_channels1=hidden_channels1,
                 hidden_channels2=hidden_channels2,
                 latent_channels=latent_channels,
+                n_mels=n_mels,
+                target_frames=target_frames,
             )
 
     def encode(self, x: torch.Tensor) -> torch.Tensor:

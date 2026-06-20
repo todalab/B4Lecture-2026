@@ -16,7 +16,7 @@ dataset:
   sample_rate: 16000
   n_fft: 1024
   hop_length: 512
-  n_mels: 64
+  n_mels: 128
   target_frames: 40
 
 dataset_normal_and_anomaly:

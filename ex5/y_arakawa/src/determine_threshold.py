@@ -83,6 +83,8 @@ def determine_threshold(config_path: str, train_file_list: str, eval_file_list: 
         hidden_channels1=hidden_channels1,
         hidden_channels2=hidden_channels2,
         latent_channels=cfg["model"]["latent_channels"],
+        n_mels=cfg["dataset"]["n_mels"],
+        target_frames=cfg["dataset"]["target_frames"],
     ).to(device)
     model.load_state_dict(
         torch.load(Path(log_dir) / Path(f"lr{round(learning_rate, 4)}") / Path("ckpts") / Path("model_epoch_0009.pt"))
