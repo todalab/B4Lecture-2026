@@ -1,0 +1,30 @@
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+
+# MNIST データセット（自動ダウンロード）
+data/
+
+# モデルの重み
+*.pt
+*.pth
+params/
+
+# Jupyter
+.ipynb_checkpoints
+
+# 環境
+.env
+.venv
+env/
+venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# macOS
+.DS_Store
