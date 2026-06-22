@@ -12,7 +12,7 @@ import argparse
 
 from data_loader import create_data_loaders
 from training_utils import count_parameters, get_device, setup_logging, train_model
-from transformer_answer import TranslationModel, get_model_config
+from transformer_skeleton import TranslationModel, get_model_config
 
 
 def main():
