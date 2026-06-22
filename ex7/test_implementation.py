@@ -8,8 +8,8 @@
 """
 
 import traceback
-import torch
 
+import torch
 from VAEs.VAE_skeleton import VAE
 
 # テスト共通パラメータ
@@ -28,20 +28,24 @@ def test_encoder():
     print("Testing VAE.encoder ...")
     try:
         model = make_model()
-        x  = torch.rand(BATCH, 28 * 28)
+        x = torch.rand(BATCH, 28 * 28)
         x2 = torch.rand(BATCH, 28 * 28)
 
         mean1, log_var1 = model.encoder(x)
-        mean2, log_var2 = model.encoder(x)   # 同じ入力を2回
-        mean3, _        = model.encoder(x2)  # 異なる入力
+        mean2, log_var2 = model.encoder(x)  # 同じ入力を2回
+        mean3, _ = model.encoder(x2)  # 異なる入力
 
         # shape
-        assert mean1.shape    == (BATCH, Z_DIM), f"mean shape: {mean1.shape}"
+        assert mean1.shape == (BATCH, Z_DIM), f"mean shape: {mean1.shape}"
         assert log_var1.shape == (BATCH, Z_DIM), f"log_var shape: {log_var1.shape}"
 
         # 決定論性: 同じ入力→同じ出力
-        assert torch.allclose(mean1, mean2),    "encoder が非決定論的です（同じ入力で mean が変わる）"
-        assert torch.allclose(log_var1, log_var2), "encoder が非決定論的です（同じ入力で log_var が変わる）"
+        assert torch.allclose(
+            mean1, mean2
+        ), "encoder が非決定論的です（同じ入力で mean が変わる）"
+        assert torch.allclose(
+            log_var1, log_var2
+        ), "encoder が非決定論的です（同じ入力で log_var が変わる）"
 
         # 識別性: 異なる入力→異なる出力
         assert not torch.allclose(mean1, mean3), "異なる入力に同じ mean を返しています"
@@ -59,14 +63,16 @@ def test_sample_z():
     print("Testing VAE.sample_z ...")
     try:
         model = make_model()
-        mean    = torch.zeros(BATCH, Z_DIM)
+        mean = torch.zeros(BATCH, Z_DIM)
         log_var = torch.zeros(BATCH, Z_DIM)
 
         z1 = model.sample_z(mean, log_var, DEVICE)
         z2 = model.sample_z(mean, log_var, DEVICE)
 
         assert z1.shape == (BATCH, Z_DIM), f"z shape: {z1.shape}"
-        assert not torch.equal(z1, z2), "2回のサンプリング結果が同一です（確率的でない）"
+        assert not torch.equal(
+            z1, z2
+        ), "2回のサンプリング結果が同一です（確率的でない）"
 
         print("  ✅ sample_z: OK")
         return True
@@ -81,13 +87,13 @@ def test_sample_z_formula():
     print("Testing VAE.sample_z (numerical formula check) ...")
     try:
         model = make_model()
-        mean    = torch.tensor([[2.0, -1.0, 0.5, 0.0]])  # (1, 4)
-        log_var = torch.tensor([[1.0,  0.0, 2.0, 0.0]])  # (1, 4)
+        mean = torch.tensor([[2.0, -1.0, 0.5, 0.0]])  # (1, 4)
+        log_var = torch.tensor([[1.0, 0.0, 2.0, 0.0]])  # (1, 4)
 
         # 期待値: 同じシードで生成された ε から手計算
         torch.manual_seed(42)
         epsilon_ref = torch.randn_like(mean)
-        z_expected  = mean + epsilon_ref * torch.exp(0.5 * log_var)
+        z_expected = mean + epsilon_ref * torch.exp(0.5 * log_var)
 
         # 実装を同じシードで呼ぶ → 同一の ε が使われるはず
         torch.manual_seed(42)
@@ -125,7 +131,9 @@ def test_decoder():
         assert y1.max().item() <= 1.0, f"出力が 1 を超える: {y1.max().item():.4f}"
 
         # 非定数性: 異なる z → 異なる y
-        assert not torch.allclose(y1, y2), "異なる z に同じ y を返しています（定数出力）"
+        assert not torch.allclose(
+            y1, y2
+        ), "異なる z に同じ y を返しています（定数出力）"
 
         print("  ✅ decoder: OK")
         return True
@@ -145,7 +153,7 @@ def test_forward_shapes():
 
         assert z.shape == (BATCH, Z_DIM), f"z shape: {z.shape}"
         assert y.shape == (BATCH, 28 * 28), f"y shape: {y.shape}"
-        assert elbo_kl.dim()  == 0, "elbo_kl はスカラーであるべき"
+        assert elbo_kl.dim() == 0, "elbo_kl はスカラーであるべき"
         assert elbo_rec.dim() == 0, "elbo_rec はスカラーであるべき"
 
         print("  ✅ forward (shapes): OK")
@@ -161,6 +169,7 @@ def test_elbo_kl_numerical():
     print("Testing elbo_kl numerical value (mean=0, log_var=1.0) ...")
     try:
         import math
+
         model = make_model()
 
         # encoder 出力を mean=0, log_var=1.0 に固定
@@ -197,7 +206,7 @@ def test_elbo_signs():
         x = torch.rand(BATCH, 28 * 28)
         (elbo_kl, elbo_rec), _, _ = model(x, DEVICE)
 
-        assert elbo_kl.item()  <= 1e-5, f"elbo_kl > 0: {elbo_kl.item():.4f}"
+        assert elbo_kl.item() <= 1e-5, f"elbo_kl > 0: {elbo_kl.item():.4f}"
         assert elbo_rec.item() <= 1e-5, f"elbo_rec > 0: {elbo_rec.item():.4f}"
 
         print("  ✅ ELBO signs: OK")
@@ -222,9 +231,9 @@ def test_kl_zero():
         x = torch.rand(BATCH, 28 * 28)
         (elbo_kl, _), _, _ = model(x, DEVICE)
 
-        assert abs(elbo_kl.item()) < 1e-3, (
-            f"mean=0, log_var=0 → elbo_kl=0 であるべき。実際: {elbo_kl.item():.6f}"
-        )
+        assert (
+            abs(elbo_kl.item()) < 1e-3
+        ), f"mean=0, log_var=0 → elbo_kl=0 であるべき。実際: {elbo_kl.item():.6f}"
 
         print("  ✅ elbo_kl = 0 (KL=0 special case): OK")
         return True

@@ -73,7 +73,7 @@ jobs:
         run: |
           flake8 ${{ join(needs.get-files-changed.outputs.files, ' ') }} \
             --max-line-length=100 \
-            --ignore=H102,H103,W503,H238,E203
+            --ignore=D,H102,H103,W503,H238,E203
 
 
   isort:

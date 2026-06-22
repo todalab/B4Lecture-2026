@@ -65,8 +65,12 @@ class Visualize:
                 ax_scatter.scatter(z[idx, 0], z[idx, 1], marker=f"${k}$", color=cm(k))
 
             ax_plot.legend(loc="upper right")
-            fig_plot.savefig(f"./images/latent_space/z{self.z_dim}_{batch_idx}_plot.png")
-            fig_scatter.savefig(f"./images/latent_space/z{self.z_dim}_{batch_idx}_scatter.png")
+            fig_plot.savefig(
+                f"./images/latent_space/z{self.z_dim}_{batch_idx}_plot.png"
+            )
+            fig_scatter.savefig(
+                f"./images/latent_space/z{self.z_dim}_{batch_idx}_scatter.png"
+            )
             plt.close(fig_plot)
             plt.close(fig_scatter)
 
@@ -99,20 +103,24 @@ class Visualize:
         endpoints = [
             (torch.tensor([-3.0, 0.0]), torch.tensor([3.0, 0.0])),
             (torch.tensor([-3.0, 3.0]), torch.tensor([3.0, -3.0])),
-            (torch.tensor([0.0, 3.0]),  torch.tensor([0.0, -3.0])),
-            (torch.tensor([3.0, 3.0]),  torch.tensor([-3.0, -3.0])),
+            (torch.tensor([0.0, 3.0]), torch.tensor([0.0, -3.0])),
+            (torch.tensor([3.0, 3.0]), torch.tensor([-3.0, -3.0])),
         ]
         for n, (z1, z2) in enumerate(endpoints):
             z_path = torch.stack(
                 [z1 * (1 - t / step) + z2 * (t / step) for t in range(step)]
             ).to(self.device)
-            frames = self.model.decoder(z_path).cpu().detach().numpy().reshape(-1, 28, 28)
+            frames = (
+                self.model.decoder(z_path).cpu().detach().numpy().reshape(-1, 28, 28)
+            )
 
             fig, ax = plt.subplots(figsize=(4, 4))
             fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
             ax.set_xticks([])
             ax.set_yticks([])
             images = [[ax.imshow(im, "gray")] for im in frames]
-            anim = ArtistAnimation(fig, images, interval=100, blit=True, repeat_delay=1000)
+            anim = ArtistAnimation(
+                fig, images, interval=100, blit=True, repeat_delay=1000
+            )
             anim.save(f"./images/walkthrough/z{self.z_dim}_{n}.gif", writer="pillow")
             plt.close(fig)

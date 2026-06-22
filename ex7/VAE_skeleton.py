@@ -12,7 +12,6 @@ Ex7 B4講義 — VAE（変分自己符号化器）
 import numpy as np
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 MNIST_SIZE = 28
 
@@ -76,10 +75,9 @@ class VAE(nn.Module):
         参照: "Auto-Encoding Variational Bayes" Appendix C.1
         """
         x = x.view(-1, self.x_dim)
-        #TODO: enc_fc1 → ReLU → enc_fc2 → ReLU の順に通す。
+        # TODO: enc_fc1 → ReLU → enc_fc2 → ReLU の順に通す。
         #      その後 enc_fc3_mean と enc_fc3_logvar に通して mean と log_var を返す。
         raise NotImplementedError("VAE.encoder の TODO を実装してください")
-        return mean, log_var
 
     def sample_z(
         self, mean: torch.Tensor, log_var: torch.Tensor, device: torch.device
@@ -100,10 +98,9 @@ class VAE(nn.Module):
 
         参照: "Auto-Encoding Variational Bayes" Section 2.4, Eq. (4)
         """
-        #TODO: mean と同じ形状の ε を標準正規分布からサンプリングし、z を計算して返す。
+        # TODO: mean と同じ形状の ε を標準正規分布からサンプリングし、z を計算して返す。
         #      ε のサンプリングには torch.randn(..., device=device) を使う。
         raise NotImplementedError("VAE.sample_z の TODO を実装してください")
-        return z
 
     def decoder(self, z: torch.Tensor) -> torch.Tensor:
         """潜在変数から再構成画像を生成する。
@@ -116,9 +113,8 @@ class VAE(nn.Module):
 
         参照: "Auto-Encoding Variational Bayes" Appendix C.1
         """
-        #TODO: dec_fc1 → ReLU → dec_fc2 → ReLU → dec_drop → dec_fc3 → Sigmoid の順に通す。
+        # TODO: dec_fc1 → ReLU → dec_fc2 → ReLU → dec_drop → dec_fc3 → Sigmoid の順に通す。
         raise NotImplementedError("VAE.decoder の TODO を実装してください")
-        return y
 
     def forward(self, x: torch.Tensor, device: torch.device):
         """ELBO の各項を計算してフォワードパスを実行する。
@@ -136,13 +132,14 @@ class VAE(nn.Module):
 
         （ヒント）各項の計算式:
             elbo_kl  = 0.5 * torch.sum(1 + log_var - mean**2 - torch.exp(log_var))
-            elbo_rec = torch.sum(x * torch.log(y + self.eps) + (1 - x) * torch.log(1 - y + self.eps))
+            elbo_rec = torch.sum(
+                x * torch.log(y + self.eps) + (1 - x) * torch.log(1 - y + self.eps)
+            )
             loss     = -(elbo_kl + elbo_rec)  ← main.py で最小化
 
         参照: "Auto-Encoding Variational Bayes" Eq. (3), Appendix B（KL の解析解）
         """
         x = x.to(device)
-        #TODO: encoder → sample_z → decoder の順に呼び出す。
+        # TODO: encoder → sample_z → decoder の順に呼び出す。
         #      その後 elbo_kl と elbo_rec を計算して [elbo_kl, elbo_rec], z, y を返す。
         raise NotImplementedError("VAE.forward の TODO を実装してください")
-        return [elbo_kl, elbo_rec], z, y
