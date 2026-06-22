@@ -10,7 +10,7 @@ from torch import optim
 from torchvision import datasets, transforms
 
 from libs.Visualize import Visualize
-from VAEs.VAE import VAE
+from VAEs.VAE_skeleton import VAE
 
 
 def get_data_loaders(batch_size: int, train_rate: float):

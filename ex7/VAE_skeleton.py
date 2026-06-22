@@ -67,7 +67,7 @@ class VAE(nn.Module):
         """入力画像を潜在変数の分布パラメータに変換する。
 
         Args:
-            x(batch, 1, 28, 28): 入力画像（任意の形状、内部で平坦化される）
+            x(batch, x_dim): 入力画像（DataLoader により平坦化済み）
 
         Returns:
             mean(batch, z_dim):    潜在変数の平均 μ
@@ -124,7 +124,7 @@ class VAE(nn.Module):
         """ELBO の各項を計算してフォワードパスを実行する。
 
         Args:
-            x(batch, 1, 28, 28): 入力画像
+            x(batch, x_dim): 入力画像（DataLoader により平坦化済み）
             device(torch.device): 使用デバイス
 
         Returns:
