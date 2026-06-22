@@ -38,10 +38,8 @@ class VAE(nn.Module):
         mean, log_var = self.enc_fc3_mean(x), self.enc_fc3_logvar(x)
         return mean, log_var
 
-    def sample_z(
-        self, mean: torch.Tensor, log_var: torch.Tensor, device: torch.device
-    ) -> torch.Tensor:
-        epsilon = torch.randn(mean.shape, device=device)
+    def sample_z(self, mean: torch.Tensor, log_var: torch.Tensor) -> torch.Tensor:
+        epsilon = torch.randn_like(mean)
         z = mean + epsilon * torch.exp(0.5 * log_var)
         return z
 
@@ -52,13 +50,17 @@ class VAE(nn.Module):
         y = torch.sigmoid(self.dec_fc3(z))
         return y
 
-    def forward(self, x: torch.Tensor, device: torch.device):
-        x = x.to(device)
+    def kld(self, mean: torch.Tensor, log_var: torch.Tensor) -> torch.Tensor:
+        sigma_sq = torch.exp(log_var)
+        elbo_kl  = 0.5 * torch.sum(1 + log_var - mean**2 - sigma_sq)
+        return elbo_kl
+
+    def forward(self, x: torch.Tensor):
         mean, log_var = self.encoder(x)
-        z = self.sample_z(mean, log_var, device)
+        z = self.sample_z(mean, log_var)
         y = self.decoder(z)
 
-        elbo_kl = 0.5 * torch.sum(1 + log_var - mean**2 - torch.exp(log_var))
+        elbo_kl = self.kld(mean, log_var)
         elbo_rec = torch.sum(
             x * torch.log(y + self.eps) + (1 - x) * torch.log(1 - y + self.eps)
         )
