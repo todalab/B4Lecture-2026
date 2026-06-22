@@ -10,7 +10,7 @@
 import traceback
 
 import torch
-from VAEs.VAE_skeleton import VAE
+from VAE_skeleton import VAE
 
 # テスト共通パラメータ
 Z_DIM = 4
@@ -66,8 +66,8 @@ def test_sample_z():
         mean = torch.zeros(BATCH, Z_DIM)
         log_var = torch.zeros(BATCH, Z_DIM)
 
-        z1 = model.sample_z(mean, log_var, DEVICE)
-        z2 = model.sample_z(mean, log_var, DEVICE)
+        z1 = model.sample_z(mean, log_var)
+        z2 = model.sample_z(mean, log_var)
 
         assert z1.shape == (BATCH, Z_DIM), f"z shape: {z1.shape}"
         assert not torch.equal(
@@ -97,7 +97,7 @@ def test_sample_z_formula():
 
         # 実装を同じシードで呼ぶ → 同一の ε が使われるはず
         torch.manual_seed(42)
-        z_actual = model.sample_z(mean, log_var, DEVICE)
+        z_actual = model.sample_z(mean, log_var)
 
         assert torch.allclose(z_actual, z_expected, atol=1e-5), (
             f"Reparametrization の計算が正しくありません\n"
@@ -149,7 +149,7 @@ def test_forward_shapes():
     try:
         model = make_model()
         x = torch.rand(BATCH, 28 * 28)
-        (elbo_kl, elbo_rec), z, y = model(x, DEVICE)
+        (elbo_kl, elbo_rec), z, y = model(x)
 
         assert z.shape == (BATCH, Z_DIM), f"z shape: {z.shape}"
         assert y.shape == (BATCH, 28 * 28), f"y shape: {y.shape}"
@@ -164,36 +164,33 @@ def test_forward_shapes():
         return False
 
 
-def test_elbo_kl_numerical():
-    """elbo_kl の数値検証: mean=0, log_var=c のとき期待値と一致するか"""
-    print("Testing elbo_kl numerical value (mean=0, log_var=1.0) ...")
+def test_kld_numerical():
+    """kld の数値検証: 既知の mean・log_var で解析解と一致するか"""
+    print("Testing VAE.kld (numerical formula check) ...")
     try:
         import math
 
         model = make_model()
 
-        # encoder 出力を mean=0, log_var=1.0 に固定
-        torch.nn.init.zeros_(model.enc_fc3_mean.weight)
-        torch.nn.init.zeros_(model.enc_fc3_mean.bias)
-        torch.nn.init.zeros_(model.enc_fc3_logvar.weight)
-        model.enc_fc3_logvar.bias.data.fill_(1.0)
+        # mean=0, log_var=1.0 を直接注入
+        mean    = torch.zeros(BATCH, Z_DIM)
+        log_var = torch.ones(BATCH, Z_DIM)   # log_var = 1.0
 
-        x = torch.rand(BATCH, 28 * 28)
-        (elbo_kl, _), _, _ = model(x, DEVICE)
+        elbo_kl = model.kld(mean, log_var)
 
-        # elbo_kl = 0.5 * sum(1 + 1 - 0^2 - e^1) = 0.5 * BATCH * Z_DIM * (2 - e)
+        # 期待値: 0.5 * sum(1 + 1 - 0² - e¹) = 0.5 * BATCH * Z_DIM * (2 - e)
         expected = 0.5 * BATCH * Z_DIM * (2.0 - math.e)
         assert abs(elbo_kl.item() - expected) < 1e-3, (
-            f"elbo_kl の数値が正しくありません\n"
+            f"kld の数値が正しくありません\n"
             f"  期待値: {expected:.6f}\n"
             f"  実際値: {elbo_kl.item():.6f}\n"
-            f"  ヒント: elbo_kl = 0.5 * torch.sum(1 + log_var - mean**2 - torch.exp(log_var))"
+            f"  ヒント: -KL = 0.5 * torch.sum(1 + log_var - mean**2 - torch.exp(log_var))"
         )
 
-        print("  ✅ elbo_kl numerical: OK")
+        print("  ✅ kld numerical: OK")
         return True
     except Exception as e:
-        print(f"  ❌ elbo_kl numerical: {e}")
+        print(f"  ❌ kld numerical: {e}")
         traceback.print_exc()
         return False
 
@@ -204,7 +201,7 @@ def test_elbo_signs():
     try:
         model = make_model()
         x = torch.rand(BATCH, 28 * 28)
-        (elbo_kl, elbo_rec), _, _ = model(x, DEVICE)
+        (elbo_kl, elbo_rec), _, _ = model(x)
 
         assert elbo_kl.item() <= 1e-5, f"elbo_kl > 0: {elbo_kl.item():.4f}"
         assert elbo_rec.item() <= 1e-5, f"elbo_rec > 0: {elbo_rec.item():.4f}"
@@ -229,7 +226,7 @@ def test_kl_zero():
         torch.nn.init.zeros_(model.enc_fc3_logvar.bias)
 
         x = torch.rand(BATCH, 28 * 28)
-        (elbo_kl, _), _, _ = model(x, DEVICE)
+        (elbo_kl, _), _, _ = model(x)
 
         assert (
             abs(elbo_kl.item()) < 1e-3
@@ -249,7 +246,7 @@ def test_gradient_flow():
     try:
         model = make_model().train()
         x = torch.rand(BATCH, 28 * 28)
-        (elbo_kl, elbo_rec), _, _ = model(x, DEVICE)
+        (elbo_kl, elbo_rec), _, _ = model(x)
         loss = -(elbo_kl + elbo_rec)
         loss.backward()
 
@@ -279,7 +276,7 @@ def main():
         test_sample_z_formula,
         test_decoder,
         test_forward_shapes,
-        test_elbo_kl_numerical,
+        test_kld_numerical,
         test_elbo_signs,
         test_kl_zero,
         test_gradient_flow,

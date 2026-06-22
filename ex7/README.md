@@ -6,7 +6,8 @@
 > - 本課題では**AIツールの使用を許可**します（コンペ後のため、効率的な学習を重視）
 > - ただし、変分推論の核心部分は自分で理解して実装すること
 > - PyTorchの基本機能のみを使用し、高レベルの VAE ライブラリは使用禁止（`pythae` 等の専用ライブラリを含む）
-> - KL ダイバージェンスは **Appendix B の解析解を自ら実装すること**（`torch.distributions.kl_divergence()` による自動計算は禁止）
+> - KL ダイバージェンスは **[Auto-Encoding Variational Bayes](https://arxiv.org/abs/1312.6114) Appendix B の解析解を自ら実装すること**（`torch.distributions.kl_divergence()` による自動計算は禁止）
+> - Reparametrization trick は **同論文 Section 2.4 の式を自ら実装すること**（`torch.distributions.Normal(...).rsample()` 等の高レベル API による自動微分サポートは禁止）
 
 本課題では **Variational Autoencoder (VAE)** を実装し、**MNIST 手書き数字データセット**を用いて画像生成タスクを行う。  
 変分推論の枠組みから導出される ELBO（変分下限）を損失関数として、潜在空間の学習・サンプリング・生成を体験することを目的とする。
@@ -58,20 +59,27 @@ pip install -r requirements.txt
 [Auto-Encoding Variational Bayes](https://arxiv.org/abs/1312.6114) の **Appendix C.1** を参照。  
 入力画像 $x$ を全結合層に通して、潜在変数の**平均 $\mu$** と**対数分散 $\log\sigma^2$** を返す。
 
-#### **7-1-2 `sample_z(self, mean, log_var, device)`**
+#### **7-1-2 `sample_z(self, mean, log_var)`**
 
 同論文の **Section 2.4、Eq. (4)** を参照。  
-Reparametrization trick を用いて潜在変数 $z$ をサンプリングする。
+Reparametrization trick を用いて潜在変数 $z$ をサンプリングする。  
+`torch.distributions.Normal(...).rsample()` の使用は禁止。論文の式を自力で実装すること。
 
 #### **7-1-3 `decoder(self, z)`**
 
 同論文の **Appendix C.1** を参照。  
 潜在変数 $z$ から再構成画像 $\hat{x} \in [0,1]$ を生成する（最終層は Sigmoid）。
 
-#### **7-1-4 `forward(self, x, device)`**
+#### **7-1-4 `kld(self, mean, log_var)`**
 
-同論文の **Eq. (3)** および **Appendix B** を参照。  
-encoder → sample_z → decoder の順に呼び出し、ELBO の2項（KL 項・再構成誤差）を計算して返す。  
+同論文の **Appendix B** を参照。  
+$q(z|x) = \mathcal{N}(\mu, \sigma^2 I)$、$p(z) = \mathcal{N}(0, I)$ のときの KL ダイバージェンスは閉形式で解ける。  
+`torch.distributions.kl_divergence()` の使用は禁止。論文の式を自力で実装すること。
+
+#### **7-1-5 `forward(self, x)`**
+
+同論文の **Eq. (3)** を参照。  
+encoder → sample_z → decoder の順に呼び出し、`self.kld()` で KL 項を、ベルヌーイ対数尤度で再構成誤差を計算して返す。  
 学習時の損失は ELBO の符号を反転して最小化する（スケルトンのコメントを参照）。
 
 `forward` は `[elbo_kl, elbo_rec], z, y` を返す。
@@ -216,6 +224,8 @@ Loss curve → ./images/loss_curve.png
 
 3. **考察**
    - 潜在空間の構造から読み取れること
+   - MNISTをVAEで学習すると，出力結果がぼやけたようなものになる理由
+   ※ 他の解説サイトの結果でも軒並みぼやけた出力がされます。VAEにそういった特徴があると考えられます。
    - ハイパーパラメータを変えたときの変化（任意）
 
 ---

@@ -9,7 +9,7 @@ import torch
 from libs.Visualize import Visualize
 from torch import optim
 from torchvision import datasets, transforms
-from VAEs.VAE_skeleton import VAE
+from VAE_skeleton import VAE
 
 
 def get_data_loaders(batch_size: int, train_rate: float):
@@ -41,7 +41,8 @@ def train_one_epoch(model, loader, optimizer, device):
     model.train()
     total = 0.0
     for x, _ in loader:
-        lower_bound, _, _ = model(x, device)
+        x = x.to(device)
+        lower_bound, _, _ = model(x)
         loss = -sum(lower_bound)
         optimizer.zero_grad()
         loss.backward()
@@ -56,7 +57,8 @@ def evaluate(model, loader, device):
     total = 0.0
     with torch.no_grad():
         for x, _ in loader:
-            lower_bound, _, _ = model(x, device)
+            x = x.to(device)
+            lower_bound, _, _ = model(x)
             total += (-sum(lower_bound)).item()
     return total / len(loader)
 
