@@ -11,4 +11,7 @@ dependencies = [
     "tqdm>=4.60.0",
     "datasets>=2.0.0",
     "sacrebleu>=2.0.0",
+    "black>=26.5.1",
+    "flake8>=7.3.0",
+    "isort>=8.0.1",
 ]
