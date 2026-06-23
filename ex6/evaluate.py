@@ -18,22 +18,24 @@ MAX_LEN = signature(create_data_loaders).parameters["max_len"].default
 
 
 @torch.no_grad()
-def calculate_chrf(model, val_loader, tgt_tokenizer, device):
+def calculate_ChrF(model, val_loader, tgt_tokeniser, device):
     predictions, references = [], []
 
     for src, _, tgt_out in val_loader:
         generated = model.generate(src.to(device), BOS_IDX, EOS_IDX, max_len=MAX_LEN)
+        generated = generated.cpu()
+        tgt_out = tgt_out.cpu()
 
-        for pred_ids, ref_ids in zip(generated.cpu().tolist(), tgt_out.tolist()):
-            predictions.append(tgt_tokenizer.decode(pred_ids))
-            references.append(tgt_tokenizer.decode(ref_ids))
+        for prediction_indices, reference_indices in zip(generated, tgt_out):
+            predictions.append(tgt_tokeniser.decode(prediction_indices.tolist()))
+            references.append(tgt_tokeniser.decode(reference_indices.tolist()))
 
     return CHRF().corpus_score(predictions, [references]).score
 
 
 def main():
     device = get_device()
-    _, val_loader, src_tokenizer, tgt_tokenizer = create_data_loaders()
+    _, val_loader, src_tokeniser, tgt_tokeniser = create_data_loaders()
 
     results = []
     for model_size in MODELS:
@@ -44,8 +46,8 @@ def main():
 
         config = get_model_config(model_size)
         model = TranslationModel(
-            len(src_tokenizer),
-            len(tgt_tokenizer),
+            len(src_tokeniser),
+            len(tgt_tokeniser),
             max_seq_len=MAX_LEN * 2,
             **config,
         ).to(device)
@@ -54,7 +56,7 @@ def main():
         model.eval()
 
         _, perplexity = evaluate(model, val_loader, device)
-        chrf = calculate_chrf(model, val_loader, tgt_tokenizer, device)
+        chrf = calculate_ChrF(model, val_loader, tgt_tokeniser, device)
         results.append({"model_size": model_size, "perplexity": perplexity, "chrf": chrf})
 
         print(f"{model_size}: perplexity={perplexity:.2f}, ChrF={chrf:.2f}")
@@ -74,13 +76,18 @@ def main():
             metrics = json.load(f)
         epochs = range(1, len(metrics["val_perplexities"]) + 1)
         plt.plot(epochs, metrics["val_perplexities"], marker="o", label=model_size)
+    plt.title("Perplexity")
+    plt.xlabel("Epoch")
     plt.legend()
     plt.tight_layout()
     plt.savefig("fig/perplexity.png", dpi=200)
     plt.close()
 
     plt.figure(figsize=(5, 4))
-    plt.bar(names, [r["chrf"] for r in results])
+    plt.plot(names, [r["chrf"] for r in results], marker="o")
+    plt.title("ChrF Score")
+    plt.xlabel("Model")
+    plt.ylim(0, 100)
     plt.tight_layout()
     plt.savefig("fig/chrf.png", dpi=200)
     plt.close()
