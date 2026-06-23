@@ -14,6 +14,9 @@
     # 学習済み全モデルを横並びで比較
     uv run evaluate.py --compare
 
+    # 同じモデルの異なるエポック数を横並びで比較
+    uv run evaluate.py --model_size large --compare_epochs
+
     # 任意の英文を翻訳
     uv run evaluate.py --model_size large \
         --translate "I will check the schedule ." "Thank you for your help ."
@@ -21,6 +24,7 @@
 
 import argparse
 import os
+import re
 from typing import List, Optional, Tuple
 
 import torch
@@ -72,15 +76,52 @@ def load_checkpoint(
     model_size: str,
     ckpt_dir: str,
     device: torch.device,
+    ckpt_path: Optional[str] = None,
 ) -> Optional[str]:
-    """`translation_{size}_best.pt` を読み込み、見つからなければ None を返す"""
-    ckpt_path = os.path.join(ckpt_dir, f"translation_{model_size}_best.pt")
+    """チェックポイントを読み込む
+
+    `ckpt_path` が指定されていればそれを使用、なければ
+    `translation_{size}_best.pt` を読み込む。見つからなければ None を返す。
+    """
+    if ckpt_path is None:
+        ckpt_path = os.path.join(ckpt_dir, f"translation_{model_size}_best.pt")
     if not os.path.exists(ckpt_path):
         return None
     ckpt = torch.load(ckpt_path, map_location=device)
     model.load_state_dict(ckpt["model_state_dict"])
     model.eval()
     return ckpt_path
+
+
+def find_epoch_checkpoints(
+    model_size: str,
+    ckpt_dir: str,
+    include_best: bool = True,
+) -> List[Tuple[Optional[int], str]]:
+    """`translation_{size}_epoch_*.pt` を全件取得しエポック順に返す
+
+    Returns:
+        (epoch_num, ckpt_path) のリスト。`include_best=True` の場合
+        末尾に (None, best_path) を付与する (best が存在すれば)。
+    """
+    if not os.path.isdir(ckpt_dir):
+        return []
+
+    pattern = re.compile(rf"^translation_{re.escape(model_size)}_epoch_(\d+)\.pt$")
+    found: List[Tuple[int, str]] = []
+    for fname in os.listdir(ckpt_dir):
+        m = pattern.match(fname)
+        if m:
+            epoch = int(m.group(1))
+            found.append((epoch, os.path.join(ckpt_dir, fname)))
+    found.sort(key=lambda x: x[0])
+
+    result: List[Tuple[Optional[int], str]] = [(e, p) for e, p in found]
+    if include_best:
+        best_path = os.path.join(ckpt_dir, f"translation_{model_size}_best.pt")
+        if os.path.exists(best_path):
+            result.append((None, best_path))
+    return result
 
 
 def translate_sentence(
@@ -163,10 +204,21 @@ def evaluate_single(
     device: torch.device,
     args: argparse.Namespace,
     sample_sentences: List[str],
+    ckpt_path: Optional[str] = None,
+    label: Optional[str] = None,
+    epoch: Optional[int] = None,
 ) -> Optional[dict]:
-    """1 モデルを評価して結果を辞書で返す"""
+    """1 モデルを評価して結果を辞書で返す
+
+    Args:
+        ckpt_path: 明示的に評価するチェックポイントパス。
+            未指定なら `translation_{size}_best.pt` を使用する。
+        label: 表示用ラベル (例: "large @ epoch 25")。未指定なら model_size を使用。
+        epoch: 結果辞書に含めるエポック番号 (None なら best)。
+    """
+    display_label = label if label is not None else model_size
     print(f"\n{'=' * 60}")
-    print(f"  Model size: {model_size}")
+    print(f"  {display_label}")
     print(f"{'=' * 60}")
 
     model = build_model(
@@ -176,13 +228,16 @@ def evaluate_single(
         max_len=args.max_len,
         device=device,
     )
-    ckpt_path = load_checkpoint(model, model_size, args.ckpt_dir, device)
-    if ckpt_path is None:
-        print(
-            f"[SKIP] checkpoint not found: "
-            f"{os.path.join(args.ckpt_dir, f'translation_{model_size}_best.pt')}"
+    resolved_path = load_checkpoint(
+        model, model_size, args.ckpt_dir, device, ckpt_path=ckpt_path
+    )
+    if resolved_path is None:
+        missing = ckpt_path or os.path.join(
+            args.ckpt_dir, f"translation_{model_size}_best.pt"
         )
+        print(f"[SKIP] checkpoint not found: {missing}")
         return None
+    ckpt_path = resolved_path
 
     n_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print(f"  Checkpoint  : {ckpt_path}")
@@ -209,7 +264,7 @@ def evaluate_single(
         )
 
     # 3. 任意入力の翻訳結果 ---------------------------------------------------
-    print(f"\n  --- Sample translations ({model_size}) ---")
+    print(f"\n  --- Sample translations ({display_label}) ---")
     for sent in sample_sentences:
         translation = translate_sentence(
             model, sent, src_tokenizer, tgt_tokenizer, device, args.max_len
@@ -219,6 +274,8 @@ def evaluate_single(
 
     return {
         "model_size": model_size,
+        "label": display_label,
+        "epoch": epoch,
         "params": n_params,
         "val_loss": val_loss,
         "perplexity": val_ppl,
@@ -253,6 +310,31 @@ def print_comparison_table(results: List[dict]) -> None:
     print("  (Perplexity は低いほど良い / ChrF は高いほど良い)\n")
 
 
+def print_epoch_comparison_table(results: List[dict], model_size: str) -> None:
+    """同一モデルのエポック別結果を表形式で表示する"""
+    if not results:
+        print("\n評価結果がありません。")
+        return
+
+    print(f"\n{'=' * 72}")
+    print(f"  Epoch comparison results ({model_size})")
+    print(f"{'=' * 72}")
+    header = f"  {'Epoch':<8} {'Val Loss':>10} {'Perplexity':>12} {'ChrF':>8}"
+    print(header)
+    print(f"  {'-' * (len(header) - 2)}")
+    for r in results:
+        epoch_str = str(r["epoch"]) if r["epoch"] is not None else "best"
+        chrf_str = f"{r['chrf']:.2f}" if r["chrf"] is not None else "  -"
+        print(
+            f"  {epoch_str:<8} "
+            f"{r['val_loss']:>10.4f} "
+            f"{r['perplexity']:>12.2f} "
+            f"{chrf_str:>8}"
+        )
+    print(f"  {'-' * (len(header) - 2)}")
+    print("  (Perplexity は低いほど良い / ChrF は高いほど良い)\n")
+
+
 # ---------------------------------------------------------------------------
 # main
 # ---------------------------------------------------------------------------
@@ -270,6 +352,16 @@ def parse_args() -> argparse.Namespace:
         "--compare",
         action="store_true",
         help="学習済みの全モデルサイズを一括比較する",
+    )
+    parser.add_argument(
+        "--compare_epochs",
+        action="store_true",
+        help="--model_size で指定したモデルの全エポックチェックポイントを比較する",
+    )
+    parser.add_argument(
+        "--no_best",
+        action="store_true",
+        help="--compare_epochs 時に best チェックポイントを含めない",
     )
     parser.add_argument(
         "--ckpt_dir",
@@ -339,13 +431,56 @@ def main() -> None:
 
     sample_sentences = args.translate if args.translate else DEFAULT_SAMPLES
 
-    # 評価対象のモデルサイズを決定
-    if args.compare:
-        target_sizes = MODEL_SIZES
-    else:
-        target_sizes = [args.model_size]
+    if args.compare and args.compare_epochs:
+        raise SystemExit(
+            "--compare と --compare_epochs は同時に指定できません。どちらか一方のみ使用してください。"
+        )
 
     results: List[dict] = []
+
+    if args.compare_epochs:
+        # 同じモデルの異なるエポックを比較
+        ckpts = find_epoch_checkpoints(
+            model_size=args.model_size,
+            ckpt_dir=args.ckpt_dir,
+            include_best=not args.no_best,
+        )
+        if not ckpts:
+            print(
+                f"[ERROR] エポック別チェックポイントが見つかりません: "
+                f"{args.ckpt_dir}/translation_{args.model_size}_epoch_*.pt"
+            )
+            return
+        print(
+            f"\nFound {len(ckpts)} checkpoint(s) for '{args.model_size}': "
+            f"{[e if e is not None else 'best' for e, _ in ckpts]}"
+        )
+        for epoch, path in ckpts:
+            label = (
+                f"{args.model_size} @ epoch {epoch}"
+                if epoch is not None
+                else f"{args.model_size} @ best"
+            )
+            res = evaluate_single(
+                model_size=args.model_size,
+                src_tokenizer=src_tokenizer,
+                tgt_tokenizer=tgt_tokenizer,
+                val_loader=val_loader,
+                device=device,
+                args=args,
+                sample_sentences=sample_sentences,
+                ckpt_path=path,
+                label=label,
+                epoch=epoch,
+            )
+            if res is not None:
+                results.append(res)
+        print_epoch_comparison_table(results, args.model_size)
+        return
+
+    # 評価対象のモデルサイズを決定
+    target_sizes = MODEL_SIZES if args.compare else [args.model_size]
+
     for size in target_sizes:
         res = evaluate_single(
             model_size=size,

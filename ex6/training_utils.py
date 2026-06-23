@@ -238,6 +238,11 @@ def train_model(
         model.parameters(), lr=learning_rate, betas=(0.9, 0.98), eps=1e-9
     )
     total_steps = len(train_loader) * epochs // grad_accumulation_steps
+    logger.info(
+        f"Scheduler: total_steps={total_steps}, warmup_steps={warmup_steps}, "
+        f"len(train_loader)={len(train_loader)}, epochs={epochs}, "
+        f"grad_accumulation_steps={grad_accumulation_steps}"
+    )
     scheduler = LearningRateScheduler(
         optimizer, warmup_steps, total_steps, learning_rate
     )
