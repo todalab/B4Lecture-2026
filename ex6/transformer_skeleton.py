@@ -27,7 +27,7 @@ from typing import Optional
 import torch
 import torch.nn as nn
 from numpy import cos, fromfunction, sin, where
-from torch import Tensor, inf, softmax, tensor
+from torch import Tensor, cat, inf, softmax, tensor
 
 
 class PositionalEncoding(nn.Module):
@@ -58,10 +58,10 @@ class PositionalEncoding(nn.Module):
         positional_encoding = fromfunction(
             lambda pos, n: where(
                 n % 2 == 0,
-                sin(pos / 10000**(n / d_model)),
-                cos(pos / 10000**((n - 1) / d_model)),
+                sin(pos / 10000 ** (n / d_model)),
+                cos(pos / 10000 ** ((n - 1) / d_model)),
             ),
-            (max_seq_len, d_model)
+            (max_seq_len, d_model),
         )
         positional_encoding = tensor(positional_encoding, dtype=torch.float32)
 
@@ -165,6 +165,7 @@ class MultiHeadAttention(nn.Module):
 
         q, k, v = map(split_heads, (self.w_q(query), self.w_k(key), self.w_v(value)))
 
+        # Correct mask dimensionality
         if mask is not None:
             if mask.dim() == 2:
                 mask = mask.unsqueeze(1).unsqueeze(2)
@@ -248,7 +249,9 @@ class EncoderBlock(nn.Module):
         self.norm2 = nn.LayerNorm(d_model)
         self.dropout = nn.Dropout(dropout)
 
-    def forward(self, x: torch.Tensor, src_mask: Optional[Tensor] = None) -> torch.Tensor:
+    def forward(
+        self, x: torch.Tensor, src_mask: Optional[Tensor] = None
+    ) -> torch.Tensor:
         """Encoder ブロックの順伝播計算.
 
         Args:
@@ -436,7 +439,9 @@ class TranslationModel(nn.Module):
         pad_mask = (tgt != self.pad_idx).unsqueeze(1)  # (batch, 1, tgt_len)
         return causal_mask.unsqueeze(0) & pad_mask  # (batch, tgt_len, tgt_len)
 
-    def encode(self, src: torch.Tensor, src_mask: Optional[Tensor] = None) -> torch.Tensor:
+    def encode(
+        self, src: torch.Tensor, src_mask: Optional[Tensor] = None
+    ) -> torch.Tensor:
         """Encoder の順伝播計算.
 
         埋め込み → 位置エンコーディング → N 層の EncoderBlock
@@ -540,7 +545,7 @@ class TranslationModel(nn.Module):
             decoded = self.decode(generated, encoded, tgt_mask, src_mask)
             logits = self.output_proj(decoded)
             next_token = logits[:, -1].argmax(dim=-1, keepdim=True)
-            generated = torch.cat([generated, next_token], dim=1)
+            generated = cat([generated, next_token], dim=1)
             if (next_token == eos_idx).all():
                 break
 

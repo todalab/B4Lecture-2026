@@ -16,7 +16,9 @@ from transformer_skeleton import TranslationModel, get_model_config
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Train Transformer en→ja translation model")
+    parser = argparse.ArgumentParser(
+        description="Train Transformer en→ja translation model"
+    )
     parser.add_argument(
         "--model_size",
         choices=["tiny", "small", "medium", "large"],
@@ -28,10 +30,15 @@ def main():
     parser.add_argument("--max_len", type=int, default=64, help="Max sequence length")
     parser.add_argument("--lr", type=float, help="Learning rate (auto if not set)")
     parser.add_argument(
-        "--src_vocab_size", type=int, default=8000, help="English vocabulary size (word-level)"
+        "--src_vocab_size",
+        type=int,
+        default=8000,
+        help="English vocabulary size (word-level)",
     )
     parser.add_argument(
-        "--tgt_vocab_size", type=int, default=4000,
+        "--tgt_vocab_size",
+        type=int,
+        default=4000,
         help="Japanese vocabulary size (char-level)",
     )
     parser.add_argument(
