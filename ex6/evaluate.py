@@ -67,21 +67,28 @@ def main():
     Path("fig").mkdir(exist_ok=True)
     names = [r["model_size"] for r in results]
 
-    plt.figure(figsize=(6, 4))
+    fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+    epoch_ranges = [(1, 15), (16, 30)]
     for model_size in names:
         metrics_path = Path("checkpoints") / f"translation_{model_size}_metrics.json"
         if not metrics_path.exists():
             continue
         with metrics_path.open() as f:
-            metrics = json.load(f)
-        epochs = range(1, len(metrics["val_perplexities"]) + 1)
-        plt.plot(epochs, metrics["val_perplexities"], marker="o", label=model_size)
-    plt.title("Perplexity")
-    plt.xlabel("Epoch")
-    plt.legend()
-    plt.tight_layout()
-    plt.savefig("fig/perplexity.png", dpi=200)
-    plt.close()
+            val_perplexities = json.load(f)["val_perplexities"]
+        for ax, (start, end) in zip(axes, epoch_ranges):
+            epochs = range(start, min(end, len(val_perplexities)) + 1)
+            values = val_perplexities[start - 1 : end]
+            ax.plot(epochs, values, label=model_size)
+
+    for ax, (start, end) in zip(axes, epoch_ranges):
+        ax.set_xlabel("Epoch")
+        ax.set_xticks(range(start, end + 1))
+        ax.set_xlim(start, end)
+        ax.legend()
+    fig.suptitle("Perplexity")
+    fig.tight_layout()
+    fig.savefig("fig/perplexity.png", dpi=200)
+    plt.close(fig)
 
     plt.figure(figsize=(5, 4))
     plt.plot(names, [r["chrf"] for r in results], marker="o")
