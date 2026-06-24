@@ -9,10 +9,11 @@ Encoder-Decoder Transformer による英語→日本語翻訳
 """
 
 import argparse
+import os
 
 from data_loader import create_data_loaders
 from training_utils import count_parameters, get_device, setup_logging, train_model
-from transformer_answer import TranslationModel, get_model_config
+from transformer_skeleton import TranslationModel, get_model_config
 
 
 def main():
@@ -49,7 +50,7 @@ def main():
     )
     args = parser.parse_args()
 
-    log_file = f"training_{args.model_size}.log"
+    log_file = os.path.join("logs", f"training_{args.model_size}.log")
     logger = setup_logging(log_file)
     logger.info("=== Transformer 英日翻訳 Ex6 ===")
     logger.info(f"Model size: {args.model_size}")

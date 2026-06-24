@@ -16,8 +16,12 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 
-def setup_logging(log_file: str = "training.log", level=logging.INFO):
+def setup_logging(log_file: str = "logs/training.log", level=logging.INFO):
     """ロギングを設定"""
+    # ログは logs/ などのディレクトリにまとめる。無ければ作成する
+    log_dir = os.path.dirname(log_file)
+    if log_dir:
+        os.makedirs(log_dir, exist_ok=True)
     logging.basicConfig(
         level=level,
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",

@@ -27,6 +27,7 @@ coverage.xml
 *.pth
 checkpoints/
 *.log
+logs/
 results/
 fig/
 
@@ -51,3 +52,5 @@ venv/
 # claude
 CLAUDE.md
 .claude/
+
+__pycache__
