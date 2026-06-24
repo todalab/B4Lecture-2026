@@ -38,7 +38,7 @@ class VAE(nn.Module):
         mean, log_var = self.enc_fc3_mean(x), self.enc_fc3_logvar(x)
         return mean, log_var
 
-    def sample_z(self, mean: torch.Tensor, log_var: torch.Tensor) -> torch.Tensor:
+    def reparametrization_trick(self, mean: torch.Tensor, log_var: torch.Tensor) -> torch.Tensor:
         epsilon = torch.randn_like(mean)
         z = mean + epsilon * torch.exp(0.5 * log_var)
         return z
@@ -57,7 +57,7 @@ class VAE(nn.Module):
 
     def forward(self, x: torch.Tensor):
         mean, log_var = self.encoder(x)
-        z = self.sample_z(mean, log_var)
+        z = self.reparametrization_trick(mean, log_var)
         y = self.decoder(z)
 
         elbo_kl = self.kld(mean, log_var)
