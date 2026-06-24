@@ -58,33 +58,33 @@ def test_encoder():
         return False
 
 
-def test_sample_z():
-    """sample_z の shape と確率性のテスト"""
-    print("Testing VAE.sample_z ...")
+def test_reparametrization_trick():
+    """reparametrization_trick の shape と確率性のテスト"""
+    print("Testing VAE.reparametrization_trick ...")
     try:
         model = make_model()
         mean = torch.zeros(BATCH, Z_DIM)
         log_var = torch.zeros(BATCH, Z_DIM)
 
-        z1 = model.sample_z(mean, log_var)
-        z2 = model.sample_z(mean, log_var)
+        z1 = model.reparametrization_trick(mean, log_var)
+        z2 = model.reparametrization_trick(mean, log_var)
 
         assert z1.shape == (BATCH, Z_DIM), f"z shape: {z1.shape}"
         assert not torch.equal(
             z1, z2
         ), "2回のサンプリング結果が同一です（確率的でない）"
 
-        print("  ✅ sample_z: OK")
+        print("  ✅ reparametrization_trick: OK")
         return True
     except Exception as e:
-        print(f"  ❌ sample_z: {e}")
+        print(f"  ❌ reparametrization_trick: {e}")
         traceback.print_exc()
         return False
 
 
-def test_sample_z_formula():
-    """sample_z の数値検証: z = mean + ε * exp(0.5 * log_var) を固定シードで確認"""
-    print("Testing VAE.sample_z (numerical formula check) ...")
+def test_reparametrization_trick_formula():
+    """reparametrization_trick の数値検証: z = mean + ε * exp(0.5 * log_var) を固定シードで確認"""
+    print("Testing VAE.reparametrization_trick (numerical formula check) ...")
     try:
         model = make_model()
         mean = torch.tensor([[2.0, -1.0, 0.5, 0.0]])  # (1, 4)
@@ -97,7 +97,7 @@ def test_sample_z_formula():
 
         # 実装を同じシードで呼ぶ → 同一の ε が使われるはず
         torch.manual_seed(42)
-        z_actual = model.sample_z(mean, log_var)
+        z_actual = model.reparametrization_trick(mean, log_var)
 
         assert torch.allclose(z_actual, z_expected, atol=1e-5), (
             f"Reparametrization の計算が正しくありません\n"
@@ -105,10 +105,10 @@ def test_sample_z_formula():
             f"  実際値: {z_actual.tolist()}"
         )
 
-        print("  ✅ sample_z (formula): OK")
+        print("  ✅ reparametrization_trick (formula): OK")
         return True
     except Exception as e:
-        print(f"  ❌ sample_z (formula): {e}")
+        print(f"  ❌ reparametrization_trick (formula): {e}")
         traceback.print_exc()
         return False
 
@@ -272,8 +272,8 @@ def main():
 
     tests = [
         test_encoder,
-        test_sample_z,
-        test_sample_z_formula,
+        test_reparametrization_trick,
+        test_reparametrization_trick_formula,
         test_decoder,
         test_forward_shapes,
         test_kld_numerical,

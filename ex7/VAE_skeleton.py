@@ -4,7 +4,7 @@ Ex7 B4講義 — VAE（変分自己符号化器）
 このファイルは VAE モデルの実装を行うためのコードです。
 以下のメソッドの #TODO と記載されている箇所を実装してください:
     - VAE.encoder
-    - VAE.sample_z
+    - VAE.reparametrization_trick
     - VAE.decoder
     - VAE.kld
     - VAE.forward
@@ -28,7 +28,7 @@ class VAE(nn.Module):
     Functions:
         __init__(z_dim, h_dim, drop_rate): 初期化コンストラクタ
         encoder(x):                        入力画像 → (μ, log σ²)
-        sample_z(mean, log_var):           Reparametrization trick で z をサンプリング
+        reparametrization_trick(mean, log_var):           Reparametrization trick で z をサンプリング
         decoder(z):                        潜在変数 → 再構成画像
         kld(mean, log_var):                -KL[q(z|x) || p(z)] の解析解
         forward(x):                        ELBO の各項を計算してフォワードパスを実行
@@ -77,7 +77,7 @@ class VAE(nn.Module):
         #      その後 enc_fc3_mean と enc_fc3_logvar に通して mean と log_var を返す。
         raise NotImplementedError("VAE.encoder の TODO を実装してください")
 
-    def sample_z(self, mean: torch.Tensor, log_var: torch.Tensor) -> torch.Tensor:
+    def reparametrization_trick(self, mean: torch.Tensor, log_var: torch.Tensor) -> torch.Tensor:
         """Reparametrization trick で潜在変数をサンプリングする。
 
         Args:
@@ -94,7 +94,7 @@ class VAE(nn.Module):
         参照: "Auto-Encoding Variational Bayes" Section 2.4, Eq. (4)
         """
         # TODO: mean と同じ形状の ε を標準正規分布からサンプリングし、z を計算して返す。
-        raise NotImplementedError("VAE.sample_z の TODO を実装してください")
+        raise NotImplementedError("VAE.reparametrization_trick の TODO を実装してください")
 
     def decoder(self, z: torch.Tensor) -> torch.Tensor:
         """潜在変数から再構成画像を生成する。
@@ -142,7 +142,7 @@ class VAE(nn.Module):
 
         参照: "Auto-Encoding Variational Bayes" Eq. (3)
         """
-        # TODO: encoder → sample_z → decoder の順に呼び出す。
+        # TODO: encoder → reparametrization_trick → decoder の順に呼び出す。
         #      elbo_kl = self.kld(mean, log_var) で KL 項を、
         #      elbo_rec を計算して [elbo_kl, elbo_rec], z, y を返す。
         raise NotImplementedError("VAE.forward の TODO を実装してください")
