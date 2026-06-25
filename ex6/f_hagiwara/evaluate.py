@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-evaluate.py - モデルサイズ別 翻訳性能評価スクリプト
+evaluate.py - モデルサイズ別 翻訳性能評価スクリプト.
 英日翻訳 Transformer (Ex6 B4講義)
 
 評価指標:
@@ -47,7 +47,7 @@ from data_loader import (
     EOS_IDX,
     PAD_IDX,
     create_data_loaders,
-)  # [fix3] PAD_IDX を追加
+)
 from training_utils import get_device, setup_logging
 from transformer_coded import TranslationModel, get_model_config
 
@@ -58,7 +58,7 @@ logger = setup_logging("evaluate.log")
 # ChrF 実装 (sacrebleu が無い場合のフォールバック)
 # ─────────────────────────────────────────────────────────────
 def _ngrams(text: str, n: int) -> Dict[str, int]:
-    """文字 n-gram の出現カウントを返す"""
+    """文字 n-gram の出現カウントを返す."""
     counts: Dict[str, int] = {}
     for i in range(len(text) - n + 1):
         ng = text[i : i + n]
@@ -67,7 +67,7 @@ def _ngrams(text: str, n: int) -> Dict[str, int]:
 
 
 def _chrf_pair(hyp: str, ref: str, max_n: int = 6, beta: float = 2.0) -> float:
-    """1ペアの ChrF スコア (0-100) を計算"""
+    """1ペアの ChrF スコア (0-100) を計算."""
     total_prec = total_rec = 0.0
     valid = 0
     for n in range(1, max_n + 1):
@@ -92,7 +92,7 @@ def _chrf_pair(hyp: str, ref: str, max_n: int = 6, beta: float = 2.0) -> float:
 
 
 def compute_chrf(hypotheses: List[str], references: List[str]) -> float:
-    """コーパス全体の平均 ChrF スコアを計算"""
+    """コーパス全体の平均 ChrF スコアを計算."""
     if _HAS_SACREBLEU:
         return SacrebleuCHRF().corpus_score(hypotheses, [references]).score
     scores = [_chrf_pair(h, r) for h, r in zip(hypotheses, references)]
@@ -110,7 +110,7 @@ def load_model(
     max_seq_len: int,
     device: torch.device,
 ) -> TranslationModel:
-    """チェックポイントからモデルを復元する"""
+    """チェックポイントからモデルを復元する."""
     config = get_model_config(model_size)
     model = TranslationModel(
         src_vocab_size=src_vocab_size,
@@ -138,6 +138,7 @@ def load_model(
 
 
 def count_parameters(model: nn.Module) -> int:
+    """パラメータ数を数える."""
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
 
@@ -149,7 +150,7 @@ def compute_perplexity(
     val_loader: DataLoader,
     device: torch.device,
 ) -> float:
-    """検証セット全体の Perplexity を計算する"""
+    """検証セット全体の Perplexity を計算する."""
     model.eval()
     # [fix3] バッチ平均ではなくトークン数で重み付けした正確な平均に修正
     total_loss = 0.0
@@ -179,7 +180,7 @@ def compute_chrf_score(
     max_len: int,
     n_samples: int = 500,
 ) -> float:
-    """検証セットから n_samples 文を翻訳して ChrF を計算する"""
+    """検証セットから n_samples 文を翻訳して ChrF を計算する."""
     model.eval()
     hypotheses: List[str] = []
     references: List[str] = []
@@ -212,7 +213,7 @@ def translate(
     device: torch.device,
     max_len: int,
 ) -> List[Tuple[str, str]]:
-    """英文リストを日本語へ翻訳して (原文, 訳文) のリストを返す"""
+    """英文リストを日本語へ翻訳して (原文, 訳文) のリストを返す."""
     model.eval()
     results: List[Tuple[str, str]] = []
     with torch.no_grad():
@@ -235,6 +236,7 @@ def interactive_mode(
     device: torch.device,
     max_len: int,
 ):
+    """対話翻訳モード."""
     print("\n" + "=" * 55)
     print("  対話翻訳モード  (終了: 'q' または Ctrl-C)")
     print("=" * 55)
@@ -258,7 +260,7 @@ def interactive_mode(
 # 結果テーブル表示
 # ─────────────────────────────────────────────────────────────
 def print_table(rows: List[Dict]):
-    """評価結果を整形して表示する"""
+    """評価結果を整形して表示する."""
     W = [10, 14, 10, 14]
     hdr = (
         f"{'Model':<{W[0]}}  "
@@ -308,6 +310,7 @@ def evaluate_one(
     sample_sentences: List[str],
     chrf_samples: int,
 ) -> Dict:
+    """単一モデルの評価."""
     bar = "=" * 55
     print(f"\n{bar}")
     print(f"  Model : {model_size}   ({checkpoint_path})")
@@ -359,6 +362,7 @@ def evaluate_one(
 # メイン
 # ─────────────────────────────────────────────────────────────
 def main():
+    """main関数."""
     parser = argparse.ArgumentParser(
         description="Evaluate en→ja Transformer model(s)",
         formatter_class=argparse.RawTextHelpFormatter,

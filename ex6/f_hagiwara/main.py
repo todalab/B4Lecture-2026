@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Main training script for Ex6 B4 Lecture - 英日翻訳タスク
+Main training script for Ex6 B4 Lecture - 英日翻訳タスク.
 Encoder-Decoder Transformer による英語→日本語翻訳
 
 使用例:
@@ -16,6 +16,7 @@ from transformer_coded import TranslationModel, get_model_config
 
 
 def main():
+    """main関数."""
     parser = argparse.ArgumentParser(
         description="Train Transformer en→ja translation model"
     )

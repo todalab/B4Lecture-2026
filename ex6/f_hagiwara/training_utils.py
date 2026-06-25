@@ -1,5 +1,5 @@
 """
-Training Utilities
+Training Utilities.
 """
 
 import json
@@ -17,7 +17,7 @@ from tqdm import tqdm
 
 
 def setup_logging(log_file: str = "training.log", level=logging.INFO):
-    """ロギングを設定"""
+    """ロギングを設定."""
     logging.basicConfig(
         level=level,
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -30,7 +30,7 @@ logger = setup_logging()
 
 
 class LearningRateScheduler:
-    """Warmup + Cosine Decay スケジューラー"""
+    """Warmup + Cosine Decay スケジューラー."""
 
     def __init__(
         self,
@@ -60,12 +60,14 @@ class LearningRateScheduler:
 
 
 class TrainingMetrics:
-    """学習メトリクスの記録"""
+    """学習メトリクスの記録."""
 
     def __init__(self):
+        """初期定義."""
         self.reset()
 
     def reset(self):
+        """resetする."""
         self.train_losses: list = []
         self.val_losses: list = []
         self.val_perplexities: list = []
@@ -80,6 +82,7 @@ class TrainingMetrics:
         lr: float,
         epoch_time: float,
     ):
+        """エポックごとに情報を記録する."""
         self.train_losses.append(train_loss)
         self.val_losses.append(val_loss)
         self.val_perplexities.append(val_perplexity)
@@ -87,6 +90,7 @@ class TrainingMetrics:
         self.epoch_times.append(epoch_time)
 
     def save(self, filepath: str):
+        """学習指標を保存する."""
         metrics = {
             "train_losses": self.train_losses,
             "val_losses": self.val_losses,
@@ -107,7 +111,7 @@ def train_epoch(
     scheduler: Optional[LearningRateScheduler] = None,
     grad_accumulation_steps: int = 1,
 ) -> Tuple[float, float]:
-    """1 エポックの学習
+    """1 エポックの学習.
 
     バッチ形式: (src, tgt_in, tgt_out)
         src:     (batch, src_len)  エンコーダ入力
@@ -160,7 +164,7 @@ def evaluate(
     val_loader: DataLoader,
     device: torch.device,
 ) -> Tuple[float, float]:
-    """検証データで評価する
+    """検証データで評価する.
 
     Returns:
         avg_loss, perplexity
@@ -199,7 +203,7 @@ def _show_sample_translations(
     bos_idx,
     eos_idx,
 ):
-    """エポック終了時にサンプル翻訳を表示する"""
+    """エポック終了時にサンプル翻訳を表示する."""
     model.eval()
     with torch.no_grad():
         for sent in sample_sentences:
@@ -227,7 +231,7 @@ def train_model(
     tgt_tokenizer=None,
     sample_max_len: int = 64,
 ) -> TrainingMetrics:
-    """モデル学習のメイン関数"""
+    """モデル学習のメイン関数."""
     logger.info(
         f"Starting training: {epochs} epochs, lr={learning_rate}, device={device}"
     )
@@ -304,10 +308,12 @@ def train_model(
 
 
 def count_parameters(model: nn.Module) -> int:
+    """パラメータ数を数える."""
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
 
 def get_device() -> torch.device:
+    """用いるデバイスを決定する.CUDAが用いられないのは要修正."""
     if torch.cuda.is_available():
         device = torch.device("cuda")
         logger.info(f"GPU: {torch.cuda.get_device_name(0)}")

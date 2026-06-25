@@ -1,5 +1,5 @@
 """
-Ex6 B4講義 - 翻訳タスク用 Transformer
+Ex6 B4講義 - 翻訳タスク用 Transformer.
 
 このファイルは、Transformer モデルの実装を行うためのコードです.
 以下のクラスのTODOと記載されている箇所を実装してください:
@@ -27,6 +27,7 @@ memo:
 """
 
 import math
+
 import torch
 import torch.nn as nn
 
@@ -57,6 +58,7 @@ class PositionalEncoding(nn.Module):
     """
 
     def __init__(self, d_model: int, dropout: float = 0.1, max_seq_len: int = 5000):
+        """初期宣言."""
         super().__init__()
         self.dropout = nn.Dropout(p=dropout)
 
@@ -87,7 +89,8 @@ class PositionalEncoding(nn.Module):
         )  # GPU 上で定数テンソルとして保持
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """生成したエンコーディングの順伝播計算
+        """生成したエンコーディングの順伝播計算.
+
         Args:
             x(batch, seq_len, d_model): 入力
         Returns:
@@ -127,6 +130,7 @@ class MultiHeadAttention(nn.Module):
     """
 
     def __init__(self, d_model: int, n_heads: int, dropout: float = 0.1):
+        """初期宣言."""
         super().__init__()
         assert d_model % n_heads == 0, "d_model は n_heads で割り切れる必要があります"
 
@@ -147,7 +151,8 @@ class MultiHeadAttention(nn.Module):
         v: torch.Tensor,
         mask: torch.Tensor = None,
     ):
-        """スケールドドットプロダクトアテンションの計算
+        """スケールドドットプロダクトアテンションの計算.
+
         Args:
             q(batch, heads, seq_len, d_k): クエリ
             k(batch, heads, seq_len, d_k): キー
@@ -186,7 +191,8 @@ class MultiHeadAttention(nn.Module):
         value: torch.Tensor,
         mask: torch.Tensor = None,
     ):
-        """アテンションの順伝播計算
+        """アテンションの順伝播計算.
+
         Args:
             query: (batch, q_len, d_model)
             key:   (batch, k_len, d_model)
@@ -263,6 +269,7 @@ class FeedForward(nn.Module):
     """
 
     def __init__(self, d_model: int, d_ff: int, dropout: float = 0.1):
+        """初期宣言."""
         super().__init__()
         self.linear1 = nn.Linear(d_model, d_ff)
         self.linear2 = nn.Linear(d_ff, d_model)
@@ -315,6 +322,7 @@ class EncoderBlock(nn.Module):
     """
 
     def __init__(self, d_model: int, n_heads: int, d_ff: int, dropout: float = 0.1):
+        """初期宣言."""
         super().__init__()
         self.self_attn = MultiHeadAttention(d_model, n_heads, dropout)
         self.feed_forward = FeedForward(d_model, d_ff, dropout)
@@ -374,6 +382,7 @@ class DecoderBlock(nn.Module):
     """
 
     def __init__(self, d_model: int, n_heads: int, d_ff: int, dropout: float = 0.1):
+        """初期宣言."""
         super().__init__()
         self.masked_self_attn = MultiHeadAttention(d_model, n_heads, dropout)
         self.cross_attn = MultiHeadAttention(d_model, n_heads, dropout)
@@ -453,6 +462,7 @@ class TranslationModel(nn.Module):
         dropout: float = 0.1,
         pad_idx: int = 0,
     ):
+        """初期宣言."""
         super().__init__()
         self.d_model = d_model
         self.pad_idx = pad_idx
@@ -575,6 +585,8 @@ class TranslationModel(nn.Module):
         targets: torch.Tensor = None,
     ):
         """
+        学習ブロック.
+
         Args:
             src(batch, src_len): ソーストークン列
             tgt(batch, tgt_len): ターゲット入力  (BOS から始まる)
@@ -611,7 +623,7 @@ class TranslationModel(nn.Module):
         eos_idx: int,
         max_len: int = 100,
     ) -> torch.Tensor:
-        """Greedy デコーディング（貪欲法による逐次生成）
+        """Greedy デコーディング（貪欲法による逐次生成）.
 
         Args:
             src:     (batch, src_len)
@@ -646,6 +658,7 @@ class TranslationModel(nn.Module):
 
 
 def get_model_config(model_size: str) -> dict:
+    """モデルの情報."""
     configs = {
         "tiny": {
             "n_encoder_layers": 2,
@@ -689,7 +702,7 @@ def get_model_config(model_size: str) -> dict:
             "n_heads": 8,
             "d_ff": 1024,
         },
-        "small_1e8": {
+        "small_1e3": {
             "n_encoder_layers": 3,
             "n_decoder_layers": 3,
             "d_model": 256,
