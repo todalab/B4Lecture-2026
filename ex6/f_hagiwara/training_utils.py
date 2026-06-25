@@ -1,6 +1,4 @@
-"""
-Training Utilities.
-"""
+"""Training Utilities."""
 
 import json
 import logging
@@ -39,6 +37,7 @@ class LearningRateScheduler:
         total_steps: int,
         base_lr: float,
     ):
+        """初期宣言."""
         self.optimizer = optimizer
         self.warmup_steps = warmup_steps
         self.total_steps = total_steps
@@ -46,6 +45,7 @@ class LearningRateScheduler:
         self.step_count = 0
 
     def step(self) -> float:
+        """ステップ管理."""
         self.step_count += 1
         if self.step_count <= self.warmup_steps:
             lr = self.base_lr * (self.step_count / self.warmup_steps)

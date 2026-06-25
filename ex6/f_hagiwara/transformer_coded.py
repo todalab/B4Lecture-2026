@@ -96,7 +96,6 @@ class PositionalEncoding(nn.Module):
         Returns:
             output(batch, seq_len, d_model): 位置エンコーディングが加算された出力
         """
-
         # 位置エンコーディングを加算
         # ブロードキャストによって各バッチに足されることとなる=複数文を一気に処理
         output = x + self.pe[:, : x.size(1), :]
@@ -162,7 +161,6 @@ class MultiHeadAttention(nn.Module):
             output(batch, heads, seq_len, d_k): アテンション出力
             attn_weights(batch, heads, seq_len, seq_len): アテンション重み
         """
-
         # 次元数を取得
         # 次元数が大きいことによる勾配爆発を防ぐためこれを基に割る
         d_k = k.size(-1)
@@ -331,7 +329,7 @@ class EncoderBlock(nn.Module):
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, x: torch.Tensor, src_mask: torch.Tensor = None) -> torch.Tensor:
-        """Encoder ブロックの順伝播計算.
+        """エンコーダブロックの順伝播計算.
 
         Args:
             x(batch, src_len, d_model): 入力
@@ -349,7 +347,7 @@ class EncoderBlock(nn.Module):
 
 
 class DecoderBlock(nn.Module):
-    """Decoder の 1 ブロック.
+    """デコーダの 1 ブロック.
 
     Args:
         d_model(int): 埋め込み次元
@@ -399,7 +397,7 @@ class DecoderBlock(nn.Module):
         tgt_mask: torch.Tensor = None,
         src_mask: torch.Tensor = None,
     ) -> torch.Tensor:
-        """Decoder ブロックの順伝播計算.
+        """デコーダブロックの順伝播計算.
 
         Args:
             x(batch, tgt_len, d_model): ターゲット埋め込み
@@ -530,7 +528,7 @@ class TranslationModel(nn.Module):
         return causal_mask.unsqueeze(0) & pad_mask  # (batch, tgt_len, tgt_len)
 
     def encode(self, src: torch.Tensor, src_mask: torch.Tensor = None) -> torch.Tensor:
-        """Encoder の順伝播計算.
+        """エンコーダの順伝播計算.
 
         埋め込み → 位置エンコーディング → N 層の EncoderBlock
 
@@ -558,7 +556,7 @@ class TranslationModel(nn.Module):
         tgt_mask: torch.Tensor = None,
         src_mask: torch.Tensor = None,
     ) -> torch.Tensor:
-        """Decoder の順伝播計算.
+        """デコーダの順伝播計算.
 
         埋め込み → 位置エンコーディング → N 層の DecoderBlock
 
