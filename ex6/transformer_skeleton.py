@@ -27,7 +27,7 @@ from typing import Optional
 import torch
 import torch.nn as nn
 from numpy import cos, fromfunction, sin, where
-from torch import Tensor, cat, inf, softmax, tensor
+from torch import Tensor, cat, full, inf, softmax, tensor
 
 
 class PositionalEncoding(nn.Module):
@@ -538,7 +538,7 @@ class TranslationModel(nn.Module):
         batch_size = src.size(0)
         src_mask = self._make_src_mask(src)
         encoded = self.encode(src, src_mask)
-        generated = torch.full((batch_size, 1), bos_idx, device=src.device)
+        generated = full((batch_size, 1), bos_idx, device=src.device)
 
         for _ in range(max_len):
             tgt_mask = self._make_tgt_mask(generated)

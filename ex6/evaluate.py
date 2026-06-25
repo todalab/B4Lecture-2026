@@ -6,12 +6,10 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import torch
-from sacrebleu.metrics.chrf import CHRF
-
 from data_loader import BOS_IDX, EOS_IDX, create_data_loaders
+from sacrebleu.metrics.chrf import CHRF
 from training_utils import evaluate, get_device
 from transformer_skeleton import TranslationModel, get_model_config
-
 
 MODELS = ["tiny", "small", "medium", "large"]
 MAX_LEN = signature(create_data_loaders).parameters["max_len"].default
@@ -57,7 +55,9 @@ def main():
 
         _, perplexity = evaluate(model, val_loader, device)
         chrf = calculate_ChrF(model, val_loader, tgt_tokeniser, device)
-        results.append({"model_size": model_size, "perplexity": perplexity, "chrf": chrf})
+        results.append(
+            {"model_size": model_size, "perplexity": perplexity, "chrf": chrf}
+        )
 
         print(f"{model_size}: perplexity={perplexity:.2f}, ChrF={chrf:.2f}")
 

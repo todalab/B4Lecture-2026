@@ -10,6 +10,7 @@ Encoder-Decoder Transformer による英語→日本語翻訳
 
 import argparse
 
+import torch
 from data_loader import create_data_loaders
 from training_utils import count_parameters, get_device, setup_logging, train_model
 from transformer_skeleton import TranslationModel, get_model_config
@@ -141,3 +142,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    print(f"Max CUDA memory allocated: {torch.cuda.max_memory_allocated()}")
