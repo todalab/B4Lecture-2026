@@ -41,7 +41,7 @@ class Visualize:
             for i, im in enumerate(x.view(-1, 28, 28)[:10]):
                 axes[0][i].imshow(im, "gray")
 
-            _, _, y = self.model(x, self.device)
+            _, _, y = self.model(x.to(self.device))
             y = y.cpu().detach().numpy().reshape(-1, 28, 28)
             for i, im in enumerate(y[:10]):
                 axes[1][i].imshow(im, "gray")
@@ -53,7 +53,7 @@ class Visualize:
         """潜在空間をクラスごとに色分けして散布図として保存する。"""
         cm = plt.get_cmap("tab10")
         for batch_idx, (x, labels) in enumerate(self.dataloader_test):
-            _, z, _ = self.model(x, self.device)
+            _, z, _ = self.model(x.to(self.device))
             z = z.cpu().detach().numpy()
 
             fig_plot, ax_plot = plt.subplots(figsize=(9, 9))

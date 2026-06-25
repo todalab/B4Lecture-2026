@@ -30,7 +30,7 @@ class VAE(nn.Module):
         encoder(x):                        入力画像 → (μ, log σ²)
         reparametrization_trick(mean, log_var):           Reparametrization trick で z をサンプリング
         decoder(z):                        潜在変数 → 再構成画像
-        kld(mean, log_var):                -KL[q(z|x) || p(z)] の解析解
+        kld(mean, log_var):                KL[q(z|x) || p(z)] の解析解
         forward(x):                        ELBO の各項を計算してフォワードパスを実行
 
     Encoder のアーキテクチャ:
@@ -118,31 +118,31 @@ class VAE(nn.Module):
             log_var(batch, z_dim): 近似事後分布の対数分散 log σ²
 
         Returns:
-            elbo_kl(scalar): -KL[q(z|x) || p(z)]（常に ≤ 0）
+            kl(scalar): KL[q(z|x) || p(z)]（常に ≥ 0）
 
         参照: "Auto-Encoding Variational Bayes" Appendix B
         """
-        # TODO: -KL[q(z|x) || p(z)] の解析解を実装する。
+        # TODO: KL[q(z|x) || p(z)] の解析解を実装する。
         #       torch.distributions.kl_divergence() の使用は禁止。
         raise NotImplementedError("VAE.kld の TODO を実装してください")
-        return elbo_kl
+        return kl
 
     def forward(self, x: torch.Tensor):
         """ELBO の各項を計算してフォワードパスを実行する。
 
         Args:
-            x(batch, x_dim): 入力画像（DataLoader により平坦化済み）
+            x(batch, x_dim): 入力画像（DataLoader により平坦化済み、値域 [0, 1]）
 
         Returns:
             [elbo_kl, elbo_rec]: ELBO の2項
-                elbo_kl(scalar):  KL 項（= self.kld の戻り値、≤ 0）
-                elbo_rec(scalar): 再構成項（≤ 0）
+                elbo_kl(scalar):  KL 項（≤ 0）
+                elbo_rec(scalar): 再構成項 — ベルヌーイ対数尤度（≤ 0）
             z(batch, z_dim): サンプリングされた潜在変数
-            y(batch, x_dim): 再構成画像
+            y(batch, x_dim): 再構成画像（値域 [0, 1]、decoder の Sigmoid 出力）
 
-        参照: "Auto-Encoding Variational Bayes" Eq. (3)
+        参照: "Auto-Encoding Variational Bayes" Eq. (3), Appendix C.1
         """
         # TODO: encoder → reparametrization_trick → decoder の順に呼び出す。
-        #      elbo_kl = self.kld(mean, log_var) で KL 項を、
+        #      elbo_kl = -self.kld(mean, log_var) で KL 項と（符号に注意）、
         #      elbo_rec を計算して [elbo_kl, elbo_rec], z, y を返す。
         raise NotImplementedError("VAE.forward の TODO を実装してください")

@@ -43,7 +43,7 @@ def train_one_epoch(model, loader, optimizer, device):
     for x, _ in loader:
         x = x.to(device)
         lower_bound, _, _ = model(x)
-        loss = -sum(lower_bound)
+        loss = -sum(lower_bound) / x.size(0)
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
@@ -59,7 +59,7 @@ def evaluate(model, loader, device):
         for x, _ in loader:
             x = x.to(device)
             lower_bound, _, _ = model(x)
-            total += (-sum(lower_bound)).item()
+            total += (-sum(lower_bound) / x.size(0)).item()
     return total / len(loader)
 
 

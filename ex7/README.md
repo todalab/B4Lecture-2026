@@ -16,9 +16,10 @@
 
 ## 背景・課題設定
 
-深層学習における生成モデルは、データの確率的な構造を学習し、新たなサンプルを生成することを目的としており、画像・テキスト・音声・音楽の生成タスクに用いられる。しかし、観測データから潜在変数の真の事後分布を直接求めることは、一般に計算量的に困難である。
+深層学習における生成モデルは、データの確率的な構造を学習し、新たなサンプルを生成することを目的としている。生成モデルの一種であるVAEは、画像・テキスト・音声・音楽等の生成タスクに用いられるほか、表現学習、半教師あり学習、密度推定、異常検知など幅広く応用されている。
+しかし、潜在変数を持つ生成モデルでは、観測データに対する潜在変数の真の事後分布を厳密に求めることは困難である。
 
-**Variational Autoencoder（VAE; Kingma & Welling, 2014）** は、この問題を**変分推論**の枠組みで解決する。近似事後分布を導入して真の事後分布を近似し、**ELBO（変分下限）** を最大化することで Encoder と Decoder を同時に学習する。生成モデルでありながら決定論的なニューラルネットワークで学習できる点が特徴である。
+**Variational Autoencoder（VAE; Kingma & Welling, 2014）** は、この問題を**変分推論**の枠組みで解決する。近似事後分布を導入して真の事後分布を近似し、**ELBO（変分下限）** を最大化することで Encoder と Decoder を同時に学習する。Peparametarization Trickを用いて、確率的過程を除くことで、生成モデルでありながら決定論的にニューラルネットワークで学習できる点が特徴である。
 
 ### **学習目標**
 
@@ -73,13 +74,15 @@ Reparametrization trick を用いて潜在変数 $z$ をサンプリングする
 #### **7-1-4 `kld(self, mean, log_var)`**
 
 同論文の **Appendix B** を参照。  
-$q(z|x) = \mathcal{N}(\mu, \sigma^2 I)$、$p(z) = \mathcal{N}(0, I)$ のときの KL ダイバージェンスは閉形式で解ける。  
+近似事後分布 q(z|x) = N(μ, σ²I)、事前分布 p(z) = N(0, I) のときの KL ダイバージェンスは閉形式で解ける（返り値は常に ≥ 0）。  
 `torch.distributions.kl_divergence()` の使用は禁止。論文の式を自力で実装すること。
 
 #### **7-1-5 `forward(self, x)`**
 
-同論文の **Eq. (3)** を参照。  
-encoder → reparametrization_trick → decoder の順に呼び出し、`self.kld()` で KL 項を、ベルヌーイ対数尤度で再構成誤差を計算して返す。  
+同論文の **Eq. (3)** および **Appendix C.1** を参照。  
+encoder → reparametrization_trick → decoder の順に呼び出す。  
+再構成項 elbo_rec は、出力分布として **ベルヌーイ分布 p(x|z) = Bernoulli(y)** を仮定した対数尤度として計算する。入力 x（ToTensor により [0, 1] に正規化済み）と decoder 出力 y（Sigmoid により [0, 1]）の値域が一致していることを確認すること。  
+KL 項は `elbo_kl = -self.kld(mean, log_var)`（符号に注意）。  
 学習時の損失は ELBO の符号を反転して最小化する（スケルトンのコメントを参照）。
 
 `forward` は `[elbo_kl, elbo_rec], z, y` を返す。
@@ -160,15 +163,15 @@ PATIENCE   = 10     # Early stopping の patience
 
 ```
 Device: cuda
-[Epoch   1]  train:   53570.9  val:   45001.6
-[Epoch   2]  train:   43766.7  val:   42188.3
-[Epoch   3]  train:   42139.3  val:   41070.7
-[Epoch   5]  train:   40263.1  val:   39595.1
-[Epoch  10]  train:   38517.7  val:   38147.3
-[Epoch  20]  train:   37240.0  val:   37026.7
-[Epoch  30]  train:   36560.3  val:   36545.1
-[Epoch  40]  train:   36189.2  val:   36314.2
-[Epoch  50]  train:   35906.5  val:   36078.6
+[Epoch   1]  train:     209.3  val:     176.3
+[Epoch   2]  train:     172.9  val:     168.1
+[Epoch   3]  train:     166.7  val:     163.2
+[Epoch   5]  train:     157.6  val:     155.2
+[Epoch  10]  train:     149.1  val:     148.6
+[Epoch  20]  train:     143.3  val:     144.3
+[Epoch  30]  train:     140.9  val:     142.4
+[Epoch  40]  train:     140.0  val:     142.2
+[Epoch  50]  train:     138.7  val:     141.1
 Loss curve → ./images/loss_curve.png
 ```
 

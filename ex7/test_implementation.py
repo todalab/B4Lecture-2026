@@ -176,15 +176,15 @@ def test_kld_numerical():
         mean    = torch.zeros(BATCH, Z_DIM)
         log_var = torch.ones(BATCH, Z_DIM)   # log_var = 1.0
 
-        elbo_kl = model.kld(mean, log_var)
+        kl = model.kld(mean, log_var)
 
-        # 期待値: 0.5 * sum(1 + 1 - 0² - e¹) = 0.5 * BATCH * Z_DIM * (2 - e)
-        expected = 0.5 * BATCH * Z_DIM * (2.0 - math.e)
-        assert abs(elbo_kl.item() - expected) < 1e-3, (
+        # 期待値: -0.5 * sum(1 + 1 - 0² - e¹) = 0.5 * BATCH * Z_DIM * (e - 2)
+        expected = 0.5 * BATCH * Z_DIM * (math.e - 2.0)
+        assert abs(kl.item() - expected) < 1e-3, (
             f"kld の数値が正しくありません\n"
             f"  期待値: {expected:.6f}\n"
-            f"  実際値: {elbo_kl.item():.6f}\n"
-            f"  ヒント: -KL = 0.5 * torch.sum(1 + log_var - mean**2 - torch.exp(log_var))"
+            f"  実際値: {kl.item():.6f}\n"
+            f"  ヒント: KL = -0.5 * torch.sum(1 + log_var - mean**2 - torch.exp(log_var))"
         )
 
         print("  ✅ kld numerical: OK")
