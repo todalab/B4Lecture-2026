@@ -13,6 +13,10 @@ from transformer_skeleton import TranslationModel, get_model_config
 
 MODELS = ["tiny", "small", "medium", "large"]
 MAX_LEN = signature(create_data_loaders).parameters["max_len"].default
+SENTENCES = [
+    "Could you please confirm your availability for a meeting next Monday?",
+    "Refrain, audacious tart, your suit from pressing.",
+]
 
 
 @torch.no_grad()
@@ -59,7 +63,17 @@ def main():
             {"model_size": model_size, "perplexity": perplexity, "chrf": chrf}
         )
 
-        print(f"{model_size}: perplexity={perplexity:.2f}, ChrF={chrf:.2f}")
+        print(f"{model_size}:")
+        for sentence in SENTENCES:
+            src = torch.tensor(
+                src_tokeniser.encode(sentence, add_eos=True, max_len=MAX_LEN),
+                dtype=torch.long,
+                device=device,
+            ).unsqueeze(0)
+            translation = tgt_tokeniser.decode(
+                model.generate(src, BOS_IDX, EOS_IDX, max_len=MAX_LEN)[0].cpu().tolist()
+            )
+            print(f"EN: {sentence}\nJP: {translation}")
 
     if not results:
         raise SystemExit("No checkpoints found.")
