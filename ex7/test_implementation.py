@@ -173,8 +173,8 @@ def test_kld_numerical():
         model = make_model()
 
         # mean=0, log_var=1.0 を直接注入
-        mean    = torch.zeros(BATCH, Z_DIM)
-        log_var = torch.ones(BATCH, Z_DIM)   # log_var = 1.0
+        mean = torch.zeros(BATCH, Z_DIM)
+        log_var = torch.ones(BATCH, Z_DIM)  # log_var = 1.0
 
         kl = model.kld(mean, log_var)
 

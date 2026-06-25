@@ -77,7 +77,9 @@ class VAE(nn.Module):
         #      その後 enc_fc3_mean と enc_fc3_logvar に通して mean と log_var を返す。
         raise NotImplementedError("VAE.encoder の TODO を実装してください")
 
-    def reparametrization_trick(self, mean: torch.Tensor, log_var: torch.Tensor) -> torch.Tensor:
+    def reparametrization_trick(
+        self, mean: torch.Tensor, log_var: torch.Tensor
+    ) -> torch.Tensor:
         """Reparametrization trick で潜在変数をサンプリングする。
 
         Args:
@@ -94,7 +96,9 @@ class VAE(nn.Module):
         参照: "Auto-Encoding Variational Bayes" Section 2.4, Eq. (4)
         """
         # TODO: mean と同じ形状の ε を標準正規分布からサンプリングし、z を計算して返す。
-        raise NotImplementedError("VAE.reparametrization_trick の TODO を実装してください")
+        raise NotImplementedError(
+            "VAE.reparametrization_trick の TODO を実装してください"
+        )
 
     def decoder(self, z: torch.Tensor) -> torch.Tensor:
         """潜在変数から再構成画像を生成する。
@@ -111,7 +115,7 @@ class VAE(nn.Module):
         raise NotImplementedError("VAE.decoder の TODO を実装してください")
 
     def kld(self, mean: torch.Tensor, log_var: torch.Tensor) -> torch.Tensor:
-        """KL ダイバージェンスの負値 -KL[q(z|x) || p(z)] を計算する。
+        """KL ダイバージェンス KL[q(z|x) || p(z)] を計算する。
 
         Args:
             mean(batch, z_dim):    近似事後分布の平均 μ
@@ -125,7 +129,6 @@ class VAE(nn.Module):
         # TODO: KL[q(z|x) || p(z)] の解析解を実装する。
         #       torch.distributions.kl_divergence() の使用は禁止。
         raise NotImplementedError("VAE.kld の TODO を実装してください")
-        return kl
 
     def forward(self, x: torch.Tensor):
         """ELBO の各項を計算してフォワードパスを実行する。
