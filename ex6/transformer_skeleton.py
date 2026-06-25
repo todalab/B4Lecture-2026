@@ -1,5 +1,4 @@
-"""
-Ex6 B4講義 - 翻訳タスク用 Transformer
+"""Ex6 B4講義 - 翻訳タスク用 Transformer.
 
 このファイルは、Transformer モデルの実装を行うためのコードです.
 以下のクラスのTODOと記載されている箇所を実装してください:
@@ -21,7 +20,9 @@ Ex6 B4講義 - 翻訳タスク用 Transformer
     - forward
     - generate
 """
+
 import math
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -48,32 +49,32 @@ class PositionalEncoding(nn.Module):
     """
 
     def __init__(self, d_model: int, dropout: float = 0.1, max_seq_len: int = 5000):
+        """位置エンコーディング行列を事前計算してバッファに保持する."""
         super().__init__()
         self.dropout = nn.Dropout(p=dropout)
 
         positional_encoding = torch.zeros(max_seq_len, d_model)
         position = torch.arange(0, max_seq_len, dtype=torch.float).unsqueeze(1)
         div_term = torch.exp(
-            torch.arange(0, d_model, 2).float() *
-              (-math.log(10000.0) / d_model)
+            torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model)
         )
         positional_encoding[:, 0::2] = torch.sin(position * div_term)
         positional_encoding[:, 1::2] = torch.cos(position * div_term)
-        positional_encoding = positional_encoding.unsqueeze(0)  
+        positional_encoding = positional_encoding.unsqueeze(0)
 
         self.register_buffer(
             "pe", positional_encoding
         )  # GPU 上で定数テンソルとして保持
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """生成したエンコーディングの順伝播計算
+        """生成したエンコーディングの順伝播計算.
+
         Args:
             x(batch, seq_len, d_model): 入力
         Returns:
             output(batch, seq_len, d_model): 位置エンコーディングが加算された出力
         """
-        
-        x = x + self.pe[:, :x.size(1), :]
+        x = x + self.pe[:, : x.size(1), :]
         return self.dropout(x)
 
 
@@ -96,6 +97,7 @@ class MultiHeadAttention(nn.Module):
     """
 
     def __init__(self, d_model: int, n_heads: int, dropout: float = 0.1):
+        """Q/K/V/出力の線形層とヘッド構成を初期化する."""
         super().__init__()
         assert d_model % n_heads == 0, "d_model は n_heads で割り切れる必要があります"
 
@@ -116,7 +118,8 @@ class MultiHeadAttention(nn.Module):
         v: torch.Tensor,
         mask: torch.Tensor = None,
     ):
-        """スケールドドットプロダクトアテンションの計算
+        """スケールドドットプロダクトアテンションの計算.
+
         Args:
             q(batch, heads, seq_len, d_k): クエリ
             k(batch, heads, seq_len, d_k): キー
@@ -126,7 +129,6 @@ class MultiHeadAttention(nn.Module):
             output(batch, heads, seq_len, d_k): アテンション出力
             attn_weights(batch, heads, seq_len, seq_len): アテンション重み
         """
-        
         d_k = q.size(-1)
         scores = torch.matmul(q, k.transpose(-2, -1)) / math.sqrt(d_k)
 
@@ -145,7 +147,8 @@ class MultiHeadAttention(nn.Module):
         value: torch.Tensor,
         mask: torch.Tensor = None,
     ):
-        """アテンションの順伝播計算
+        """アテンションの順伝播計算.
+
         Args:
             query: (batch, q_len, d_model)
             key:   (batch, k_len, d_model)
@@ -161,15 +164,27 @@ class MultiHeadAttention(nn.Module):
         q_len = query.size(1)
         k_len = key.size(1)
 
-        q = self.w_q(query).view(batch_size, q_len, self.n_heads, self.d_k).transpose(1, 2)
-        k = self.w_k(key).view(batch_size, k_len, self.n_heads, self.d_k).transpose(1, 2)
-        v = self.w_v(value).view(batch_size, k_len, self.n_heads, self.d_k).transpose(1, 2)
+        q = (
+            self.w_q(query)
+            .view(batch_size, q_len, self.n_heads, self.d_k)
+            .transpose(1, 2)
+        )
+        k = (
+            self.w_k(key)
+            .view(batch_size, k_len, self.n_heads, self.d_k)
+            .transpose(1, 2)
+        )
+        v = (
+            self.w_v(value)
+            .view(batch_size, k_len, self.n_heads, self.d_k)
+            .transpose(1, 2)
+        )
 
         if mask is not None:
-            if mask.dim() == 2:       # (batch, k_len) → PAD マスク
-                mask = mask.unsqueeze(1).unsqueeze(2)   # (batch, 1, 1, k_len)
-            elif mask.dim() == 3:     # (batch, q_len, k_len) → 因果マスク
-                mask = mask.unsqueeze(1)                # (batch, 1, q_len, k_len)
+            if mask.dim() == 2:  # (batch, k_len) → PAD マスク
+                mask = mask.unsqueeze(1).unsqueeze(2)  # (batch, 1, 1, k_len)
+            elif mask.dim() == 3:  # (batch, q_len, k_len) → 因果マスク
+                mask = mask.unsqueeze(1)  # (batch, 1, q_len, k_len)
 
         attn_output, attn_weights = self.scaled_dot_product_attention(q, k, v, mask)
 
@@ -200,6 +215,7 @@ class FeedForward(nn.Module):
     """
 
     def __init__(self, d_model: int, d_ff: int, dropout: float = 0.1):
+        """2 層の線形変換と dropout を初期化する."""
         super().__init__()
         self.linear1 = nn.Linear(d_model, d_ff)
         self.linear2 = nn.Linear(d_ff, d_model)
@@ -238,6 +254,7 @@ class EncoderBlock(nn.Module):
     """
 
     def __init__(self, d_model: int, n_heads: int, d_ff: int, dropout: float = 0.1):
+        """自己注意・FFN・LayerNorm から成る Encoder ブロックを初期化する."""
         super().__init__()
         self.self_attn = MultiHeadAttention(d_model, n_heads, dropout)
         self.feed_forward = FeedForward(d_model, d_ff, dropout)
@@ -246,7 +263,7 @@ class EncoderBlock(nn.Module):
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, x: torch.Tensor, src_mask: torch.Tensor = None) -> torch.Tensor:
-        """Encoder ブロックの順伝播計算.
+        """入力系列を Encoder ブロックで順伝播する.
 
         Args:
             x(batch, src_len, d_model): 入力
@@ -254,7 +271,6 @@ class EncoderBlock(nn.Module):
         Returns:
             (batch, src_len, d_model): 出力
         """
-
         attn_out, _ = self.self_attn(x, x, x, src_mask)
         x = self.norm1(x + self.dropout(attn_out))
         ff_out = self.feed_forward(x)
@@ -289,6 +305,7 @@ class DecoderBlock(nn.Module):
     """
 
     def __init__(self, d_model: int, n_heads: int, d_ff: int, dropout: float = 0.1):
+        """マスク自己注意・クロス注意・FFN から成る Decoder ブロックを初期化する."""
         super().__init__()
         self.masked_self_attn = MultiHeadAttention(d_model, n_heads, dropout)
         self.cross_attn = MultiHeadAttention(d_model, n_heads, dropout)
@@ -305,7 +322,7 @@ class DecoderBlock(nn.Module):
         tgt_mask: torch.Tensor = None,
         src_mask: torch.Tensor = None,
     ) -> torch.Tensor:
-        """Decoder ブロックの順伝播計算.
+        """ターゲット埋め込みを Decoder ブロックで順伝播する.
 
         Args:
             x(batch, tgt_len, d_model): ターゲット埋め込み
@@ -313,7 +330,6 @@ class DecoderBlock(nn.Module):
         Returns:
             torch.Tensor(batch, tgt_len, d_model): 出力
         """
-
         attn_out, _ = self.masked_self_attn(x, x, x, tgt_mask)
         x = self.norm1(x + self.dropout(attn_out))
         attn_out, _ = self.cross_attn(x, encoder_out, encoder_out, src_mask)
@@ -364,6 +380,7 @@ class TranslationModel(nn.Module):
         dropout: float = 0.1,
         pad_idx: int = 0,
     ):
+        """埋め込み・位置エンコーディング・Encoder/Decoder 層・出力層を構築する."""
         super().__init__()
         self.d_model = d_model
         self.pad_idx = pad_idx
@@ -431,7 +448,7 @@ class TranslationModel(nn.Module):
         return causal_mask.unsqueeze(0) & pad_mask  # (batch, tgt_len, tgt_len)
 
     def encode(self, src: torch.Tensor, src_mask: torch.Tensor = None) -> torch.Tensor:
-        """Encoder の順伝播計算.
+        """入力系列を Encoder で符号化する.
 
         埋め込み → 位置エンコーディング → N 層の EncoderBlock
 
@@ -455,7 +472,7 @@ class TranslationModel(nn.Module):
         tgt_mask: torch.Tensor = None,
         src_mask: torch.Tensor = None,
     ) -> torch.Tensor:
-        """Decoder の順伝播計算.
+        """ターゲット系列を Decoder で復号する.
 
         埋め込み → 位置エンコーディング → N 層の DecoderBlock
 
@@ -480,7 +497,8 @@ class TranslationModel(nn.Module):
         tgt: torch.Tensor,
         targets: torch.Tensor = None,
     ):
-        """
+        """モデル全体の順伝播を行い logits と損失を返す (訓練時).
+
         Args:
             src(batch, src_len): ソーストークン列
             tgt(batch, tgt_len): ターゲット入力  (BOS から始まる)
@@ -514,7 +532,7 @@ class TranslationModel(nn.Module):
         eos_idx: int,
         max_len: int = 100,
     ) -> torch.Tensor:
-        """Greedy デコーディング（貪欲法による逐次生成）
+        """Greedy デコーディング（貪欲法による逐次生成）.
 
         Args:
             src:     (batch, src_len)
@@ -525,7 +543,7 @@ class TranslationModel(nn.Module):
         Returns:
             generated(batch, generated_len): BOS を含む
         """
-        self.eval()  
+        self.eval()
         batch_size = src.size(0)
 
         src_mask = self._make_src_mask(src)
@@ -549,6 +567,7 @@ class TranslationModel(nn.Module):
 
 
 def get_model_config(model_size: str) -> dict:
+    """モデルサイズ名に対応するハイパーパラメータ辞書を返す."""
     configs = {
         "tiny": {
             "n_encoder_layers": 2,

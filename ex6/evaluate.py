@@ -235,7 +235,7 @@ def evaluate_epoch_checkpoints(
     max_len,
     chrf_samples,
 ):
-    """epoch ごとの中間チェックポイントを順に評価する.
+    """Epoch ごとの中間チェックポイントを順に評価する.
 
     `{checkpoint_dir}/translation_{size}_epoch_{N}.pt` を全て読み込み、各 epoch
     時点の Perplexity と ChrF を計算する。ChrF は学習時に記録されないため、
@@ -290,9 +290,7 @@ def evaluate_epoch_checkpoints(
             n_samples=chrf_samples,
         )
         print(f"    epoch {epoch_num:>3}: PPL={ppl:.2f}  ChrF={chrf_score:.2f}")
-        records.append(
-            {"epoch": epoch_num, "perplexity": ppl, "chrf": chrf_score}
-        )
+        records.append({"epoch": epoch_num, "perplexity": ppl, "chrf": chrf_score})
     return records
 
 
@@ -318,7 +316,7 @@ def build_figure_path(image_dir, model_size, name, epoch):
 
 
 def plot_metrics_over_epochs(model_size, records, image_dir):
-    """epoch ごとに計算した Perplexity / ChrF の推移をグラフ化して保存する.
+    """Epoch ごとに計算した Perplexity / ChrF の推移をグラフ化して保存する.
 
     Args:
         model_size: モデルサイズ
@@ -393,9 +391,7 @@ def plot_epoch_metrics(model_size, checkpoint_dir, image_dir):
     fig.tight_layout()
     # 学習 epoch 数は val_losses の長さから求める
     n_epochs = len(metrics.get("val_losses", []))
-    out_path = build_figure_path(
-        image_dir, model_size, "epoch_metrics", n_epochs
-    )
+    out_path = build_figure_path(image_dir, model_size, "epoch_metrics", n_epochs)
     fig.savefig(out_path, dpi=150)
     plt.close(fig)
     print(f"  Epoch ごとの指標グラフを保存しました: {out_path}")

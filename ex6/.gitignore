@@ -27,6 +27,7 @@ coverage.xml
 *.pth
 checkpoints/
 *.log
+
 logs/
 results/
 fig/

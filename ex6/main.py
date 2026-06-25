@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""
-Main training script for Ex6 B4 Lecture - 英日翻訳タスク
+"""Main training script for Ex6 B4 Lecture - 英日翻訳タスク.
+
 Encoder-Decoder Transformer による英語→日本語翻訳
 
 使用例:
@@ -17,7 +17,10 @@ from transformer_skeleton import TranslationModel, get_model_config
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Train Transformer en→ja translation model")
+    """学習スクリプトのメインエントリポイント."""
+    parser = argparse.ArgumentParser(
+        description="Train Transformer en→ja translation model"
+    )
     parser.add_argument(
         "--model_size",
         choices=["tiny", "small", "medium", "large"],
@@ -29,10 +32,15 @@ def main():
     parser.add_argument("--max_len", type=int, default=64, help="Max sequence length")
     parser.add_argument("--lr", type=float, help="Learning rate (auto if not set)")
     parser.add_argument(
-        "--src_vocab_size", type=int, default=8000, help="English vocabulary size (word-level)"
+        "--src_vocab_size",
+        type=int,
+        default=8000,
+        help="English vocabulary size (word-level)",
     )
     parser.add_argument(
-        "--tgt_vocab_size", type=int, default=4000,
+        "--tgt_vocab_size",
+        type=int,
+        default=4000,
         help="Japanese vocabulary size (char-level)",
     )
     parser.add_argument(

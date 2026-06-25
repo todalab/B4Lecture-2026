@@ -8,14 +8,20 @@
 """
 
 import traceback
-import torch
 
-from transformer_skeleton import MultiHeadAttention, PositionalEncoding, TranslationModel, DecoderBlock, EncoderBlock
-from transformer_skeleton import get_model_config
+import torch
+from transformer_skeleton import (
+    DecoderBlock,
+    EncoderBlock,
+    MultiHeadAttention,
+    PositionalEncoding,
+    TranslationModel,
+    get_model_config,
+)
 
 
 def test_positional_encoding():
-    """PositionalEncoding のテスト"""
+    """Test PositionalEncoding."""
     print("Testing PositionalEncoding ...")
     try:
         pe = PositionalEncoding(d_model=128, dropout=0.0, max_seq_len=100)
@@ -39,7 +45,7 @@ def test_positional_encoding():
 
 
 def test_multihead_attention_self():
-    """MultiHeadAttention の self-attention テスト"""
+    """Test MultiHeadAttention self-attention."""
     print("Testing MultiHeadAttention (self-attention) ...")
     try:
         attn = MultiHeadAttention(d_model=128, n_heads=4, dropout=0.0)
@@ -52,8 +58,9 @@ def test_multihead_attention_self():
 
         # Attention weights の合計は 1 に近いはず
         row_sum = weights.sum(dim=-1)
-        assert torch.allclose(row_sum, torch.ones_like(row_sum), atol=1e-4), \
-            "Attention weights should sum to 1"
+        assert torch.allclose(
+            row_sum, torch.ones_like(row_sum), atol=1e-4
+        ), "Attention weights should sum to 1"
 
         print("  ✅ MultiHeadAttention (self-attention): OK")
         return True
@@ -64,11 +71,11 @@ def test_multihead_attention_self():
 
 
 def test_multihead_attention_cross():
-    """MultiHeadAttention の cross-attention テスト (encoder出力を参照)"""
+    """Test MultiHeadAttention cross-attention (encoder 出力を参照)."""
     print("Testing MultiHeadAttention (cross-attention) ...")
     try:
         attn = MultiHeadAttention(d_model=128, n_heads=4, dropout=0.0)
-        query = torch.randn(2, 8, 128)   # decoder side (tgt_len=8)
+        query = torch.randn(2, 8, 128)  # decoder side (tgt_len=8)
         encoder_out = torch.randn(2, 15, 128)  # encoder side (src_len=15)
 
         out, weights = attn(query, encoder_out, encoder_out)
@@ -85,7 +92,7 @@ def test_multihead_attention_cross():
 
 
 def test_encoder_block():
-    """EncoderBlock のテスト"""
+    """Test EncoderBlock."""
     print("Testing EncoderBlock ...")
     try:
         block = EncoderBlock(d_model=128, n_heads=4, d_ff=512, dropout=0.0)
@@ -104,11 +111,11 @@ def test_encoder_block():
 
 
 def test_decoder_block():
-    """DecoderBlock のテスト (cross-attention を含む)"""
+    """Test DecoderBlock (cross-attention を含む)."""
     print("Testing DecoderBlock ...")
     try:
         block = DecoderBlock(d_model=128, n_heads=4, d_ff=512, dropout=0.0)
-        x = torch.randn(2, 10, 128)            # decoder input  (tgt_len=10)
+        x = torch.randn(2, 10, 128)  # decoder input  (tgt_len=10)
         encoder_out = torch.randn(2, 20, 128)  # encoder output (src_len=20)
         out = block(x, encoder_out)
 
@@ -124,7 +131,7 @@ def test_decoder_block():
 
 
 def test_translation_model():
-    """TranslationModel のフルフォワードテスト"""
+    """Test TranslationModel full forward pass."""
     print("Testing TranslationModel ...")
     try:
         config = get_model_config("tiny")
@@ -164,14 +171,20 @@ def test_translation_model():
         traceback.print_exc()
         return False
 
+
 def test_generate():
-    """生成 (greedy decoding) のテスト"""
+    """Test generate (greedy decoding)."""
     print("Testing generate (greedy decoding) ...")
     try:
         model = TranslationModel(
-            src_vocab_size=100, tgt_vocab_size=100,
-            d_model=64, n_heads=4, n_encoder_layers=1, n_decoder_layers=1,
-            d_ff=128, max_seq_len=32,
+            src_vocab_size=100,
+            tgt_vocab_size=100,
+            d_model=64,
+            n_heads=4,
+            n_encoder_layers=1,
+            n_decoder_layers=1,
+            d_ff=128,
+            max_seq_len=32,
         )
         model.eval()
 
@@ -191,6 +204,7 @@ def test_generate():
 
 
 def main():
+    """全コンポーネントのテストを実行して結果を集計する."""
     print("=" * 55)
     print("Ex6 Translation Transformer - Implementation Test")
     print("=" * 55)
