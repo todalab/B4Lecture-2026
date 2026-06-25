@@ -557,7 +557,7 @@ def main():
         print(f"\n{'=' * 56}")
         print("  比較サマリー")
         print(f"{'=' * 56}")
-        header = f"  {'Size':<8} {'Epoch':>6} {'Perplexity':>12} {'ChrF':>8}"
+        header = f"  {'Size':<8} {'Best epoch':>6} {'Perplexity':>12} {'ChrF':>8}"
         print(header)
         print(f"  {'-' * 38}")
         # 入力順 (args.model_sizes) を保ちつつ、評価できたサイズだけ表示
