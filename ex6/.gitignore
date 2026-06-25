@@ -27,6 +27,8 @@ coverage.xml
 *.pth
 checkpoints/
 *.log
+
+logs/
 results/
 fig/
 
@@ -47,3 +49,9 @@ venv/
 
 # MacOS
 .DS_Store
+
+# claude
+CLAUDE.md
+.claude/
+
+__pycache__

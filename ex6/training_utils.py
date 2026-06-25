@@ -1,6 +1,4 @@
-"""
-Training Utilities
-"""
+"""Training utilities."""
 
 import json
 import logging
@@ -16,8 +14,12 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 
-def setup_logging(log_file: str = "training.log", level=logging.INFO):
-    """ロギングを設定"""
+def setup_logging(log_file: str = "logs/training.log", level=logging.INFO):
+    """ロギングを設定する."""
+    # ログは logs/ などのディレクトリにまとめる。無ければ作成する
+    log_dir = os.path.dirname(log_file)
+    if log_dir:
+        os.makedirs(log_dir, exist_ok=True)
     logging.basicConfig(
         level=level,
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -30,7 +32,7 @@ logger = setup_logging()
 
 
 class LearningRateScheduler:
-    """Warmup + Cosine Decay スケジューラー"""
+    """Warmup + Cosine Decay スケジューラー."""
 
     def __init__(
         self,
@@ -39,6 +41,7 @@ class LearningRateScheduler:
         total_steps: int,
         base_lr: float,
     ):
+        """学習率スケジューラーを初期化する."""
         self.optimizer = optimizer
         self.warmup_steps = warmup_steps
         self.total_steps = total_steps
@@ -46,6 +49,7 @@ class LearningRateScheduler:
         self.step_count = 0
 
     def step(self) -> float:
+        """1 ステップ進めて更新後の学習率を返す."""
         self.step_count += 1
         if self.step_count <= self.warmup_steps:
             lr = self.base_lr * (self.step_count / self.warmup_steps)
@@ -60,12 +64,14 @@ class LearningRateScheduler:
 
 
 class TrainingMetrics:
-    """学習メトリクスの記録"""
+    """学習メトリクスの記録."""
 
     def __init__(self):
+        """空のメトリクス記録を初期化する."""
         self.reset()
 
     def reset(self):
+        """記録している全メトリクスを空に戻す."""
         self.train_losses: list = []
         self.val_losses: list = []
         self.val_perplexities: list = []
@@ -80,6 +86,7 @@ class TrainingMetrics:
         lr: float,
         epoch_time: float,
     ):
+        """1 エポック分のメトリクスを追記する."""
         self.train_losses.append(train_loss)
         self.val_losses.append(val_loss)
         self.val_perplexities.append(val_perplexity)
@@ -87,6 +94,7 @@ class TrainingMetrics:
         self.epoch_times.append(epoch_time)
 
     def save(self, filepath: str):
+        """メトリクスを JSON ファイルに保存する."""
         metrics = {
             "train_losses": self.train_losses,
             "val_losses": self.val_losses,
@@ -107,7 +115,7 @@ def train_epoch(
     scheduler: Optional[LearningRateScheduler] = None,
     grad_accumulation_steps: int = 1,
 ) -> Tuple[float, float]:
-    """1 エポックの学習
+    """1 エポックの学習を行う.
 
     バッチ形式: (src, tgt_in, tgt_out)
         src:     (batch, src_len)  エンコーダ入力
@@ -160,7 +168,7 @@ def evaluate(
     val_loader: DataLoader,
     device: torch.device,
 ) -> Tuple[float, float]:
-    """検証データで評価する
+    """検証データで評価する.
 
     Returns:
         avg_loss, perplexity
@@ -199,7 +207,7 @@ def _show_sample_translations(
     bos_idx,
     eos_idx,
 ):
-    """エポック終了時にサンプル翻訳を表示する"""
+    """エポック終了時にサンプル翻訳を表示する."""
     model.eval()
     with torch.no_grad():
         for sent in sample_sentences:
@@ -227,7 +235,7 @@ def train_model(
     tgt_tokenizer=None,
     sample_max_len: int = 64,
 ) -> TrainingMetrics:
-    """モデル学習のメイン関数"""
+    """モデル学習のメイン関数."""
     logger.info(
         f"Starting training: {epochs} epochs, lr={learning_rate}, device={device}"
     )
@@ -304,10 +312,12 @@ def train_model(
 
 
 def count_parameters(model: nn.Module) -> int:
+    """学習対象パラメータ数を数えて返す."""
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
 
 def get_device() -> torch.device:
+    """利用可能なら CUDA、無ければ CPU のデバイスを返す."""
     if torch.cuda.is_available():
         device = torch.device("cuda")
         logger.info(f"GPU: {torch.cuda.get_device_name(0)}")
