@@ -376,8 +376,9 @@ def main():
             "large",
             "small_GA",
             "small_GA8",
-            "small1e3",
-            "small1e2",
+            "small_6",
+            "small_1e3",
+            "small_1e2",
         ],
         help="評価するモデルサイズ (--compare 使用時は不要)",
     )
@@ -464,8 +465,9 @@ def main():
             "large",
             "small_GA",
             "small_GA8",
-            "small1e3",
-            "small1e2",
+            "small_6",
+            "small_1e3",
+            "small_1e2",
         ]
         for size in sizes:
             ckpt = os.path.join(args.save_dir, f"translation_{size}_best.pt")
