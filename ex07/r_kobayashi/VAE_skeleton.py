@@ -147,7 +147,8 @@ class VAE(nn.Module):
         # TODO: KL[q(z|x) || p(z)] の解析解を実装する。
         #       torch.distributions.kl_divergence() の使用は禁止。
         kl = -0.5 * torch.sum(1 + log_var - mean.pow(2) - log_var.exp())
-        # 一見すると近似事後分布の解しか使っていないように見えるが、今回比較対象の事前分布 p(z) は標準正規分布 N(0, I) なので、KL ダイバージェンスの解析解は上記の式で表される。
+        # 一見すると近似事後分布の解しか使っていないように見えるが、今回比較対象の事前分布 p(z) は標準正規分布 N(0, I) なので、
+        # KL ダイバージェンスの解析解は上記の式で表される。
         return kl.mean()  # バッチ平均を返す
         # raise NotImplementedError("VAE.kld の TODO を実装してください")
 
