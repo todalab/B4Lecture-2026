@@ -178,21 +178,30 @@ def main():
     plot_loss(train_losses, val_losses, "./images/loss_curve.png")
 
     # 可視化
-    model.load_state_dict(torch.load(model_path, weights_only=True))
-    model.eval()
     vis = Visualize(args.z_dim, args.h_dim, test_loader, model, device)
     vis.createDirectories()
-    vis.reconstruction()
-    vis.latent_space()
+
+    # 最終エポックのモデル（学習ループ終了時点の重み）で reconstruction / latent_space を出力
+    model.eval()
+    vis.reconstruction(tag="final")
+    vis.latent_space(tag="final")
+
+    # best モデル（val loss 最小）をロードして可視化
+    model.load_state_dict(torch.load(model_path, weights_only=True))
+    model.eval()
+    vis.reconstruction(tag="best")
+    vis.latent_space(tag="best")
 
     if args.z_dim == 2:
         vis.lattice_point()
         vis.walkthrough()
     else:
-        print("z_dim != 2: lattice_point / walkthrough をスキップします。")
         print(
-            "  ヒント: t-SNE や PCA で潜在空間を2次元に落として可視化してみよう（発展課題）。"
+            f"z_dim={args.z_dim}: t-SNE で潜在空間を2次元に落として "
+            "lattice_point / walkthrough を可視化します。"
         )
+        vis.lattice_point()
+        vis.walkthrough()
 
 
 if __name__ == "__main__":

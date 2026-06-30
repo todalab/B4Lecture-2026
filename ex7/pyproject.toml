@@ -16,4 +16,5 @@ dependencies = [
     "isort>=8.0.1",
     "torchvision>=0.27.1",
     "pillow>=9.0.0",
+    "scikit-learn>=1.7.2",
 ]
