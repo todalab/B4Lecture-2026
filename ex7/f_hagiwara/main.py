@@ -2,16 +2,17 @@
 """VAE の学習・可視化スクリプト。実装済み・変更不要。"""
 
 import argparse
+import json
 import os
-
-from datetime import datetime
 import random
+from datetime import datetime
+
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from libs.Visualize import Visualize
-from torch import optim
 from torchvision import datasets, transforms
+
+from libs.Visualize import Visualize
 from VAE_coded import VAE
 
 
@@ -61,21 +62,31 @@ def get_data_loaders(batch_size: int, train_rate: float, seed: int = 42):
 
     # train_loader のみに generator を渡す（shuffle=True のときだけ意味があるため）
     train_loader = torch.utils.data.DataLoader(
-        train_set, shuffle=True,
-        batch_size=batch_size, num_workers=2, pin_memory=True,
-        worker_init_fn=seed_worker, generator=train_g
+        train_set,
+        shuffle=True,
+        batch_size=batch_size,
+        num_workers=2,
+        pin_memory=True,
+        worker_init_fn=seed_worker,
+        generator=train_g,
     )
 
     val_loader = torch.utils.data.DataLoader(
-        val_set, shuffle=False,
-        batch_size=batch_size, num_workers=2, pin_memory=True,
-        worker_init_fn=seed_worker
+        val_set,
+        shuffle=False,
+        batch_size=batch_size,
+        num_workers=2,
+        pin_memory=True,
+        worker_init_fn=seed_worker,
     )
 
     test_loader = torch.utils.data.DataLoader(
-        test_set, shuffle=False,
-        batch_size=batch_size, num_workers=2, pin_memory=True,
-        worker_init_fn=seed_worker
+        test_set,
+        shuffle=False,
+        batch_size=batch_size,
+        num_workers=2,
+        pin_memory=True,
+        worker_init_fn=seed_worker,
     )
     return train_loader, val_loader, test_loader
 
@@ -180,8 +191,33 @@ def main():
                 print(f"Early stopping at epoch {epoch}.")
                 break
 
-    plot_loss(train_losses, val_losses, f"./images/LC_z{args.z_dim}_"
-        f"h{args.h_dim}_dr{args.drop_rate}_lr{args.lr}_{timestamp}.png")
+    plot_loss(
+        train_losses,
+        val_losses,
+        f"./images/LC_z{args.z_dim}_"
+        f"h{args.h_dim}_dr{args.drop_rate}_lr{args.lr}_{timestamp}.png",
+    )
+
+    json_path = (
+        f"./params/jsons/loss_z{args.z_dim}_"
+        f"h{args.h_dim}_dr{args.drop_rate}_lr{args.lr}_{timestamp}.json"
+    )
+
+    history = {
+        "z_dim": args.z_dim,
+        "h_dim": args.h_dim,
+        "drop_rate": args.drop_rate,
+        "lr": args.lr,
+        "epochs": len(train_losses),
+        "best_val_loss": best_val_loss,
+        "train_losses": train_losses,
+        "val_losses": val_losses,
+    }
+
+    with open(json_path, "w") as f:
+        json.dump(history, f, indent=4)
+
+    print(f"Training history -> {json_path}")
 
     # 可視化
     model.load_state_dict(torch.load(model_path, weights_only=True))

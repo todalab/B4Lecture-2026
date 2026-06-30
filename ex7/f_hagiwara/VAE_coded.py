@@ -73,10 +73,10 @@ class VAE(nn.Module):
         参照: "Auto-Encoding Variational Bayes" Appendix C.1
         """
         # 全結合層に与えられるように平坦化させる（2次元の画像を1次元のベクトルへ）
-        x = x.view(-1, self.x_dim) 
+        x = x.view(-1, self.x_dim)
         # DONE: enc_fc1 → ReLU → enc_fc2 → ReLU の順に通す。
         #      その後 enc_fc3_mean と enc_fc3_logvar に通して mean と log_var を返す。
-        
+
         x = torch.relu(self.enc_fc1(x))
         x = torch.relu(self.enc_fc2(x))
 
@@ -110,7 +110,9 @@ class VAE(nn.Module):
         """
         # DONE: mean と同じ形状の ε を標準正規分布からサンプリングし、z を計算して返す。
         std = torch.exp(0.5 * log_var)
-        eps = torch.randn_like(std) # stdと同じ形（行/列数）の標準偏差に則った値のリストが得られる
+        eps = torch.randn_like(
+            std
+        )  # stdと同じ形（行/列数）の標準偏差に則った値のリストが得られる
         z = mean + eps * std
 
         return z
@@ -127,14 +129,14 @@ class VAE(nn.Module):
         参照: "Auto-Encoding Variational Bayes" Appendix C.1
         """
         # DONE: dec_fc1 → ReLU → dec_fc2 → ReLU → dec_drop → dec_fc3 → Sigmoid の順に通す。
-        
+
         z = torch.relu(self.dec_fc1(z))
         z = torch.relu(self.dec_fc2(z))
         z = self.dec_drop(z)
         y = torch.sigmoid(self.dec_fc3(z))
 
         return y
-        
+
     def kld(self, mean: torch.Tensor, log_var: torch.Tensor) -> torch.Tensor:
         """KL ダイバージェンス KL[q(z|x) || p(z)] を計算する。
 
@@ -152,9 +154,7 @@ class VAE(nn.Module):
         """
         # DONE: KL[q(z|x) || p(z)] の解析解を実装する。
         #       torch.distributions.kl_divergence() の使用は禁止。
-        kl = -0.5 * torch.sum(
-            1 + log_var - mean.pow(2) - log_var.exp()
-        )
+        kl = -0.5 * torch.sum(1 + log_var - mean.pow(2) - log_var.exp())
 
         return kl
 
@@ -192,8 +192,7 @@ class VAE(nn.Module):
 
         # Bernoulli log likelihood
         elbo_rec = torch.sum(
-            x * torch.log(y + self.eps)
-            + (1 - x) * torch.log(1 - y + self.eps)
+            x * torch.log(y + self.eps) + (1 - x) * torch.log(1 - y + self.eps)
         )
 
         return [elbo_kl, elbo_rec], z, y
