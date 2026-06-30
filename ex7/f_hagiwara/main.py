@@ -10,9 +10,9 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from torchvision import datasets, transforms
-
 from libs.Visualize import Visualize
+from torchvision import datasets, transforms
+from torch import optim
 from VAE_coded import VAE
 
 
