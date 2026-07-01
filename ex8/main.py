@@ -9,13 +9,12 @@ import hydra
 import torch
 import torch.nn as nn
 from datasets import load_dataset
+from diffusion_skeleton import DiffusionModel
 from omegaconf import DictConfig
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from torchvision import transforms
 from torchvision.utils import make_grid
-
-from diffusion_skeleton import DiffusionModel
 
 
 def train_one_epoch(model, loader, optimizer, device):
