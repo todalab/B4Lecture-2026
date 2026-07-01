@@ -134,6 +134,7 @@ diffusion:
 | ファイル | 内容 |
 |----------|------|
 | `diffusion_skeleton.py` | 実装箇所（`#TODO`）が明示された DiffusionModel クラス |
+| `test_implementation.py` | 実装を確認するためのテストコード |
 | `main.py` | 訓練ループ・可視化スクリプト（実装済み・変更不要） |
 | `conf/default.yaml` | Hydra 設定ファイル（ハイパーパラメータ） |
 | `requirements.txt` | 依存ライブラリ |
@@ -141,6 +142,9 @@ diffusion:
 ### **実行コマンド**
 
 ```bash
+# テストの実行（実装完了後に確認）
+python test_implementation.py
+
 # データダウンロード先を指定して実行（初回はダウンロードが走る）
 python main.py datadir=<データを保存するディレクトリの絶対パス>
 
