@@ -1,0 +1,13 @@
+defaults:
+  - model: flow
+  - train: default
+  - _self_
+
+data:
+  sr: 16000
+  n_fft: 1024
+  hop_length: 512
+  n_mels: 64
+  segment_sec: 10.0
+  data_dir: /home/yogo26/nas02/home/data
+  target_models: ["03", "04", "05", "06"]  # 学習・評価対象

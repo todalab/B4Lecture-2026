@@ -1,0 +1,6 @@
+epochs: 100
+lr: 3e-4        # 1e-3 → 3e-4（モデルが大きい分安定させる）
+weight_decay: 1e-4
+batch_size: 16
+val_interval: 10
+seed: 42
