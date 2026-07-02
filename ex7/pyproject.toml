@@ -1,0 +1,13 @@
+[project]
+name = "ex7"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "matplotlib>=3.7.0",
+    "numpy>=1.24.0",
+    "pillow>=9.0.0",
+    "torch>=2.0.0",
+    "torchvision>=0.15.0",
+]
