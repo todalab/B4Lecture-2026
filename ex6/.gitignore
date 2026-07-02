@@ -28,7 +28,6 @@ coverage.xml
 checkpoints/
 *.log
 results/
-fig/
 
 # Jupyter
 .ipynb_checkpoints

@@ -44,7 +44,7 @@ class WordTokenizer:
 
     def _tokenize(self, text: str) -> List[str]:
         if self.char_level:
-            return list(text)        # 文字レベル: 日本語（スペースなし言語）
+            return list(text)  # 文字レベル: 日本語（スペースなし言語）
         return text.lower().split()  # 単語レベル: 英語
 
     def build(self, sentences: List[str], max_vocab: int = 8000) -> "WordTokenizer":
@@ -128,7 +128,7 @@ class TranslationDataset(Dataset):
         tgt = self.tgt_data[idx]  # [..., EOS]
 
         tgt_in = [BOS_IDX] + tgt[:-1]  # [BOS, char1, char2, ...]
-        tgt_out = tgt                   # [char1, char2, ..., EOS]
+        tgt_out = tgt  # [char1, char2, ..., EOS]
 
         return (
             torch.tensor(src, dtype=torch.long),
@@ -145,7 +145,9 @@ def collate_fn(
     src_batch, tgt_in_batch, tgt_out_batch = zip(*batch)
     src_padded = pad_sequence(src_batch, batch_first=True, padding_value=pad_idx)
     tgt_in_padded = pad_sequence(tgt_in_batch, batch_first=True, padding_value=pad_idx)
-    tgt_out_padded = pad_sequence(tgt_out_batch, batch_first=True, padding_value=pad_idx)
+    tgt_out_padded = pad_sequence(
+        tgt_out_batch, batch_first=True, padding_value=pad_idx
+    )
     return src_padded, tgt_in_padded, tgt_out_padded
 
 
@@ -208,8 +210,12 @@ def create_data_loaders(
 
     # 語彙構築 (訓練データのみ)
     logger.info("Building vocabularies ...")
-    src_tokenizer = WordTokenizer(char_level=False).build(train_src, max_vocab=src_vocab_size)
-    tgt_tokenizer = WordTokenizer(char_level=True).build(train_tgt, max_vocab=tgt_vocab_size)
+    src_tokenizer = WordTokenizer(char_level=False).build(
+        train_src, max_vocab=src_vocab_size
+    )
+    tgt_tokenizer = WordTokenizer(char_level=True).build(
+        train_tgt, max_vocab=tgt_vocab_size
+    )
 
     def encode_all(sentences, tokenizer):
         return [tokenizer.encode(s, add_eos=True, max_len=max_len) for s in sentences]
