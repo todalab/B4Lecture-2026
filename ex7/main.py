@@ -7,7 +7,7 @@ import os
 import matplotlib.pyplot as plt
 import torch
 from libs.Visualize import Visualize
-from torch import optim, flatten
+from torch import flatten, optim
 from torchvision import datasets, transforms
 from VAE_skeleton import VAE
 
@@ -93,6 +93,8 @@ def main():
         "--patience", type=int, default=10, help="Early stopping の patience"
     )
     args = parser.parse_args()
+
+    torch.manual_seed(42)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Device: {device}")

@@ -13,7 +13,7 @@ Ex7 B4講義 — VAE（変分自己符号化器）
 import numpy as np
 import torch
 import torch.nn as nn
-from torch import exp, log, sum, manual_seed, randn_like, relu, sigmoid
+from torch import exp, log, randn_like, relu, sigmoid, sum
 
 MNIST_SIZE = 28
 
@@ -102,7 +102,6 @@ class VAE(nn.Module):
         参照: "Auto-Encoding Variational Bayes" Section 2.4, Eq. (4)
         """
         # epsilon ~ N(0, identity)
-        manual_seed(42)
         epsilon = randn_like(mean)
         z = mean + epsilon * exp(0.5 * log_var)
         return z
@@ -163,9 +162,6 @@ class VAE(nn.Module):
         y = self.decoder(z)
 
         elbo_kl = -self.kld(mean, log_var)
-        elbo_rec = sum(
-            x * log(y + self.eps)
-            + (1 - x) * log(1 - y + self.eps)
-        )
+        elbo_rec = sum(x * log(y + self.eps) + (1 - x) * log(1 - y + self.eps))
 
         return [elbo_kl, elbo_rec], z, y
