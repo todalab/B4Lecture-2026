@@ -13,6 +13,7 @@ Ex7 B4講義 — VAE（変分自己符号化器）
 import numpy as np
 import torch
 import torch.nn as nn
+from torch import exp, log, sum, manual_seed, randn_like, relu, sigmoid
 
 MNIST_SIZE = 28
 
@@ -73,9 +74,14 @@ class VAE(nn.Module):
         参照: "Auto-Encoding Variational Bayes" Appendix C.1
         """
         x = x.view(-1, self.x_dim)
-        # TODO: enc_fc1 → ReLU → enc_fc2 → ReLU の順に通す。
-        #      その後 enc_fc3_mean と enc_fc3_logvar に通して mean と log_var を返す。
-        raise NotImplementedError("VAE.encoder の TODO を実装してください")
+
+        h = relu(self.enc_fc1(x))
+        z = relu(self.enc_fc2(h))
+
+        log_var = self.enc_fc3_logvar(z)
+        mean = self.enc_fc3_mean(z)
+
+        return mean, log_var
 
     def reparametrization_trick(
         self, mean: torch.Tensor, log_var: torch.Tensor
@@ -95,10 +101,11 @@ class VAE(nn.Module):
 
         参照: "Auto-Encoding Variational Bayes" Section 2.4, Eq. (4)
         """
-        # TODO: mean と同じ形状の ε を標準正規分布からサンプリングし、z を計算して返す。
-        raise NotImplementedError(
-            "VAE.reparametrization_trick の TODO を実装してください"
-        )
+        # epsilon ~ N(0, identity)
+        manual_seed(42)
+        epsilon = randn_like(mean)
+        z = mean + epsilon * exp(0.5 * log_var)
+        return z
 
     def decoder(self, z: torch.Tensor) -> torch.Tensor:
         """潜在変数から再構成画像を生成する。
@@ -111,8 +118,16 @@ class VAE(nn.Module):
 
         参照: "Auto-Encoding Variational Bayes" Appendix C.1
         """
-        # TODO: dec_fc1 → ReLU → dec_fc2 → ReLU → dec_drop → dec_fc3 → Sigmoid の順に通す。
-        raise NotImplementedError("VAE.decoder の TODO を実装してください")
+
+        h = relu(self.dec_fc1(z))
+        h = relu(self.dec_fc2(h))
+        h = self.dec_drop(h)
+        y = sigmoid(self.dec_fc3(h))
+        # y = sigmoid(NN'(z))
+        # p(x|z) = prod_i p(x_i|z) = prod_i Bernoulli(x_i|y_i)  (x_i in {0, 1})
+        # log p(x|z) = sum_i x_i log y_i + (1 - x_i) log (1 - y_i)
+
+        return y
 
     def kld(self, mean: torch.Tensor, log_var: torch.Tensor) -> torch.Tensor:
         """KL ダイバージェンス KL[q(z|x) || p(z)] を計算する。
@@ -126,9 +141,7 @@ class VAE(nn.Module):
 
         参照: "Auto-Encoding Variational Bayes" Appendix B
         """
-        # TODO: KL[q(z|x) || p(z)] の解析解を実装する。
-        #       torch.distributions.kl_divergence() の使用は禁止。
-        raise NotImplementedError("VAE.kld の TODO を実装してください")
+        return -0.5 * sum(1 + log_var - mean**2 - exp(log_var))
 
     def forward(self, x: torch.Tensor):
         """ELBO の各項を計算してフォワードパスを実行する。
@@ -145,7 +158,14 @@ class VAE(nn.Module):
 
         参照: "Auto-Encoding Variational Bayes" Eq. (3), Appendix C.1
         """
-        # TODO: encoder → reparametrization_trick → decoder の順に呼び出す。
-        #      elbo_kl = -self.kld(mean, log_var) で KL 項と（符号に注意）、
-        #      elbo_rec を計算して [elbo_kl, elbo_rec], z, y を返す。
-        raise NotImplementedError("VAE.forward の TODO を実装してください")
+        mean, log_var = self.encoder(x)
+        z = self.reparametrization_trick(mean, log_var)
+        y = self.decoder(z)
+
+        elbo_kl = -self.kld(mean, log_var)
+        elbo_rec = sum(
+            x * log(y + self.eps)
+            + (1 - x) * log(1 - y + self.eps)
+        )
+
+        return [elbo_kl, elbo_rec], z, y

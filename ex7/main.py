@@ -7,7 +7,7 @@ import os
 import matplotlib.pyplot as plt
 import torch
 from libs.Visualize import Visualize
-from torch import optim
+from torch import optim, flatten
 from torchvision import datasets, transforms
 from VAE_skeleton import VAE
 
@@ -17,7 +17,7 @@ def get_data_loaders(batch_size: int, train_rate: float):
     transform = transforms.Compose(
         [
             transforms.ToTensor(),
-            transforms.Lambda(lambda x: x.view(-1)),
+            transforms.Lambda(flatten),
         ]
     )
     full_train = datasets.MNIST(
