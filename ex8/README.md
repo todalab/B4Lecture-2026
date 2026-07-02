@@ -37,11 +37,13 @@ pip install -r requirements.txt
 
 ## データセット
 
-**Smithsonian Butterflies Subset**（HuggingFace Datasets）
+**[Smithsonian Butterflies Subset](https://huggingface.co/datasets/huggan/smithsonian_butterflies_subset)**（HuggingFace Datasets）
 
-- 蝶の写真 約1,000枚のカラー画像
+- スミソニアン博物館が公開している蝶の写真 約1,000枚のカラー画像
 - 初回実行時に HuggingFace から自動ダウンロード
 - ダウンロード先を `datadir` 引数で指定する
+
+![butterflies](images/examples/butterflies.png)
 
 ---
 
@@ -65,9 +67,8 @@ $$x_t = \sqrt{\bar{\alpha}_t}\, x_0 + \sqrt{1 - \bar{\alpha}_t}\, \varepsilon, \
 #### **8-1-2 `p_sample(self, x, t)`**
 
 同論文の **Algorithm 2** および **Eq. (11)** を参照。  
-ノイズ付き画像 $x_t$ から、推定ノイズ $\varepsilon_\theta$ を用いて $x_{t-1}$ を 1ステップ計算する。  
-`self.alpha[t]` ($\alpha_t$) および `self.alpha_prod[t]` ($\bar{\alpha}_t$) を使うこと。  
-$t = 0$ のとき（最終ステップ）はノイズを加えないことに注意。
+ノイズ $\varepsilon_\theta(x_t, t)$ を推定し、1ステップ分ノイズを除去したのち新たなノイズを加えて $x_{t-1}$ を返す。
+最終ステップ（$t = 0$）のみ、新たなノイズは加えない。
 
 #### **8-1-3 `training_step(self, batch, batch_idx)`**
 

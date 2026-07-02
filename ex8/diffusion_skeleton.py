@@ -8,7 +8,7 @@ Ex8 B4講義 — Diffusion Model（拡散モデル）
     - DiffusionModel.training_step
 """
 
-from typing import Any, Dict
+from typing import Any, Dict, Literal
 
 import torch
 import torch.nn as nn
@@ -22,7 +22,7 @@ class DiffusionModel(nn.Module):
         model (nn.Module):                      ノイズ推定モデル（例: UNet2DModel）
         criterion (nn.Module):                  損失関数
         num_timesteps (int):                    拡散過程のタイムステップ数 T
-        noise_schedule (str):                   ノイズスケジュールの種類（"linear"）
+        noise_schedule (Literal["linear"]):     ノイズスケジュールの種類
         noise_schedule_kwargs (Dict[str, Any]): ノイズスケジュールの引数（start, end）
 
     Functions:
@@ -38,7 +38,7 @@ class DiffusionModel(nn.Module):
         model: nn.Module,
         criterion: nn.Module,
         num_timesteps: int,
-        noise_schedule: str,
+        noise_schedule: Literal["linear"],
         noise_schedule_kwargs: Dict[str, Any],
     ) -> None:
         """Initialize the diffusion model."""
