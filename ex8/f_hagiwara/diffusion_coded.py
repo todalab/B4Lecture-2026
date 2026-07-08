@@ -189,10 +189,18 @@ class DiffusionModel(nn.Module):
 
         return loss
 
-    def generate(self, num_timesteps: int, shape: tuple) -> torch.Tensor:
+    def generate(
+        self,
+        num_timesteps: int,
+        shape: tuple | None = None,
+        noise: torch.Tensor | None = None,
+    ) -> torch.Tensor:
         """サンプルを生成する。（実装済み・変更不要）"""
         device = self.alpha.device
-        x = torch.randn(shape, device=device)
+        if noise is None:
+            x = torch.randn(shape, device=device)
+        else:
+            x = noise.to(device)
         for step in tqdm(range(num_timesteps - 1, -1, -1)):
             t = torch.full((x.size(0),), step, dtype=torch.long, device=device)
             x = self.p_sample(x, t)

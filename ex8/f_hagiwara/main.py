@@ -6,11 +6,13 @@ import os
 
 import diffusers
 import hydra
+import numpy as np
 import torch
 import torch.nn as nn
 from datasets import load_dataset
 from diffusion_coded import DiffusionModel
 from omegaconf import DictConfig
+from PIL import Image
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from torchvision import transforms
@@ -40,6 +42,39 @@ def visualize(model, num_timesteps, num_samples, image_size, writer, epoch):
     generated = (generated + 1) / 2  # [-1, 1] → [0, 1]
     grid = make_grid(generated, nrow=num_samples[1])
     writer.add_image("Generated Images", grid, epoch)
+    model.train()
+
+
+def generate_gif(model, num_timesteps, num_samples, noise, frames, outdir):
+    """固定ノイズから生成した画像をフレームとして蓄積し、GIF を上書き保存する。
+
+    Args:
+        noise   : 毎回同一の初期ノイズ Tensor (N, C, H, W)
+        frames  : PIL.Image を蓄積するリスト（呼び出し元で管理）
+        outdir  : GIF の保存先ディレクトリ
+    """
+    model.eval()
+    with torch.no_grad():
+        generated = model.generate(
+            num_timesteps,
+            noise=noise,
+        )  # 固定ノイズを渡す
+    generated = (generated.clamp(-1, 1) + 1) / 2  # [-1, 1] → [0, 1]
+    grid = make_grid(generated, nrow=num_samples[1])
+
+    # Tensor → PIL Image
+    grid_np = (grid.permute(1, 2, 0).cpu().numpy() * 255).astype(np.uint8)
+    frames.append(Image.fromarray(grid_np))
+
+    # フレームを追記しながら GIF を毎回上書き保存
+    gif_path = os.path.join(outdir, "training_progress.gif")
+    frames[0].save(
+        gif_path,
+        save_all=True,
+        append_images=frames[1:],
+        duration=200,  # 1フレームあたり 200 ms
+        loop=0,  # 無限ループ
+    )
     model.train()
 
 
@@ -82,10 +117,28 @@ def main(cfg: DictConfig) -> None:
 
     writer = SummaryWriter(log_dir=os.path.join(outdir, "tensorboard"))
 
+    # GIF用追記1
+    gif_frames: list[Image.Image] = []
+    noise_for_gif = torch.randn(
+        (cfg.gif.num_samples[0] * cfg.gif.num_samples[1],) + tuple(cfg.gif.image_size),
+        device=device,
+    )
+
     for epoch in range(1, cfg.train.num_epochs + 1):
         loss = train_one_epoch(diffmodel, train_loader, optimizer, device)
         writer.add_scalar("train_loss", loss, epoch)
         print(f"[Epoch {epoch:4d}]  loss: {loss:.4f}")
+
+        if epoch % cfg.gif.every_n_epochs == 0:
+            logging.info(f"Epoch {epoch}: Generating images...")
+            generate_gif(
+                diffmodel,
+                cfg.diffusion.num_timesteps,
+                cfg.gif.num_samples,
+                noise_for_gif,
+                gif_frames,
+                outdir,
+            )
 
         if epoch % cfg.plot.every_n_epochs == 0:
             logging.info(f"Epoch {epoch}: Generating images...")

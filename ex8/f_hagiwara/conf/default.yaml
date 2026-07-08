@@ -32,3 +32,8 @@ train:
 
 optimizer:
   lr: 1e-3
+
+gif:
+  num_samples: [8, 8]
+  image_size: [3, 32, 32]
+  every_n_epochs: 10
