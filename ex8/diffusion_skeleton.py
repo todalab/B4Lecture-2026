@@ -38,7 +38,7 @@ class DiffusionModel(nn.Module):
         model: nn.Module,
         criterion: nn.Module,
         num_timesteps: int,
-        noise_schedule: Literal["linear"],
+        noise_schedule: Literal["linear", "cosine"],
         noise_schedule_kwargs: Dict[str, Any],
     ) -> None:
         """Initialize the diffusion model."""
@@ -53,11 +53,20 @@ class DiffusionModel(nn.Module):
                 noise_schedule_kwargs["end"],
                 num_timesteps,
             )
-            alpha = 1.0 - beta
-            alpha_prod = alpha.cumprod(dim=0)
-            self.register_buffer("beta", beta)
-            self.register_buffer("alpha", alpha)
-            self.register_buffer("alpha_prod", alpha_prod)
+        elif noise_schedule == "cosine":
+            # 参照: Nichol & Dhariwal, "Improved Denoising Diffusion
+            # Probabilistic Models" Eq. (17)
+            s = noise_schedule_kwargs.get("s", 0.008)
+            t = torch.linspace(0, num_timesteps, num_timesteps + 1) / num_timesteps
+            alpha_bar = torch.cos((t + s) / (1 + s) * torch.pi / 2) ** 2
+            alpha_bar = alpha_bar / alpha_bar[0]
+            beta = (1 - alpha_bar[1:] / alpha_bar[:-1]).clamp(max=0.999)
+
+        alpha = 1.0 - beta
+        alpha_prod = alpha.cumprod(dim=0)
+        self.register_buffer("beta", beta)
+        self.register_buffer("alpha", alpha)
+        self.register_buffer("alpha_prod", alpha_prod)
 
     def forward(self, x: torch.Tensor, t: torch.Tensor) -> torch.Tensor:
         """ノイズ推定モデルを呼び出す。（実装済み・変更不要）
@@ -87,7 +96,10 @@ class DiffusionModel(nn.Module):
         参照: "Denoising Diffusion Probabilistic Models" Eq. (4)
         """
         # TODO
-        raise NotImplementedError("DiffusionModel.q_sample の TODO を実装してください")
+        alpha_prod_t = self.alpha_prod[t].view(-1, 1, 1, 1)
+        sqrt_alpha_prod_t = alpha_prod_t.sqrt()
+        sqrt_one_minus_alpha_prod_t = (1.0 - alpha_prod_t).sqrt()
+        return sqrt_alpha_prod_t * x0 + sqrt_one_minus_alpha_prod_t * noise
 
     def p_sample(self, x: torch.Tensor, t: torch.Tensor) -> torch.Tensor:
         """逆拡散過程（Reverse process）: x_t から x_{t-1} を推定する。
@@ -102,7 +114,20 @@ class DiffusionModel(nn.Module):
         参照: "Denoising Diffusion Probabilistic Models" Algorithm 2, Eq. (11)
         """
         # TODO
-        raise NotImplementedError("DiffusionModel.p_sample の TODO を実装してください")
+        alpha_t = self.alpha[t].view(-1, 1, 1, 1)
+        beta_t = self.beta[t].view(-1, 1, 1, 1)
+        alpha_prod_t = self.alpha_prod[t].view(-1, 1, 1, 1)
+
+        noise_pred = self.forward(x, t)
+
+        mean = (1.0 / alpha_t.sqrt()) * (
+            x - (beta_t / (1.0 - alpha_prod_t).sqrt()) * noise_pred
+        )
+
+        z = torch.randn_like(x)
+        z[t == 0] = 0.0
+
+        return mean + beta_t.sqrt() * z
 
     def training_step(self, images: torch.Tensor) -> torch.Tensor:
         """1バッチの損失を計算する。
@@ -116,9 +141,16 @@ class DiffusionModel(nn.Module):
         参照: "Denoising Diffusion Probabilistic Models" Algorithm 1
         """
         # TODO
-        raise NotImplementedError(
-            "DiffusionModel.training_step の TODO を実装してください"
-        )
+        device = images.device
+        batch_size = images.size(0)
+
+        t = torch.randint(0, self.num_timesteps, (batch_size,), device=device).long()
+        noise = torch.randn_like(images)
+
+        x_t = self.q_sample(images, t, noise)
+        noise_pred = self.forward(x_t, t)
+
+        return self.criterion(noise_pred, noise)
 
     def generate(self, num_timesteps: int, shape: tuple) -> torch.Tensor:
         """サンプルを生成する。（実装済み・変更不要）"""

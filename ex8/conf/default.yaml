@@ -15,12 +15,12 @@ model:
     - 256
 
 diffusion:
-  num_timesteps: 1000
+  num_timesteps: 200
   noise_schedule: linear
   noise_schedule_kwargs:
+    #s: 0.008
     start: 0.0001
     end: 0.02
-
 plot:
   num_samples: [8, 8]
   image_size: [3, 32, 32]

@@ -71,7 +71,9 @@ def main(cfg: DictConfig) -> None:
 
     train_dataset.set_transform(transform)
     train_loader = DataLoader(
-        train_dataset, batch_size=cfg.train.batch_size, shuffle=True
+        train_dataset,
+        batch_size=cfg.train.batch_size,
+        shuffle=True,
     )
 
     unet = diffusers.UNet2DModel(**cfg.model)
