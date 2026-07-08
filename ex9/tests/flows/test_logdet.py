@@ -1,9 +1,8 @@
 import torch
-from torch import nn
-
 from nf_assignment.flows.coupling import AffineCouplingBlock
 from nf_assignment.flows.distributions import DiagGaussian
 from nf_assignment.flows.flow import NormalizingFlow
+from torch import nn
 
 
 class ConstantAffineParams(nn.Module):
@@ -33,7 +32,9 @@ def test_affine_coupling_block_logdet_matches_constant_scale() -> None:
 
 
 def test_normalizing_flow_log_prob_shape() -> None:
-    model = NormalizingFlow(DiagGaussian(2), [AffineCouplingBlock(ConstantAffineParams(0.0, 0.1))])
+    model = NormalizingFlow(
+        DiagGaussian(2), [AffineCouplingBlock(ConstantAffineParams(0.0, 0.1))]
+    )
     x = torch.randn(13, 2)
 
     log_prob = model.log_prob(x)

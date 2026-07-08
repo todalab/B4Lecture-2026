@@ -10,7 +10,6 @@ from typing import Any
 
 import numpy as np
 import torch
-
 from nf_assignment.speech.conditions import WORLD_AUX_CONDITION, parse_condition_spec
 from nf_assignment.speech.data import select_vc_sample_items
 from nf_assignment.speech.features.content import load_hubert_soft_model
@@ -31,7 +30,13 @@ from nf_assignment.speech.sample import (
 )
 from nf_assignment.speech.train import resolve_device
 from nf_assignment.training.checkpoints import load_checkpoint
-from nf_assignment.utils.io import ensure_dir, load_yaml, read_csv_rows, write_csv_rows, write_json
+from nf_assignment.utils.io import (
+    ensure_dir,
+    load_yaml,
+    read_csv_rows,
+    write_csv_rows,
+    write_json,
+)
 from nf_assignment.utils.seed import set_seed
 
 
@@ -71,7 +76,9 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def _parse_utterance_ids(value: str | list[str] | tuple[str, ...] | None) -> list[str] | None:
+def _parse_utterance_ids(
+    value: str | list[str] | tuple[str, ...] | None,
+) -> list[str] | None:
     """Normalize optional utterance-ID selections from config or CLI."""
 
     if value is None:
@@ -169,7 +176,9 @@ def _analyze_item_world(
         utterance_id = row.get("utterance_id")
         raise KeyError(f"{wav_key} is required for VC sampling: {utterance_id}")
     wav_path = _resolve_existing_path(row[wav_key], path_roots)
-    waveform, sample_rate = load_mono_audio(wav_path, target_sample_rate=target_sample_rate)
+    waveform, sample_rate = load_mono_audio(
+        wav_path, target_sample_rate=target_sample_rate
+    )
     world = analyze_world(waveform, sample_rate, world_config)
     return wav_path.as_posix(), waveform, world
 
@@ -277,7 +286,9 @@ def main() -> None:
     base_condition = condition_spec.single_content_condition()
     uses_world_aux = condition_spec.uses_world_aux
     inventory_manifest = args.inventory_manifest or str(
-        sample_config.get("inventory_manifest", "data/manifests/cmu_arctic_inventory.csv")
+        sample_config.get(
+            "inventory_manifest", "data/manifests/cmu_arctic_inventory.csv"
+        )
     )
     path_root = Path(args.path_root or sample_config.get("path_root", "."))
     path_roots = [path_root, Path.cwd()]
@@ -291,12 +302,20 @@ def main() -> None:
         or sample_config.get("statistics_split")
         or metadata.get("statistics_split", "train")
     )
-    source_speaker = str(args.source_speaker or sample_config.get("source_speaker", "bdl"))
-    target_speaker = str(args.target_speaker or sample_config.get("target_speaker", "slt"))
-    utterance_ids = _parse_utterance_ids(
-        args.utterance_ids if args.utterance_ids is not None else sample_config.get("utterance_ids")
+    source_speaker = str(
+        args.source_speaker or sample_config.get("source_speaker", "bdl")
     )
-    split = args.split or str(sample_config.get("split", metadata.get("valid_split", "valid")))
+    target_speaker = str(
+        args.target_speaker or sample_config.get("target_speaker", "slt")
+    )
+    utterance_ids = _parse_utterance_ids(
+        args.utterance_ids
+        if args.utterance_ids is not None
+        else sample_config.get("utterance_ids")
+    )
+    split = args.split or str(
+        sample_config.get("split", metadata.get("valid_split", "valid"))
+    )
     latent_scale = (
         float(args.latent_scale)
         if args.latent_scale is not None
@@ -304,7 +323,8 @@ def main() -> None:
     )
     num_utterances = args.num_utterances or int(sample_config.get("num_utterances", 2))
     output_dir = ensure_dir(
-        args.output_dir or str(sample_config.get("output_dir", "outputs/speech_world_flow"))
+        args.output_dir
+        or str(sample_config.get("output_dir", "outputs/speech_world_flow"))
     )
 
     normalizers = load_feature_normalizers(statistics_path, split=statistics_split)
@@ -340,7 +360,9 @@ def main() -> None:
     started = time.time()
     rows: list[dict[str, Any]] = []
     count = len(sample_items)
-    path_roots.extend([inventory_manifest_path.parent, inventory_manifest_path.parent.parent])
+    path_roots.extend(
+        [inventory_manifest_path.parent, inventory_manifest_path.parent.parent]
+    )
     for item in sample_items:
         sample_rate = sample_config.get("sample_rate")
         source_wav_path, source_waveform, source_world = _analyze_item_world(
@@ -387,7 +409,9 @@ def main() -> None:
         generated_norm_np = generated_norm[0, :, :length].detach().cpu().numpy().T
         target_coded_sp = target_world.coded_sp
         target_length = int(target_coded_sp.shape[0])
-        if int(target_coded_sp.shape[1]) != int(metadata["model_kwargs"]["coded_sp_channels"]):
+        if int(target_coded_sp.shape[1]) != int(
+            metadata["model_kwargs"]["coded_sp_channels"]
+        ):
             raise ValueError(
                 f"target coded_sp channels={target_coded_sp.shape[1]} does not match "
                 f"checkpoint coded_sp_channels={metadata['model_kwargs']['coded_sp_channels']}."

@@ -7,7 +7,6 @@ import time
 
 import numpy as np
 import torch
-
 from nf_assignment.toy.data import make_toy_distribution
 from nf_assignment.toy.model import build_realnvp_2d
 from nf_assignment.toy.sample import sample_model
@@ -23,7 +22,9 @@ def _resolve_device(requested: str) -> torch.device:
         return torch.device("cuda" if torch.cuda.is_available() else "cpu")
     device = torch.device(requested)
     if device.type == "cuda" and not torch.cuda.is_available():
-        raise RuntimeError("CUDA device was requested, but torch.cuda.is_available() is False.")
+        raise RuntimeError(
+            "CUDA device was requested, but torch.cuda.is_available() is False."
+        )
     return device
 
 

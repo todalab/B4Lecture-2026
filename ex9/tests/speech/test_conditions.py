@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import pytest
-
 from nf_assignment.speech.conditions import parse_condition_spec
 
 

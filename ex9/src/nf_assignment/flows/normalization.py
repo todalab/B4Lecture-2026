@@ -25,7 +25,9 @@ def _sequence_mask(x: torch.Tensor, mask: torch.Tensor | None) -> torch.Tensor:
 class ActNorm(nn.Module):
     """Glow-style activation normalization for ``[batch, channels, time]`` tensors."""
 
-    def __init__(self, channels: int, *, data_dep_init: bool = False, eps: float = 1e-6):
+    def __init__(
+        self, channels: int, *, data_dep_init: bool = False, eps: float = 1e-6
+    ):
         """Create channel-wise affine normalization parameters."""
 
         super().__init__()

@@ -25,6 +25,8 @@ def build_realnvp_2d(
 
     transforms = []
     for _ in range(num_layers):
-        transforms.append(AffineCouplingBlock(MLP([1, *hidden_dims, 2], init_zeros=init_zeros)))
+        transforms.append(
+            AffineCouplingBlock(MLP([1, *hidden_dims, 2], init_zeros=init_zeros))
+        )
         transforms.append(Permute(2, mode="swap"))
     return NormalizingFlow(DiagGaussian(2), transforms, target=target)

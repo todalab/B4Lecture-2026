@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 import torch
+from nf_assignment.flows.transforms import Transform, batch_zeros_like
 from torch import nn
 from torch.nn import functional as F
-
-from nf_assignment.flows.transforms import Transform, batch_zeros_like
 
 
 class Permute(Transform):
@@ -150,7 +149,9 @@ class InvConvNear(Transform):
             log_det = torch.zeros(x.shape[0], dtype=x.dtype, device=x.device)
         else:
             _, log_abs_det = torch.linalg.slogdet(self.weight)
-            log_det = log_abs_det * (self.channels / self.n_split) * self._lengths(x, mask)
+            log_det = (
+                log_abs_det * (self.channels / self.n_split) * self._lengths(x, mask)
+            )
         return z, log_det
 
     def inverse(
@@ -180,5 +181,7 @@ class InvConvNear(Transform):
             log_det = torch.zeros(z.shape[0], dtype=z.dtype, device=z.device)
         else:
             _, log_abs_det = torch.linalg.slogdet(self.weight)
-            log_det = -log_abs_det * (self.channels / self.n_split) * self._lengths(z, mask)
+            log_det = (
+                -log_abs_det * (self.channels / self.n_split) * self._lengths(z, mask)
+            )
         return x, log_det

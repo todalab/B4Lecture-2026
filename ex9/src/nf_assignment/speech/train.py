@@ -17,11 +17,15 @@ def resolve_device(requested: str) -> torch.device:
         return torch.device("cuda" if torch.cuda.is_available() else "cpu")
     device = torch.device(requested)
     if device.type == "cuda" and not torch.cuda.is_available():
-        raise RuntimeError("CUDA device was requested, but torch.cuda.is_available() is False.")
+        raise RuntimeError(
+            "CUDA device was requested, but torch.cuda.is_available() is False."
+        )
     return device
 
 
-def build_optimizer(model: torch.nn.Module, train_config: dict[str, Any]) -> torch.optim.Optimizer:
+def build_optimizer(
+    model: torch.nn.Module, train_config: dict[str, Any]
+) -> torch.optim.Optimizer:
     """Build the speech-flow optimizer from config."""
 
     optimizer_config = train_config.get("optimizer", {})
@@ -191,7 +195,9 @@ def train_speech_flow(
     generator.manual_seed(seed)
     for step in range(1, num_steps + 1):
         batch = move_batch_to_device(next(batches), device)
-        batch = crop_batch_segments(batch, segment_frames=segment_frames, generator=generator)
+        batch = crop_batch_segments(
+            batch, segment_frames=segment_frames, generator=generator
+        )
         optimizer.zero_grad(set_to_none=True)
         loss = speech_nll_loss(model, batch)
         loss.backward()

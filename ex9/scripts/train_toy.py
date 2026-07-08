@@ -6,7 +6,6 @@ import argparse
 import time
 
 import torch
-
 from nf_assignment.toy.data import TwoMoons, make_toy_distribution
 from nf_assignment.toy.model import build_realnvp_2d
 from nf_assignment.toy.train import train_forward_kld
@@ -23,11 +22,15 @@ def _resolve_device(requested: str) -> torch.device:
         return torch.device("cuda" if torch.cuda.is_available() else "cpu")
     device = torch.device(requested)
     if device.type == "cuda" and not torch.cuda.is_available():
-        raise RuntimeError("CUDA device was requested, but torch.cuda.is_available() is False.")
+        raise RuntimeError(
+            "CUDA device was requested, but torch.cuda.is_available() is False."
+        )
     return device
 
 
-def _build_optimizer(model: torch.nn.Module, train_config: dict) -> torch.optim.Optimizer:
+def _build_optimizer(
+    model: torch.nn.Module, train_config: dict
+) -> torch.optim.Optimizer:
     """Build the toy optimizer from YAML training config."""
 
     optimizer_config = train_config.get("optimizer", {})
@@ -66,7 +69,9 @@ def main() -> None:
 
     requested_device = args.device or str(train_config.get("device", "auto"))
     device = _resolve_device(requested_device)
-    output_dir = ensure_dir(args.output_dir or train_config.get("output_dir", "runs/toy_realnvp"))
+    output_dir = ensure_dir(
+        args.output_dir or train_config.get("output_dir", "runs/toy_realnvp")
+    )
 
     noise = data_config.get("noise")
     target = make_toy_distribution(
@@ -74,7 +79,9 @@ def main() -> None:
         noise=None if noise is None else float(noise),
     ).to(device)
     if not isinstance(target, TwoMoons):
-        raise ValueError("Stage06 validation currently expects a TwoMoons-compatible target.")
+        raise ValueError(
+            "Stage06 validation currently expects a TwoMoons-compatible target."
+        )
 
     hidden_dims = tuple(int(v) for v in model_config.get("hidden_dims", [64, 64]))
     model = build_realnvp_2d(
@@ -113,7 +120,9 @@ def main() -> None:
         "seed": seed,
         "train_config": train_config,
     }
-    save_checkpoint(checkpoint_path, model=model, optimizer=optimizer, metadata=metadata)
+    save_checkpoint(
+        checkpoint_path, model=model, optimizer=optimizer, metadata=metadata
+    )
 
     metrics = {
         "batch_size": batch_size,

@@ -8,7 +8,6 @@ import time
 from pathlib import Path
 
 import numpy as np
-
 from nf_assignment.speech.visualize import (
     plot_coded_sp_comparison,
     plot_loss_curve,
@@ -32,13 +31,17 @@ def _read_sample_manifest(sample_output_dir: Path) -> list[dict]:
     return read_csv_rows(sample_output_dir / "sample_manifest.csv")
 
 
-def _resolve_existing_path(value: str | None, *, sample_output_dir: Path) -> Path | None:
+def _resolve_existing_path(
+    value: str | None, *, sample_output_dir: Path
+) -> Path | None:
     """Resolve an optional manifest path relative to cwd or the sample directory."""
 
     if not value:
         return None
     path = Path(value)
-    candidates = [path] if path.is_absolute() else [Path.cwd() / path, sample_output_dir / path]
+    candidates = (
+        [path] if path.is_absolute() else [Path.cwd() / path, sample_output_dir / path]
+    )
     for candidate in candidates:
         if candidate.exists():
             return candidate

@@ -7,7 +7,6 @@ import json
 import numpy as np
 import pytest
 import torch
-
 from nf_assignment.speech.dataset import (
     FeatureNormalizer,
     SpeechFeatureDataset,
@@ -15,7 +14,10 @@ from nf_assignment.speech.dataset import (
     load_feature_normalizers,
     read_feature_manifest,
 )
-from nf_assignment.speech.features.world import WorldFeatureBundle, shift_f0_by_voiced_mean
+from nf_assignment.speech.features.world import (
+    WorldFeatureBundle,
+    shift_f0_by_voiced_mean,
+)
 
 
 def _write_json(path, data) -> None:
@@ -224,7 +226,9 @@ def test_collate_speech_features_pads_to_batch_max_length(tmp_path) -> None:
     assert batch["coded_sp"].shape == (2, 2, 5)
     assert batch["condition"].shape == (2, 3, 5)
     assert batch["lengths"].tolist() == [3, 5]
-    torch.testing.assert_close(batch["mask"][0, 0], torch.tensor([1.0, 1.0, 1.0, 0.0, 0.0]))
+    torch.testing.assert_close(
+        batch["mask"][0, 0], torch.tensor([1.0, 1.0, 1.0, 0.0, 0.0])
+    )
     torch.testing.assert_close(batch["coded_sp"][0, :, 3:], torch.zeros(2, 2))
 
 
@@ -272,7 +276,9 @@ def test_dataset_loads_manifest_wav_synthesis_features(tmp_path) -> None:
 def test_load_feature_normalizers_requires_existing_split(tmp_path) -> None:
     cache_dir = _fake_feature_cache(tmp_path)
 
-    normalizers = load_feature_normalizers(cache_dir / "feature_statistics.json", split="train")
+    normalizers = load_feature_normalizers(
+        cache_dir / "feature_statistics.json", split="train"
+    )
 
     assert set(normalizers) == {"hubert_soft", "world_aux", "world_coded_sp"}
 

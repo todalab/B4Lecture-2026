@@ -7,7 +7,10 @@ from nf_assignment.speech.dataset import (
     read_feature_manifest,
 )
 from nf_assignment.speech.model import ConditionalSequenceFlow, build_speech_flow
-from nf_assignment.speech.normalization import FeatureNormalizer, load_feature_normalizers
+from nf_assignment.speech.normalization import (
+    FeatureNormalizer,
+    load_feature_normalizers,
+)
 
 __all__ = [
     "ConditionalSequenceFlow",

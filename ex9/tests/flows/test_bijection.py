@@ -1,11 +1,10 @@
 import torch
-from torch import nn
-
 from nf_assignment.flows.coupling import AffineCouplingBlock, AffineCouplingTransform
 from nf_assignment.flows.flow import NormalizingFlow
 from nf_assignment.flows.permutation import Permute
 from nf_assignment.networks.mlp import MLP
 from nf_assignment.toy.model import build_realnvp_2d
+from torch import nn
 
 
 class ChunkedSequenceParams(nn.Module):
@@ -31,7 +30,9 @@ def test_affine_coupling_block_reconstructs_input() -> None:
     x_reconstructed, inverse_log_det = block.inverse(y)
 
     assert torch.allclose(x_reconstructed, x, atol=1e-6)
-    assert torch.allclose(forward_log_det + inverse_log_det, torch.zeros_like(forward_log_det))
+    assert torch.allclose(
+        forward_log_det + inverse_log_det, torch.zeros_like(forward_log_det)
+    )
     assert isinstance(block.transform, AffineCouplingTransform)
 
 
@@ -47,7 +48,9 @@ def test_shared_affine_coupling_transform_handles_sequence_masks() -> None:
     expected_log_det = torch.tensor([-1.5, -2.0])
     assert torch.allclose(x_reconstructed, x, atol=1e-6)
     assert torch.allclose(forward_log_det, expected_log_det)
-    assert torch.allclose(forward_log_det + inverse_log_det, torch.zeros_like(forward_log_det))
+    assert torch.allclose(
+        forward_log_det + inverse_log_det, torch.zeros_like(forward_log_det)
+    )
 
 
 def test_permute_swap_reconstructs_input() -> None:

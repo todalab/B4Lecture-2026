@@ -9,12 +9,18 @@ from typing import Any
 
 import numpy as np
 import torch
-from torch.utils.data import Dataset
-
 from nf_assignment.speech.conditions import ConditionSpec, parse_condition_spec
 from nf_assignment.speech.data import normalize_speaker_list
-from nf_assignment.speech.features.world import WorldFeatureConfig, analyze_world, load_mono_audio
-from nf_assignment.speech.normalization import FeatureNormalizer, load_feature_normalizers
+from nf_assignment.speech.features.world import (
+    WorldFeatureConfig,
+    analyze_world,
+    load_mono_audio,
+)
+from nf_assignment.speech.normalization import (
+    FeatureNormalizer,
+    load_feature_normalizers,
+)
+from torch.utils.data import Dataset
 
 
 def read_feature_manifest(path: str | Path) -> list[dict[str, Any]]:
@@ -28,7 +34,9 @@ def read_feature_manifest(path: str | Path) -> list[dict[str, Any]]:
     return rows
 
 
-def _normalize_speaker_filter(speakers: str | Sequence[str] | None) -> tuple[str, ...] | None:
+def _normalize_speaker_filter(
+    speakers: str | Sequence[str] | None,
+) -> tuple[str, ...] | None:
     """Normalize an optional speaker filter from config or CLI values."""
 
     if speakers is None:
@@ -67,7 +75,9 @@ class SpeechFeatureDataset(Dataset):
         self.condition_spec = parse_condition_spec(condition)
         self.condition = self.condition_spec.name
         self.condition_components = self.condition_spec.components
-        self.path_root = Path(path_root) if path_root is not None else self._infer_path_root()
+        self.path_root = (
+            Path(path_root) if path_root is not None else self._infer_path_root()
+        )
         self.split = split
         self.speakers = _normalize_speaker_filter(speakers)
         rows = read_feature_manifest(self.manifest_path)
@@ -76,7 +86,10 @@ class SpeechFeatureDataset(Dataset):
             row
             for row in rows
             if (split is None or row.get("split") == split)
-            and (speaker_set is None or str(row.get("speaker", "")).lower() in speaker_set)
+            and (
+                speaker_set is None
+                or str(row.get("speaker", "")).lower() in speaker_set
+            )
         ]
         if not self.rows:
             raise ValueError(
@@ -90,12 +103,16 @@ class SpeechFeatureDataset(Dataset):
 
         self.normalizers: dict[str, FeatureNormalizer] = {}
         if normalize:
-            stats_path = Path(statistics_path) if statistics_path is not None else (
-                self.cache_dir / "feature_statistics.json"
+            stats_path = (
+                Path(statistics_path)
+                if statistics_path is not None
+                else (self.cache_dir / "feature_statistics.json")
             )
             normalizers = load_feature_normalizers(stats_path, split=statistics_split)
             names = {"world_coded_sp", *self.condition_components}
-            self.normalizers = {name: normalizers[name] for name in names if name in normalizers}
+            self.normalizers = {
+                name: normalizers[name] for name in names if name in normalizers
+            }
 
     def _infer_path_root(self) -> Path:
         """Infer the root used to resolve relative manifest paths."""
@@ -163,7 +180,9 @@ class SpeechFeatureDataset(Dataset):
         components = self._condition_components(row)
         arrays = []
         for component in components:
-            features = np.load(self.resolve_path(condition_paths[component])).astype(np.float32)
+            features = np.load(self.resolve_path(condition_paths[component])).astype(
+                np.float32
+            )
             if features.ndim != 2:
                 raise ValueError(
                     f"cached condition component must be 2-D [frames, channels]: {component}"
@@ -189,10 +208,14 @@ class SpeechFeatureDataset(Dataset):
         """
 
         row = self.rows[index]
-        coded_sp = np.load(self.resolve_path(row["world_coded_sp_path"])).astype(np.float32)
+        coded_sp = np.load(self.resolve_path(row["world_coded_sp_path"])).astype(
+            np.float32
+        )
         condition = self._load_condition(row)
         if coded_sp.ndim != 2 or condition.ndim != 2:
-            raise ValueError("cached features must be 2-D arrays shaped [frames, channels].")
+            raise ValueError(
+                "cached features must be 2-D arrays shaped [frames, channels]."
+            )
         if coded_sp.shape[0] != condition.shape[0]:
             raise ValueError(
                 f"frame mismatch for {row.get('utterance_id')}: "
@@ -228,7 +251,9 @@ class SpeechFeatureDataset(Dataset):
 
         row = self.rows[index]
         wav_path = self.resolve_path(row["wav_path"])
-        waveform, sample_rate = audio_loader(wav_path, target_sample_rate=target_sample_rate)
+        waveform, sample_rate = audio_loader(
+            wav_path, target_sample_rate=target_sample_rate
+        )
         config = world_config or WorldFeatureConfig(
             frame_period_ms=float(row.get("world_frame_period_ms", 10.0))
         )
@@ -268,7 +293,9 @@ def collate_speech_features(samples: list[dict[str, Any]]) -> dict[str, Any]:
     coded_channels = int(samples[0]["coded_sp"].shape[0])
     condition_channels = int(samples[0]["condition"].shape[0])
     coded_sp = torch.zeros(batch_size, coded_channels, max_length, dtype=torch.float32)
-    condition = torch.zeros(batch_size, condition_channels, max_length, dtype=torch.float32)
+    condition = torch.zeros(
+        batch_size, condition_channels, max_length, dtype=torch.float32
+    )
     mask = torch.zeros(batch_size, 1, max_length, dtype=torch.float32)
 
     for index, sample in enumerate(samples):

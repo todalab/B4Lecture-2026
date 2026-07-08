@@ -146,7 +146,9 @@ def analyze_world(
     )
 
 
-def decode_spectral_envelope(coded_sp: np.ndarray, sample_rate: int, fft_size: int) -> np.ndarray:
+def decode_spectral_envelope(
+    coded_sp: np.ndarray, sample_rate: int, fft_size: int
+) -> np.ndarray:
     """Decode WORLD ``coded_sp`` back to a spectral envelope.
 
     Args:
@@ -165,7 +167,9 @@ def decode_spectral_envelope(coded_sp: np.ndarray, sample_rate: int, fft_size: i
     )
 
 
-def decode_aperiodicity(coded_ap: np.ndarray, sample_rate: int, fft_size: int) -> np.ndarray:
+def decode_aperiodicity(
+    coded_ap: np.ndarray, sample_rate: int, fft_size: int
+) -> np.ndarray:
     """Decode WORLD ``coded_ap`` back to full-band aperiodicity.
 
     Args:
@@ -200,17 +204,25 @@ def world_aux_features(
     f0 = np.asarray(f0, dtype=np.float64).reshape(-1)
     coded_ap = np.asarray(coded_ap, dtype=np.float32)
     if coded_ap.ndim != 2:
-        raise ValueError(f"expected coded_ap with shape [frames, channels], got {coded_ap.shape}")
+        raise ValueError(
+            f"expected coded_ap with shape [frames, channels], got {coded_ap.shape}"
+        )
     if coded_ap.shape[0] != f0.shape[0]:
-        raise ValueError(f"frame mismatch: f0={f0.shape[0]}, coded_ap={coded_ap.shape[0]}")
-    voicing_source = f0 if vuv_f0 is None else np.asarray(vuv_f0, dtype=np.float64).reshape(-1)
+        raise ValueError(
+            f"frame mismatch: f0={f0.shape[0]}, coded_ap={coded_ap.shape[0]}"
+        )
+    voicing_source = (
+        f0 if vuv_f0 is None else np.asarray(vuv_f0, dtype=np.float64).reshape(-1)
+    )
     if voicing_source.shape[0] != f0.shape[0]:
         raise ValueError(
             f"frame mismatch: f0={f0.shape[0]}, vuv_f0={voicing_source.shape[0]}"
         )
     log1p_f0 = np.log1p(np.maximum(f0, 0.0)).astype(np.float32)[:, None]
     vuv = (voicing_source > 0.0).astype(np.float32)[:, None]
-    return np.concatenate([log1p_f0, vuv, coded_ap.astype(np.float32, copy=False)], axis=1)
+    return np.concatenate(
+        [log1p_f0, vuv, coded_ap.astype(np.float32, copy=False)], axis=1
+    )
 
 
 def synthesize_world(

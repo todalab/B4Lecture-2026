@@ -5,7 +5,6 @@ from importlib import import_module
 from types import SimpleNamespace
 
 import numpy as np
-
 from nf_assignment.speech.extract_features import (
     _world_aux_condition,
     select_manifest_rows,
@@ -100,12 +99,17 @@ def test_extract_resampled_condition_features_with_fake_extractors() -> None:
     assert features["hubert_soft"].metadata["alignment_method"] == (
         "waveform_padding_then_repeat_upsample"
     )
-    assert features["ppg"].metadata["alignment_method"] == "waveform_padding_then_crop_or_pad"
+    assert (
+        features["ppg"].metadata["alignment_method"]
+        == "waveform_padding_then_crop_or_pad"
+    )
     np.testing.assert_allclose(
         features["hubert_soft"].aligned,
         np.array([[0.0, 1.0], [0.0, 1.0], [2.0, 3.0], [2.0, 3.0]], dtype=np.float32),
     )
-    np.testing.assert_allclose(features["ppg"].aligned.sum(axis=1), np.ones(4), atol=1e-6)
+    np.testing.assert_allclose(
+        features["ppg"].aligned.sum(axis=1), np.ones(4), atol=1e-6
+    )
 
 
 def test_select_manifest_rows_filters_split_and_utterance() -> None:
@@ -230,7 +234,9 @@ def test_world_wrappers_pass_c_contiguous_arrays(monkeypatch) -> None:
         assert fft_size == 8
         return np.ones((coded_sp.shape[0], 5), dtype=np.float64)
 
-    def fake_synthesize(f0, spectral_envelope, aperiodicity, sample_rate, frame_period_ms):
+    def fake_synthesize(
+        f0, spectral_envelope, aperiodicity, sample_rate, frame_period_ms
+    ):
         assert f0.flags.c_contiguous
         assert spectral_envelope.flags.c_contiguous
         assert aperiodicity.flags.c_contiguous
@@ -251,7 +257,9 @@ def test_world_wrappers_pass_c_contiguous_arrays(monkeypatch) -> None:
     )
     coded_sp = np.arange(24, dtype=np.float32).reshape(4, 6)[:, ::2]
     spectral_envelope = decode_spectral_envelope(coded_sp, 16000, 8)
-    decoded_ap = decode_aperiodicity(np.ones((4, 1), dtype=np.float32)[:, ::-1], 16000, 8)
+    decoded_ap = decode_aperiodicity(
+        np.ones((4, 1), dtype=np.float32)[:, ::-1], 16000, 8
+    )
     waveform = synthesize_world(
         np.arange(4, dtype=np.float32)[::-1],
         spectral_envelope[:, ::-1],

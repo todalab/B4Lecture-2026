@@ -10,7 +10,6 @@ from typing import Any
 
 import numpy as np
 import torch
-
 from nf_assignment.speech.features.alignment import (
     crop_or_pad_frames,
     frame_feature_summary,
@@ -35,7 +34,9 @@ class ResampledConditionFeature:
     theoretical_frame_period_ms: float | None = None
     metadata: dict[str, Any] | None = None
 
-    def summary(self, *, target_frames: int, duration_sec: float | None = None) -> dict[str, Any]:
+    def summary(
+        self, *, target_frames: int, duration_sec: float | None = None
+    ) -> dict[str, Any]:
         """Return factual shape and frame-rate metadata."""
 
         summary = frame_feature_summary(
@@ -74,12 +75,16 @@ def _zero_pad_waveform(waveform: np.ndarray, pad_samples_each_side: int) -> np.n
 
     waveform = np.asarray(waveform)
     if waveform.ndim != 1:
-        raise ValueError(f"expected mono waveform with shape [samples], got {waveform.shape}")
+        raise ValueError(
+            f"expected mono waveform with shape [samples], got {waveform.shape}"
+        )
     if pad_samples_each_side < 0:
         raise ValueError("pad_samples_each_side must be non-negative.")
     if pad_samples_each_side == 0:
         return waveform.copy()
-    return np.pad(waveform, (pad_samples_each_side, pad_samples_each_side), mode="constant")
+    return np.pad(
+        waveform, (pad_samples_each_side, pad_samples_each_side), mode="constant"
+    )
 
 
 def resolve_device(*, gpu: int | None = 0, cpu: bool = False) -> torch.device:
@@ -98,7 +103,9 @@ def load_hubert_soft_model(
 ) -> torch.nn.Module:
     """Load a HuBERT-Soft content encoder from a local repo or torch hub."""
 
-    resolved_device = torch.device(device or ("cuda:0" if torch.cuda.is_available() else "cpu"))
+    resolved_device = torch.device(
+        device or ("cuda:0" if torch.cuda.is_available() else "cpu")
+    )
     if hubert_repo is None:
         model = torch.hub.load(
             "bshall/hubert:main",
@@ -166,7 +173,9 @@ def extract_ppg(
         "hopsize_samples": int(ppgs.HOPSIZE),
         "phoneme_count": int(len(ppgs.PHONEMES)),
         "sample_rate": int(ppgs.SAMPLE_RATE),
-        "theoretical_frame_period_ms": 1000.0 * float(ppgs.HOPSIZE) / float(ppgs.SAMPLE_RATE),
+        "theoretical_frame_period_ms": 1000.0
+        * float(ppgs.HOPSIZE)
+        / float(ppgs.SAMPLE_RATE),
     }
     return normalize_rows(ppg_array), metadata
 
@@ -203,7 +212,9 @@ def extract_resampled_condition_features(
     if target_frame_count <= 0:
         raise ValueError("target_frame_count must be positive.")
 
-    resolved_device = torch.device(device) if device is not None else resolve_device(gpu=gpu)
+    resolved_device = (
+        torch.device(device) if device is not None else resolve_device(gpu=gpu)
+    )
     features: dict[str, ResampledConditionFeature] = {}
 
     if "hubert_soft" in requested:

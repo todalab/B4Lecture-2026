@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import torch
-from torch import nn
-
 from nf_assignment.flows.transforms import Transform
+from torch import nn
 
 
 class AffineCouplingTransform(Transform):

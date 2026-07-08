@@ -7,7 +7,6 @@ from typing import Any
 
 import numpy as np
 import torch
-
 from nf_assignment.speech.conditions import (
     WORLD_AUX_CONDITION,
     ConditionSpec,
@@ -110,27 +109,35 @@ def extract_vc_condition(
     normalized_components = []
     component_normalizers = normalizers or {}
     if base_condition in component_normalizers:
-        normalized_components.append(component_normalizers[base_condition].normalize(content))
+        normalized_components.append(
+            component_normalizers[base_condition].normalize(content)
+        )
     else:
         normalized_components.append(content)
     shifted_f0 = None
     if use_world_aux:
         if source_world is None:
-            raise ValueError("source_world is required when world_aux is a condition component.")
+            raise ValueError(
+                "source_world is required when world_aux is a condition component."
+            )
         shifted_f0 = shift_f0_by_voiced_mean(
             source_world.f0,
             source_mean_hz=voiced_f0_mean(source_world.f0),
             target_mean_hz=target_voiced_mean_f0_hz,
         )
         aux = crop_or_pad_frames(
-            world_aux_features(shifted_f0, source_world.coded_ap, vuv_f0=source_world.f0),
+            world_aux_features(
+                shifted_f0, source_world.coded_ap, vuv_f0=source_world.f0
+            ),
             frame_count,
         )
         aux = aux.astype(np.float32, copy=False)
         aligned = np.concatenate([content, aux], axis=1)
         components[WORLD_AUX_CONDITION] = aux
         if WORLD_AUX_CONDITION in component_normalizers:
-            normalized_components.append(component_normalizers[WORLD_AUX_CONDITION].normalize(aux))
+            normalized_components.append(
+                component_normalizers[WORLD_AUX_CONDITION].normalize(aux)
+            )
         else:
             normalized_components.append(aux)
     if normalizers is not None:
@@ -179,9 +186,13 @@ def fit_world_frames(
         ``[frames, fft_bins]``.
     """
 
-    fitted_f0 = crop_or_pad_frames(np.asarray(f0, dtype=np.float64).reshape(-1, 1), frames)[:, 0]
+    fitted_f0 = crop_or_pad_frames(
+        np.asarray(f0, dtype=np.float64).reshape(-1, 1), frames
+    )[:, 0]
     fitted_ap = crop_or_pad_frames(np.asarray(aperiodicity, dtype=np.float64), frames)
-    return fitted_f0.astype(np.float64, copy=False), fitted_ap.astype(np.float64, copy=False)
+    return fitted_f0.astype(np.float64, copy=False), fitted_ap.astype(
+        np.float64, copy=False
+    )
 
 
 def synthesize_generated_world(

@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Iterable
 
 import torch
-
 from nf_assignment.flows.flow import NormalizingFlow
 
 

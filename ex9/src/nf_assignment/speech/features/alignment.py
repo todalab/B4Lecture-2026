@@ -12,7 +12,9 @@ def linear_resample_frames(features: np.ndarray, target_frames: int) -> np.ndarr
 
     features = np.asarray(features, dtype=np.float32)
     if features.ndim != 2:
-        raise ValueError(f"expected features with shape [frames, channels], got {features.shape}")
+        raise ValueError(
+            f"expected features with shape [frames, channels], got {features.shape}"
+        )
     if target_frames <= 0:
         raise ValueError("target_frames must be positive.")
     if features.shape[0] == 0:
@@ -35,7 +37,9 @@ def crop_or_pad_frames(features: np.ndarray, target_frames: int) -> np.ndarray:
 
     features = np.asarray(features, dtype=np.float32)
     if features.ndim != 2:
-        raise ValueError(f"expected features with shape [frames, channels], got {features.shape}")
+        raise ValueError(
+            f"expected features with shape [frames, channels], got {features.shape}"
+        )
     if target_frames <= 0:
         raise ValueError("target_frames must be positive.")
     if features.shape[0] == 0:
@@ -58,7 +62,9 @@ def repeat_upsample_frames(features: np.ndarray, factor: int) -> np.ndarray:
 
     features = np.asarray(features, dtype=np.float32)
     if features.ndim != 2:
-        raise ValueError(f"expected features with shape [frames, channels], got {features.shape}")
+        raise ValueError(
+            f"expected features with shape [frames, channels], got {features.shape}"
+        )
     if factor <= 0:
         raise ValueError("factor must be positive.")
     if features.shape[0] == 0:
@@ -78,9 +84,13 @@ def normalize_rows(features: np.ndarray) -> np.ndarray:
 
     features = np.maximum(np.asarray(features, dtype=np.float32), 0.0)
     if features.ndim != 2:
-        raise ValueError(f"expected features with shape [frames, channels], got {features.shape}")
+        raise ValueError(
+            f"expected features with shape [frames, channels], got {features.shape}"
+        )
     row_sum = features.sum(axis=1, keepdims=True)
-    return np.divide(features, np.maximum(row_sum, np.finfo(np.float32).eps)).astype(np.float32)
+    return np.divide(features, np.maximum(row_sum, np.finfo(np.float32).eps)).astype(
+        np.float32
+    )
 
 
 def frame_feature_summary(
@@ -110,6 +120,8 @@ def frame_feature_summary(
         "frames": frames,
         "name": name,
         "shape": list(features.shape),
-        "target_to_feature_frame_ratio": float(target_frames / frames) if frames else None,
+        "target_to_feature_frame_ratio": (
+            float(target_frames / frames) if frames else None
+        ),
         "theoretical_frame_period_ms": theoretical_frame_period_ms,
     }

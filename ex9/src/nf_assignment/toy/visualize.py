@@ -93,7 +93,9 @@ def _evaluate_log_prob_grid(
     values = []
     with torch.no_grad():
         for start in range(0, len(points), chunk_size):
-            values.append(log_prob_fn(points[start : start + chunk_size]).detach().cpu())
+            values.append(
+                log_prob_fn(points[start : start + chunk_size]).detach().cpu()
+            )
     log_prob = torch.cat(values, dim=0).reshape(grid_size, grid_size)
     finite = torch.isfinite(log_prob)
     relative_density = torch.zeros_like(log_prob)
@@ -137,8 +139,12 @@ def plot_density_heatmaps(
     yy, xx = torch.meshgrid(ys, xs, indexing="ij")
     points = torch.stack([xx.reshape(-1), yy.reshape(-1)], dim=1)
 
-    target_density = _evaluate_log_prob_grid(target_log_prob, points, grid_size, chunk_size)
-    model_density = _evaluate_log_prob_grid(model_log_prob, points, grid_size, chunk_size)
+    target_density = _evaluate_log_prob_grid(
+        target_log_prob, points, grid_size, chunk_size
+    )
+    model_density = _evaluate_log_prob_grid(
+        model_log_prob, points, grid_size, chunk_size
+    )
 
     fig, axes = plt.subplots(1, 2, figsize=(12, 5.5), sharex=True, sharey=True)
     extent = [xlim[0], xlim[1], ylim[0], ylim[1]]
@@ -256,8 +262,12 @@ def plot_warped_base_grid(
 
     base_x = torch.linspace(base_xlim[0], base_xlim[1], line_points, device=plot_device)
     base_y = torch.linspace(base_ylim[0], base_ylim[1], line_points, device=plot_device)
-    constants_x = torch.linspace(base_xlim[0], base_xlim[1], base_grid_size, device=plot_device)
-    constants_y = torch.linspace(base_ylim[0], base_ylim[1], base_grid_size, device=plot_device)
+    constants_x = torch.linspace(
+        base_xlim[0], base_xlim[1], base_grid_size, device=plot_device
+    )
+    constants_y = torch.linspace(
+        base_ylim[0], base_ylim[1], base_grid_size, device=plot_device
+    )
 
     with torch.no_grad():
         for value in constants_x:
@@ -265,7 +275,11 @@ def plot_warped_base_grid(
             base_line = line.detach().cpu().numpy()
             warped = flow_forward(line).detach().cpu().numpy()
             base_ax.plot(
-                base_line[:, 0], base_line[:, 1], color="white", linewidth=0.65, alpha=0.75
+                base_line[:, 0],
+                base_line[:, 1],
+                color="white",
+                linewidth=0.65,
+                alpha=0.75,
             )
             data_ax.plot(
                 warped[:, 0], warped[:, 1], color="white", linewidth=0.65, alpha=0.65
@@ -275,7 +289,11 @@ def plot_warped_base_grid(
             base_line = line.detach().cpu().numpy()
             warped = flow_forward(line).detach().cpu().numpy()
             base_ax.plot(
-                base_line[:, 0], base_line[:, 1], color="#35d0ba", linewidth=0.65, alpha=0.75
+                base_line[:, 0],
+                base_line[:, 1],
+                color="#35d0ba",
+                linewidth=0.65,
+                alpha=0.75,
             )
             data_ax.plot(
                 warped[:, 0], warped[:, 1], color="#35d0ba", linewidth=0.65, alpha=0.65

@@ -19,13 +19,17 @@ class FeatureNormalizer:
     eps: float = 1e-6
 
     @classmethod
-    def from_stats(cls, stats: dict[str, Any], *, eps: float = 1e-6) -> FeatureNormalizer:
+    def from_stats(
+        cls, stats: dict[str, Any], *, eps: float = 1e-6
+    ) -> FeatureNormalizer:
         """Create a normalizer from one feature entry in ``feature_statistics.json``."""
 
         mean = np.asarray(stats["mean"], dtype=np.float32)
         std = np.asarray(stats["std"], dtype=np.float32)
         if mean.ndim != 1 or std.ndim != 1 or mean.shape != std.shape:
-            raise ValueError("normalization statistics must contain matching 1-D mean/std arrays.")
+            raise ValueError(
+                "normalization statistics must contain matching 1-D mean/std arrays."
+            )
         return cls(mean=mean, std=std, eps=eps)
 
     def normalize(self, features: np.ndarray) -> np.ndarray:

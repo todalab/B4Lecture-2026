@@ -5,7 +5,6 @@ from pathlib import Path
 
 import pytest
 import torch
-
 from nf_assignment.flows.coupling import AffineCouplingBlock
 from nf_assignment.flows.distributions import DiagGaussian
 from nf_assignment.flows.flow import NormalizingFlow
@@ -103,4 +102,3 @@ def test_normalizing_flow_log_prob_matches_normflows() -> None:
     x = torch.randn(10, 2)
 
     assert torch.allclose(ours.log_prob(x), reference.log_prob(x))
-

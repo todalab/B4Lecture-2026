@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import numpy as np
-
 from nf_assignment.speech.visualize import (
     plot_mel_spectrogram_comparison,
     plot_spectral_envelope_comparison,

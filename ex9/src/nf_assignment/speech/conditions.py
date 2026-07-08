@@ -24,7 +24,9 @@ class ConditionSpec:
         invalid = [name for name in self.components if not name]
         if invalid:
             raise ValueError("condition components must be non-empty strings.")
-        duplicates = sorted({name for name in self.components if self.components.count(name) > 1})
+        duplicates = sorted(
+            {name for name in self.components if self.components.count(name) > 1}
+        )
         if duplicates:
             raise ValueError(f"condition components must be unique: {duplicates}")
 
@@ -80,7 +82,9 @@ def parse_condition_spec(
         text = value.strip()
         if not text:
             raise ValueError("condition must not be empty.")
-        components = tuple(part.strip() for part in re.split(r"[,+]", text) if part.strip())
+        components = tuple(
+            part.strip() for part in re.split(r"[,+]", text) if part.strip()
+        )
     else:
         components = tuple(str(part).strip() for part in value)
     return ConditionSpec(components)

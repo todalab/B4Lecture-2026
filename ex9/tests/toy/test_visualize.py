@@ -1,5 +1,4 @@
 import torch
-
 from nf_assignment.toy.visualize import plot_density_heatmaps, plot_warped_base_grid
 
 

@@ -48,7 +48,9 @@ def _config_speakers(value, *, default: tuple[str, ...]) -> tuple[str, ...]:
         return normalize_speaker_list((value,))
     if isinstance(value, (list, tuple)):
         return normalize_speaker_list(tuple(str(item) for item in value))
-    raise TypeError(f"speaker list must be a string or sequence, got {type(value).__name__}")
+    raise TypeError(
+        f"speaker list must be a string or sequence, got {type(value).__name__}"
+    )
 
 
 def parse_args() -> argparse.Namespace:
@@ -60,7 +62,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--manifest", default=None)
     parser.add_argument("--split-json", default=None)
     parser.add_argument("--summary-json", default=None)
-    parser.add_argument("--speakers", default=None, help="Comma-separated inventory speakers.")
+    parser.add_argument(
+        "--speakers", default=None, help="Comma-separated inventory speakers."
+    )
     parser.add_argument(
         "--download-speakers",
         default=None,
@@ -84,7 +88,8 @@ def main() -> None:
 
     root = Path(args.root or config.get("root", "data/cmu_arctic"))
     manifest_path = Path(
-        args.manifest or config.get("manifest", "data/manifests/cmu_arctic_inventory.csv")
+        args.manifest
+        or config.get("manifest", "data/manifests/cmu_arctic_inventory.csv")
     )
     split_path = Path(args.split_json or "data/manifests/cmu_arctic_splits.json")
     summary_path = Path(args.summary_json or "data/manifests/cmu_arctic_summary.json")
@@ -174,7 +179,9 @@ def main() -> None:
     print(f"summary_json={summary_path}")
     print(f"selected_utterances={summary['selected_utterances']}")
     print(f"common_utterances={summary['common_utterance_count']}")
-    print(f"selected_utterances_per_speaker={summary['selected_utterances_per_speaker']}")
+    print(
+        f"selected_utterances_per_speaker={summary['selected_utterances_per_speaker']}"
+    )
     print(f"inventory_rows={summary['inventory_rows']}")
     print(f"split_counts={summary['split_counts']}")
     print(f"row_split_counts={summary['row_split_counts']}")

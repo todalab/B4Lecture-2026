@@ -9,7 +9,6 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
-
 from nf_assignment.speech.data import normalize_speaker_list
 from nf_assignment.speech.features.content import (
     ResampledConditionFeature,
@@ -95,7 +94,9 @@ def select_manifest_rows(
     ``max_utterances`` is applied independently to each selected speaker.
     """
 
-    selected = rows if split == "all" else [row for row in rows if row.get("split") == split]
+    selected = (
+        rows if split == "all" else [row for row in rows if row.get("split") == split]
+    )
     if speakers is not None:
         speaker_set = set(speakers)
         selected = [row for row in selected if row.get("speaker") in speaker_set]
@@ -173,7 +174,9 @@ class ChannelStats:
             self.minimum = np.full(self.channels, np.inf, dtype=np.float64)
             self.maximum = np.full(self.channels, -np.inf, dtype=np.float64)
         if features.shape[1] != self.channels:
-            raise ValueError(f"expected {self.channels} channels, got {features.shape[1]}")
+            raise ValueError(
+                f"expected {self.channels} channels, got {features.shape[1]}"
+            )
 
         self.frame_count += int(features.shape[0])
         self.utterance_count += 1
@@ -255,7 +258,9 @@ class VoicedF0Stats:
         """Serialize voiced-F0 statistics."""
 
         voiced_fraction = (
-            float(self.voiced_frame_count / self.frame_count) if self.frame_count else 0.0
+            float(self.voiced_frame_count / self.frame_count)
+            if self.frame_count
+            else 0.0
         )
         result: dict[str, Any] = {
             "frame_count": self.frame_count,
@@ -278,7 +283,9 @@ class VoicedF0Stats:
             return result
 
         voiced_mean = self.voiced_sum / self.voiced_frame_count
-        voiced_variance = max(self.voiced_sumsq / self.voiced_frame_count - voiced_mean**2, 0.0)
+        voiced_variance = max(
+            self.voiced_sumsq / self.voiced_frame_count - voiced_mean**2, 0.0
+        )
         utterance_mean = self.utterance_mean_sum / self.voiced_utterance_count
         utterance_mean_variance = max(
             self.utterance_mean_sumsq / self.voiced_utterance_count - utterance_mean**2,
@@ -343,7 +350,9 @@ def _condition_rows(
                 "effective_frame_period_ms": 1000.0 * duration_sec / aligned_frames,
                 "feature": name,
                 "frames": aligned_frames,
-                "input_padding_ms_each_side": metadata.get("input_padding_ms_each_side", ""),
+                "input_padding_ms_each_side": metadata.get(
+                    "input_padding_ms_each_side", ""
+                ),
                 "item_id": item_id,
                 "speaker": speaker,
                 "theoretical_frame_period_ms": feature.theoretical_frame_period_ms,
@@ -356,7 +365,9 @@ def _condition_rows(
     return rows
 
 
-def _condition_summary(feature, *, target_frames: int, duration_sec: float) -> dict[str, Any]:
+def _condition_summary(
+    feature, *, target_frames: int, duration_sec: float
+) -> dict[str, Any]:
     """Summarize one aligned condition feature for ``feature_summary.json``.
 
     The feature's ``raw`` and ``aligned`` arrays are shaped ``[frames, channels]``.
@@ -412,7 +423,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--manifest", default="data/manifests/cmu_arctic_inventory.csv")
     parser.add_argument("--path-root", default=".")
     parser.add_argument("--output-dir", default="feature_cache/cmu_arctic")
-    parser.add_argument("--split", default="train", help="Manifest split to dump, or 'all'.")
+    parser.add_argument(
+        "--split", default="train", help="Manifest split to dump, or 'all'."
+    )
     parser.add_argument(
         "--speakers",
         type=_parse_speakers,
@@ -528,7 +541,9 @@ def main() -> None:
         speaker = str(item["speaker"])
         item_id = f"{speaker}_{utterance_id}"
         wav_path = resolve_manifest_path(path_root, item["wav_path"])
-        waveform, actual_sample_rate = load_mono_audio(wav_path, target_sample_rate=sample_rate)
+        waveform, actual_sample_rate = load_mono_audio(
+            wav_path, target_sample_rate=sample_rate
+        )
         duration_sec = len(waveform) / actual_sample_rate
         world = analyze_world(waveform, actual_sample_rate, world_config)
         split_name = item["split"]
@@ -536,7 +551,9 @@ def main() -> None:
         world_voiced_mean_f0_hz = world_summary["voiced_f0_mean_hz"]
         world_voiced_fraction = world_summary["voiced_fraction"]
 
-        utterance_aligned_dir = ensure_dir(output_dir / "aligned" / speaker / utterance_id)
+        utterance_aligned_dir = ensure_dir(
+            output_dir / "aligned" / speaker / utterance_id
+        )
         world_path = utterance_aligned_dir / "world_coded_sp.npy"
         np.save(world_path, world.coded_sp)
 
@@ -623,7 +640,9 @@ def main() -> None:
             "sample_rate": actual_sample_rate,
             "speaker": speaker,
             "speaker_id": (
-                int(item["speaker_id"]) if item.get("speaker_id") not in (None, "") else None
+                int(item["speaker_id"])
+                if item.get("speaker_id") not in (None, "")
+                else None
             ),
             "speaker_set": selected_speaker_set,
             "speaker_to_id": selected_speaker_to_id,

@@ -7,8 +7,6 @@ import csv
 import time
 
 import torch
-from torch.utils.data import DataLoader
-
 from nf_assignment.speech.conditions import parse_condition_spec
 from nf_assignment.speech.data import normalize_speaker_list
 from nf_assignment.speech.dataset import SpeechFeatureDataset, collate_speech_features
@@ -24,6 +22,7 @@ from nf_assignment.speech.visualize import plot_loss_curve
 from nf_assignment.training.checkpoints import load_checkpoint, save_checkpoint
 from nf_assignment.utils.io import ensure_dir, load_yaml, write_csv_rows, write_json
 from nf_assignment.utils.seed import set_seed
+from torch.utils.data import DataLoader
 
 DEFAULT_DATA_CONFIG = "configs/speech/data.yaml"
 DEFAULT_MODEL_CONFIG = "configs/speech/model.yaml"
@@ -101,7 +100,9 @@ def _normalize_speakers(value) -> tuple[str, ...] | None:
         return normalize_speaker_list(tuple(part.strip() for part in value.split(",")))
     if isinstance(value, (list, tuple)):
         return normalize_speaker_list(tuple(str(part).strip() for part in value))
-    raise TypeError("speakers must be a comma-separated string or a list of speaker names.")
+    raise TypeError(
+        "speakers must be a comma-separated string or a list of speaker names."
+    )
 
 
 def _resume_config(
@@ -122,7 +123,9 @@ def _resume_config(
     return current_config
 
 
-def _model_kwargs(model_config: dict, *, target_channels: int, condition_channels: int) -> dict:
+def _model_kwargs(
+    model_config: dict, *, target_channels: int, condition_channels: int
+) -> dict:
     """Build ``build_speech_flow`` keyword arguments from config and data shapes."""
 
     return {
@@ -157,7 +160,9 @@ def main() -> None:
     data_config = load_yaml(args.data_config)
     model_config = load_yaml(args.model_config)
     train_config = load_yaml(args.train_config)
-    resume_payload = load_checkpoint(args.resume, map_location="cpu") if args.resume else None
+    resume_payload = (
+        load_checkpoint(args.resume, map_location="cpu") if args.resume else None
+    )
     resume_metadata = resume_payload.get("metadata", {}) if resume_payload else {}
     if resume_payload is not None and not isinstance(resume_metadata, dict):
         raise ValueError("resume checkpoint metadata must be a dictionary.")
@@ -182,7 +187,9 @@ def main() -> None:
 
     seed = int(effective_train_config.get("seed", resume_metadata.get("seed", 0)))
     set_seed(seed)
-    device = resolve_device(args.device or str(effective_train_config.get("device", "auto")))
+    device = resolve_device(
+        args.device or str(effective_train_config.get("device", "auto"))
+    )
     condition_value = (
         args.condition
         if args.condition is not None
@@ -211,7 +218,11 @@ def main() -> None:
     batch_size = (
         int(args.batch_size)
         if args.batch_size is not None
-        else int(resume_metadata.get("batch_size", effective_train_config.get("batch_size", 8)))
+        else int(
+            resume_metadata.get(
+                "batch_size", effective_train_config.get("batch_size", 8)
+            )
+        )
     )
     segment_frames = (
         int(args.segment_frames)
@@ -250,7 +261,8 @@ def main() -> None:
     )
 
     output_dir = ensure_dir(
-        args.output_dir or str(effective_train_config.get("output_dir", "runs/speech_world_flow"))
+        args.output_dir
+        or str(effective_train_config.get("output_dir", "runs/speech_world_flow"))
     )
     statistics_split = str(
         resume_metadata.get(
@@ -400,7 +412,9 @@ def main() -> None:
     if args.resume:
         metadata["resume_checkpoint"] = str(args.resume)
         metadata["resume_previous_steps"] = resume_previous_steps
-    save_checkpoint(checkpoint_path, model=model, optimizer=optimizer, metadata=metadata)
+    save_checkpoint(
+        checkpoint_path, model=model, optimizer=optimizer, metadata=metadata
+    )
 
     metrics = {
         "batch_size": batch_size,

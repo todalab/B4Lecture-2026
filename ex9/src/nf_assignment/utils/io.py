@@ -52,7 +52,9 @@ def read_csv_rows(path: str | Path) -> list[dict[str, str]]:
         return list(csv.DictReader(handle))
 
 
-def write_csv_rows(path: str | Path, rows: list[dict[str, Any]], fieldnames: list[str]) -> None:
+def write_csv_rows(
+    path: str | Path, rows: list[dict[str, Any]], fieldnames: list[str]
+) -> None:
     """Write a list of dictionaries as CSV."""
 
     ensure_dir(Path(path).parent)

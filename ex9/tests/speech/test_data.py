@@ -91,7 +91,9 @@ def test_build_cmu_arctic_inventory_manifest_uses_speaker_rows_and_shared_splits
     assert len({(row["speaker"], row["utterance_id"]) for row in rows}) == len(rows)
     assert split_doc["split_kind"] == "utterance_id"
     assert sorted(
-        split_doc["splits"]["train"] + split_doc["splits"]["valid"] + split_doc["splits"]["test"]
+        split_doc["splits"]["train"]
+        + split_doc["splits"]["valid"]
+        + split_doc["splits"]["test"]
     ) == sorted({row["utterance_id"] for row in rows})
 
 
@@ -190,14 +192,46 @@ def test_select_vc_sample_items_resolves_source_and_target_from_inventory() -> N
     assert selected[0]["target_wav"] == "slt/arctic_a0001.wav"
 
 
-def test_select_vc_sample_items_uses_pair_intersection_for_automatic_selection() -> None:
+def test_select_vc_sample_items_uses_pair_intersection_for_automatic_selection() -> (
+    None
+):
     rows = [
-        {"speaker": "bdl", "split": "valid", "utterance_id": "utt1", "wav_path": "bdl/utt1.wav"},
-        {"speaker": "slt", "split": "valid", "utterance_id": "utt1", "wav_path": "slt/utt1.wav"},
-        {"speaker": "bdl", "split": "valid", "utterance_id": "utt2", "wav_path": "bdl/utt2.wav"},
-        {"speaker": "slt", "split": "valid", "utterance_id": "utt3", "wav_path": "slt/utt3.wav"},
-        {"speaker": "bdl", "split": "train", "utterance_id": "utt4", "wav_path": "bdl/utt4.wav"},
-        {"speaker": "slt", "split": "train", "utterance_id": "utt4", "wav_path": "slt/utt4.wav"},
+        {
+            "speaker": "bdl",
+            "split": "valid",
+            "utterance_id": "utt1",
+            "wav_path": "bdl/utt1.wav",
+        },
+        {
+            "speaker": "slt",
+            "split": "valid",
+            "utterance_id": "utt1",
+            "wav_path": "slt/utt1.wav",
+        },
+        {
+            "speaker": "bdl",
+            "split": "valid",
+            "utterance_id": "utt2",
+            "wav_path": "bdl/utt2.wav",
+        },
+        {
+            "speaker": "slt",
+            "split": "valid",
+            "utterance_id": "utt3",
+            "wav_path": "slt/utt3.wav",
+        },
+        {
+            "speaker": "bdl",
+            "split": "train",
+            "utterance_id": "utt4",
+            "wav_path": "bdl/utt4.wav",
+        },
+        {
+            "speaker": "slt",
+            "split": "train",
+            "utterance_id": "utt4",
+            "wav_path": "slt/utt4.wav",
+        },
     ]
 
     selected = select_vc_sample_items(
@@ -214,8 +248,18 @@ def test_select_vc_sample_items_uses_pair_intersection_for_automatic_selection()
 
 def test_select_vc_sample_items_accepts_explicit_utterance_ids() -> None:
     rows = [
-        {"speaker": "bdl", "split": "train", "utterance_id": "utt2", "wav_path": "bdl/utt2.wav"},
-        {"speaker": "slt", "split": "train", "utterance_id": "utt2", "wav_path": "slt/utt2.wav"},
+        {
+            "speaker": "bdl",
+            "split": "train",
+            "utterance_id": "utt2",
+            "wav_path": "bdl/utt2.wav",
+        },
+        {
+            "speaker": "slt",
+            "split": "train",
+            "utterance_id": "utt2",
+            "wav_path": "slt/utt2.wav",
+        },
     ]
 
     selected = select_vc_sample_items(

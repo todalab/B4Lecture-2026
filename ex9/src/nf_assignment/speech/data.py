@@ -39,7 +39,9 @@ DEFAULT_MAX_UTTERANCES = 1132
 DEFAULT_VALID_COUNT = 100
 DEFAULT_TEST_COUNT = 32
 DEFAULT_SEED = 20260625
-PROMPT_RE = re.compile(r'^\(\s*(?P<utterance_id>arctic_[ab]\d{4})\s+"(?P<text>.*)"\s*\)\s*$')
+PROMPT_RE = re.compile(
+    r'^\(\s*(?P<utterance_id>arctic_[ab]\d{4})\s+"(?P<text>.*)"\s*\)\s*$'
+)
 
 
 def speaker_archive_url(speaker: str) -> str:
@@ -153,7 +155,9 @@ def prepare_speaker_archive(
     root = Path(root)
     ensure_dir(root)
     archive_url = speaker_archive_url(speaker)
-    archive_path = Path(download_dir or root / "archives") / archive_url.rsplit("/", 1)[-1]
+    archive_path = (
+        Path(download_dir or root / "archives") / archive_url.rsplit("/", 1)[-1]
+    )
     downloaded = False
     extracted = False
 
@@ -229,13 +233,17 @@ def _split_utterance_ids(
     if valid_count < 0 or test_count < 0:
         raise ValueError("valid_count and test_count must be non-negative.")
     if valid_count + test_count >= len(utterance_ids):
-        raise ValueError("valid_count + test_count must be smaller than available utterances.")
+        raise ValueError(
+            "valid_count + test_count must be smaller than available utterances."
+        )
     shuffled = list(utterance_ids)
     random.Random(seed).shuffle(shuffled)
     valid = sorted(shuffled[:valid_count])
     test = sorted(shuffled[valid_count : valid_count + test_count])
     held_out = set(valid) | set(test)
-    train = sorted(utterance_id for utterance_id in shuffled if utterance_id not in held_out)
+    train = sorted(
+        utterance_id for utterance_id in shuffled if utterance_id not in held_out
+    )
     return {"train": train, "valid": valid, "test": test}
 
 
@@ -272,12 +280,20 @@ def build_cmu_arctic_inventory_manifest(
 
     root = Path(root)
     speaker_set = normalize_speaker_list(tuple(speakers))
-    prompts_file = Path(prompts_path) if prompts_path is not None else root / "cmuarctic.data"
+    prompts_file = (
+        Path(prompts_path) if prompts_path is not None else root / "cmuarctic.data"
+    )
     prompts = load_cmu_arctic_prompts(prompts_file)
-    wavs_by_speaker = {speaker: find_speaker_wavs(root, speaker) for speaker in speaker_set}
-    missing_speakers = [speaker for speaker, wavs in wavs_by_speaker.items() if not wavs]
+    wavs_by_speaker = {
+        speaker: find_speaker_wavs(root, speaker) for speaker in speaker_set
+    }
+    missing_speakers = [
+        speaker for speaker, wavs in wavs_by_speaker.items() if not wavs
+    ]
     if missing_speakers:
-        raise ValueError(f"No CMU ARCTIC wav files found for speakers: {missing_speakers}")
+        raise ValueError(
+            f"No CMU ARCTIC wav files found for speakers: {missing_speakers}"
+        )
 
     if max_utterances <= 0:
         raise ValueError("max_utterances must be positive.")
@@ -289,7 +305,9 @@ def build_cmu_arctic_inventory_manifest(
         speaker for speaker, utterances in selected_by_speaker.items() if not utterances
     ]
     if empty_speakers:
-        raise ValueError(f"No prompted CMU ARCTIC wav files found for speakers: {empty_speakers}")
+        raise ValueError(
+            f"No prompted CMU ARCTIC wav files found for speakers: {empty_speakers}"
+        )
     selected_sets = {
         speaker: set(utterances) for speaker, utterances in selected_by_speaker.items()
     }
@@ -348,7 +366,9 @@ def build_cmu_arctic_inventory_manifest(
         for split_name in ("train", "valid", "test")
     }
     summary = {
-        "archive_urls": {speaker: speaker_archive_url(speaker) for speaker in speaker_set},
+        "archive_urls": {
+            speaker: speaker_archive_url(speaker) for speaker in speaker_set
+        },
         "common_utterance_count": len(common_utterances),
         "dataset": "cmu_arctic",
         "expected_sample_rate": expected_sample_rate,
@@ -417,22 +437,27 @@ def select_vc_sample_items(
     source_speaker = source_speaker.strip().lower()
     target_speaker = target_speaker.strip().lower()
     row_by_key = {
-        (str(row.get("speaker")), str(row.get("utterance_id"))): row for row in inventory_rows
+        (str(row.get("speaker")), str(row.get("utterance_id"))): row
+        for row in inventory_rows
     }
     if utterance_ids is None:
         source_ids = {
             utterance_id
             for (speaker, utterance_id), row in row_by_key.items()
-            if speaker == source_speaker and (split == "all" or row.get("split") == split)
+            if speaker == source_speaker
+            and (split == "all" or row.get("split") == split)
         }
         target_ids = {
             utterance_id
             for (speaker, utterance_id), row in row_by_key.items()
-            if speaker == target_speaker and (split == "all" or row.get("split") == split)
+            if speaker == target_speaker
+            and (split == "all" or row.get("split") == split)
         }
         selected_ids = sorted(source_ids & target_ids)[:max_items]
     else:
-        selected_ids = [utterance_id.strip() for utterance_id in utterance_ids if utterance_id]
+        selected_ids = [
+            utterance_id.strip() for utterance_id in utterance_ids if utterance_id
+        ]
 
     if not selected_ids:
         raise ValueError(

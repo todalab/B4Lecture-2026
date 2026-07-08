@@ -1,7 +1,6 @@
 """Speech flow shape and reversibility tests."""
 
 import torch
-
 from nf_assignment.flows.coupling import AffineCouplingTransform, SequenceAffineCoupling
 from nf_assignment.flows.normalization import ActNorm
 from nf_assignment.flows.permutation import InvConvNear
@@ -38,7 +37,9 @@ def test_speech_flow_reconstructs_hubert_conditioned_features() -> None:
     assert log_det.shape == (3,)
     assert torch.isfinite(log_det).all()
     assert torch.allclose(x_reconstructed, x, atol=1e-5)
-    assert torch.allclose(log_det + inverse_log_det, torch.zeros_like(log_det), atol=1e-5)
+    assert torch.allclose(
+        log_det + inverse_log_det, torch.zeros_like(log_det), atol=1e-5
+    )
     assert torch.allclose(z * (1.0 - mask), torch.zeros_like(z))
 
 
@@ -62,7 +63,9 @@ def test_speech_flow_accepts_ppg_condition_channels() -> None:
     assert z.shape == (2, 48, 7)
     assert log_det.shape == (2,)
     assert torch.allclose(x_reconstructed, x, atol=1e-5)
-    assert torch.allclose(log_det + inverse_log_det, torch.zeros_like(log_det), atol=1e-5)
+    assert torch.allclose(
+        log_det + inverse_log_det, torch.zeros_like(log_det), atol=1e-5
+    )
 
 
 def test_actnorm_data_dependent_init_reconstructs_masked_input() -> None:
@@ -77,7 +80,9 @@ def test_actnorm_data_dependent_init_reconstructs_masked_input() -> None:
 
     assert layer.initialized
     assert torch.allclose(x_reconstructed, x, atol=1e-5)
-    assert torch.allclose(log_det + inverse_log_det, torch.zeros_like(log_det), atol=1e-5)
+    assert torch.allclose(
+        log_det + inverse_log_det, torch.zeros_like(log_det), atol=1e-5
+    )
 
 
 def test_zero_initialized_sequence_coupling_starts_as_identity() -> None:

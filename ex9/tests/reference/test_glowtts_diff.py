@@ -7,7 +7,6 @@ from pathlib import Path
 
 import pytest
 import torch
-
 from nf_assignment.flows.coupling import SequenceAffineCoupling
 from nf_assignment.flows.normalization import ActNorm
 from nf_assignment.flows.permutation import InvConvNear
@@ -72,7 +71,9 @@ def test_inv_conv_near_matches_glow_tts_fixed_parameters() -> None:
     assert torch.allclose(z, ref_z, atol=1e-6)
     assert torch.allclose(log_det, ref_log_det, atol=1e-6)
     assert torch.allclose(x_reconstructed, ref_x, atol=1e-6)
-    assert torch.allclose(log_det + inverse_log_det, torch.zeros_like(log_det), atol=1e-6)
+    assert torch.allclose(
+        log_det + inverse_log_det, torch.zeros_like(log_det), atol=1e-6
+    )
 
 
 def test_sequence_coupling_matches_glow_tts_fixed_parameters() -> None:
@@ -112,4 +113,6 @@ def test_sequence_coupling_matches_glow_tts_fixed_parameters() -> None:
     assert torch.allclose(z, ref_z, atol=1e-6)
     assert torch.allclose(log_det, ref_log_det, atol=1e-6)
     assert torch.allclose(x_reconstructed, ref_x, atol=1e-6)
-    assert torch.allclose(log_det + inverse_log_det, torch.zeros_like(log_det), atol=1e-6)
+    assert torch.allclose(
+        log_det + inverse_log_det, torch.zeros_like(log_det), atol=1e-6
+    )

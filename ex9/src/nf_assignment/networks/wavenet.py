@@ -123,7 +123,9 @@ class WaveNetStack(nn.Module):
         encoded_condition = None
         if condition is not None:
             if not self.condition_channels:
-                raise ValueError("condition was provided but condition_channels is zero.")
+                raise ValueError(
+                    "condition was provided but condition_channels is zero."
+                )
             encoded_condition = self.cond_layer(condition)
 
         for layer_index in range(self.num_layers):
@@ -132,7 +134,9 @@ class WaveNetStack(nn.Module):
                 condition_slice = torch.zeros_like(acts)
             else:
                 offset = layer_index * 2 * self.hidden_channels
-                condition_slice = encoded_condition[:, offset : offset + 2 * self.hidden_channels]
+                condition_slice = encoded_condition[
+                    :, offset : offset + 2 * self.hidden_channels
+                ]
             acts = fused_add_tanh_sigmoid_multiply(
                 acts,
                 condition_slice,

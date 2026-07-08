@@ -37,14 +37,21 @@ class TwoMoons(nn.Module):
         upper = torch.stack([torch.cos(theta), torch.sin(theta)], dim=1)
         lower = torch.stack([1.0 - torch.cos(theta), 0.5 - torch.sin(theta)], dim=1)
         centers = torch.cat([upper, lower], dim=0)
-        centers = (centers - torch.tensor([0.5, 0.25], dtype=torch.float32)) * self.scale
+        centers = (
+            centers - torch.tensor([0.5, 0.25], dtype=torch.float32)
+        ) * self.scale
         self.register_buffer("arc_centers", centers)
 
-    def _arc_points(self, theta: torch.Tensor, moon_index: torch.Tensor) -> torch.Tensor:
+    def _arc_points(
+        self, theta: torch.Tensor, moon_index: torch.Tensor
+    ) -> torch.Tensor:
         upper = torch.stack([torch.cos(theta), torch.sin(theta)], dim=1)
         lower = torch.stack([1.0 - torch.cos(theta), 0.5 - torch.sin(theta)], dim=1)
         centers = torch.where(moon_index[:, None].bool(), lower, upper)
-        return (centers - torch.tensor([0.5, 0.25], dtype=centers.dtype, device=centers.device)) * self.scale
+        return (
+            centers
+            - torch.tensor([0.5, 0.25], dtype=centers.dtype, device=centers.device)
+        ) * self.scale
 
     def log_prob(self, z: torch.Tensor) -> torch.Tensor:
         """Evaluate an approximate normalized two-moons log density.
@@ -58,7 +65,9 @@ class TwoMoons(nn.Module):
         """
 
         if z.shape[-1] != self.n_dims:
-            raise ValueError(f"expected last dimension {self.n_dims}, got {z.shape[-1]}")
+            raise ValueError(
+                f"expected last dimension {self.n_dims}, got {z.shape[-1]}"
+            )
         centers = self.arc_centers.to(device=z.device, dtype=z.dtype)
         sigma = torch.as_tensor(self.noise, dtype=z.dtype, device=z.device)
         diff = z[:, None, :] - centers[None, :, :]
@@ -68,7 +77,9 @@ class TwoMoons(nn.Module):
             - math.log(2.0 * math.pi)
             - 2.0 * torch.log(sigma)
         )
-        return torch.logsumexp(component_log_prob, dim=1) - math.log(float(len(centers)))
+        return torch.logsumexp(component_log_prob, dim=1) - math.log(
+            float(len(centers))
+        )
 
     def sample(self, num_samples: int = 1) -> torch.Tensor:
         """Draw exactly ``num_samples`` two-moons samples.
@@ -77,11 +88,14 @@ class TwoMoons(nn.Module):
             Tensor shaped ``[num_samples, 2]``.
         """
 
-        theta = torch.rand(
-            num_samples,
-            dtype=self.arc_centers.dtype,
-            device=self.arc_centers.device,
-        ) * math.pi
+        theta = (
+            torch.rand(
+                num_samples,
+                dtype=self.arc_centers.dtype,
+                device=self.arc_centers.device,
+            )
+            * math.pi
+        )
         moon_index = torch.randint(0, 2, (num_samples,), device=self.arc_centers.device)
         centers = self._arc_points(theta, moon_index)
         noise = torch.randn_like(centers) * self.noise
@@ -109,8 +123,12 @@ class EightGaussians(nn.Module):
             Tensor shaped ``[num_samples, 2]``.
         """
 
-        indices = torch.randint(0, len(self.centers), (num_samples,), device=self.centers.device)
-        noise = torch.randn(num_samples, 2, dtype=self.centers.dtype, device=self.centers.device)
+        indices = torch.randint(
+            0, len(self.centers), (num_samples,), device=self.centers.device
+        )
+        noise = torch.randn(
+            num_samples, 2, dtype=self.centers.dtype, device=self.centers.device
+        )
         return self.centers[indices] + self.scale * noise
 
 

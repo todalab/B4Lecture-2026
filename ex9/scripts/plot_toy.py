@@ -9,7 +9,6 @@ from pathlib import Path
 
 import numpy as np
 import torch
-
 from nf_assignment.toy.data import make_toy_distribution
 from nf_assignment.toy.model import build_realnvp_2d
 from nf_assignment.toy.visualize import (
@@ -29,7 +28,9 @@ def _resolve_device(requested: str) -> torch.device:
         return torch.device("cuda" if torch.cuda.is_available() else "cpu")
     device = torch.device(requested)
     if device.type == "cuda" and not torch.cuda.is_available():
-        raise RuntimeError("CUDA device was requested, but torch.cuda.is_available() is False.")
+        raise RuntimeError(
+            "CUDA device was requested, but torch.cuda.is_available() is False."
+        )
     return device
 
 
@@ -97,7 +98,9 @@ def main() -> None:
     model.eval()
 
     plot_loss_curve(history, output_dir / "loss_curve.png")
-    plot_sample_comparison(target_samples, generated_samples, output_dir / "samples.png")
+    plot_sample_comparison(
+        target_samples, generated_samples, output_dir / "samples.png"
+    )
     plot_density_heatmaps(
         target.log_prob,
         model.log_prob,

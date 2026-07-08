@@ -9,8 +9,6 @@ import sys
 
 import numpy as np
 import torch
-from torch.utils.data import DataLoader
-
 from nf_assignment.speech.dataset import FeatureNormalizer, collate_speech_features
 from nf_assignment.speech.features.content import ResampledConditionFeature
 from nf_assignment.speech.features.world import WorldFeatureBundle
@@ -21,8 +19,13 @@ from nf_assignment.speech.sample import (
     generate_coded_sp,
     synthesize_target_world,
 )
-from nf_assignment.speech.train import crop_batch_segments, speech_nll_loss, train_speech_flow
+from nf_assignment.speech.train import (
+    crop_batch_segments,
+    speech_nll_loss,
+    train_speech_flow,
+)
 from nf_assignment.training.checkpoints import load_checkpoint
+from torch.utils.data import DataLoader
 
 
 def _sample(length: int) -> dict:
@@ -110,7 +113,9 @@ def test_crop_batch_segments_pads_short_items_and_crops_long_items() -> None:
     assert cropped["coded_sp"].shape == (2, 4, 4)
     assert cropped["condition"].shape == (2, 3, 4)
     assert cropped["lengths"].tolist() == [4, 3]
-    torch.testing.assert_close(cropped["mask"][1, 0], torch.tensor([1.0, 1.0, 1.0, 0.0]))
+    torch.testing.assert_close(
+        cropped["mask"][1, 0], torch.tensor([1.0, 1.0, 1.0, 0.0])
+    )
 
 
 def test_crop_batch_segments_zero_keeps_full_utterances() -> None:
@@ -203,9 +208,7 @@ def test_train_speech_script_resumes_checkpoint(tmp_path) -> None:
     resumed_output = tmp_path / "resumed"
     _write_text(
         data_config,
-        "splits:\n"
-        "  train: train\n"
-        "  valid: valid\n",
+        "splits:\n" "  train: train\n" "  valid: valid\n",
     )
     _write_text(
         model_config,
@@ -243,7 +246,9 @@ def test_train_speech_script_resumes_checkpoint(tmp_path) -> None:
         "log_every: 1\n",
     )
     env = dict(os.environ)
-    env["PYTHONPATH"] = os.path.join(repo_dir, "src") + os.pathsep + env.get("PYTHONPATH", "")
+    env["PYTHONPATH"] = (
+        os.path.join(repo_dir, "src") + os.pathsep + env.get("PYTHONPATH", "")
+    )
     script = os.path.join(repo_dir, "scripts", "train_speech.py")
     common_args = [
         sys.executable,
@@ -323,7 +328,9 @@ def test_generate_coded_sp_respects_mask() -> None:
     )
 
     assert generated.shape == batch["coded_sp"].shape
-    torch.testing.assert_close(generated * (1.0 - batch["mask"]), torch.zeros_like(generated))
+    torch.testing.assert_close(
+        generated * (1.0 - batch["mask"]), torch.zeros_like(generated)
+    )
 
 
 def test_extract_vc_condition_uses_source_frames_and_normalizer(monkeypatch) -> None:
@@ -457,7 +464,9 @@ def test_extract_vc_condition_appends_shifted_source_world_aux(monkeypatch) -> N
     assert result["condition_components"] == ["hubert_soft", "world_aux"]
     assert result["condition"].shape == (1, 5, 4)
     np.testing.assert_allclose(result["shifted_f0"], expected_shifted_f0)
-    np.testing.assert_allclose(result["aligned"][:, :2], [[1, 2], [3, 4], [5, 6], [7, 8]])
+    np.testing.assert_allclose(
+        result["aligned"][:, :2], [[1, 2], [3, 4], [5, 6], [7, 8]]
+    )
     np.testing.assert_allclose(result["aligned"][:, 2], np.log1p(expected_shifted_f0))
     np.testing.assert_allclose(result["aligned"][:, 3], [0.0, 1.0, 1.0, 0.0])
     np.testing.assert_allclose(result["aligned"][:, 4], [0.1, 0.2, 0.3, 0.4])
@@ -484,7 +493,9 @@ def test_synthesize_target_world_uses_target_f0_and_ap(monkeypatch) -> None:
         captured["decode"] = (coded_sp.copy(), sample_rate, fft_size)
         return np.full((3, 5), 2.0, dtype=np.float64)
 
-    def fake_synthesize(f0, spectral_envelope, aperiodicity, sample_rate, *, frame_period_ms):
+    def fake_synthesize(
+        f0, spectral_envelope, aperiodicity, sample_rate, *, frame_period_ms
+    ):
         captured["synthesize"] = (
             f0.copy(),
             spectral_envelope.copy(),
@@ -494,7 +505,9 @@ def test_synthesize_target_world_uses_target_f0_and_ap(monkeypatch) -> None:
         )
         return np.arange(4, dtype=np.float64)
 
-    monkeypatch.setattr("nf_assignment.speech.sample.decode_spectral_envelope", fake_decode)
+    monkeypatch.setattr(
+        "nf_assignment.speech.sample.decode_spectral_envelope", fake_decode
+    )
     monkeypatch.setattr("nf_assignment.speech.sample.synthesize_world", fake_synthesize)
 
     coded_sp = np.ones((3, 4), dtype=np.float32)

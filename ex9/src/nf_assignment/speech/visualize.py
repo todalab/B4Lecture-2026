@@ -98,7 +98,9 @@ def waveform_to_log_mel_spectrogram(
     return np.log10(np.maximum(mel_power.T, eps)).astype(np.float32)
 
 
-def plot_loss_curve(history: list[dict[str, float | int]], output_path: str | Path) -> None:
+def plot_loss_curve(
+    history: list[dict[str, float | int]], output_path: str | Path
+) -> None:
     """Plot speech training loss history."""
 
     import matplotlib.pyplot as plt
@@ -126,13 +128,17 @@ def plot_coded_sp_comparison(
 
     import matplotlib.pyplot as plt
 
-    fig, axes = plt.subplots(1, 2, figsize=(9, 3.5), constrained_layout=True, sharey=True)
+    fig, axes = plt.subplots(
+        1, 2, figsize=(9, 3.5), constrained_layout=True, sharey=True
+    )
     panels = [
         ("target coded_sp", target_coded_sp),
         ("generated coded_sp", generated_coded_sp),
     ]
     for ax, (title, values) in zip(axes, panels, strict=True):
-        image = ax.imshow(values.T, aspect="auto", origin="lower", interpolation="nearest")
+        image = ax.imshow(
+            values.T, aspect="auto", origin="lower", interpolation="nearest"
+        )
         ax.set_title(title)
         ax.set_xlabel("frame")
         ax.set_ylabel("channel")
@@ -156,10 +162,14 @@ def plot_spectral_envelope_comparison(
     import matplotlib.pyplot as plt
 
     target_log_sp = np.log10(np.maximum(np.asarray(target_sp, dtype=np.float64), eps))
-    generated_log_sp = np.log10(np.maximum(np.asarray(generated_sp, dtype=np.float64), eps))
+    generated_log_sp = np.log10(
+        np.maximum(np.asarray(generated_sp, dtype=np.float64), eps)
+    )
     vmin = float(min(np.min(target_log_sp), np.min(generated_log_sp)))
     vmax = float(max(np.max(target_log_sp), np.max(generated_log_sp)))
-    fig, axes = plt.subplots(1, 2, figsize=(9, 3.5), constrained_layout=True, sharey=True)
+    fig, axes = plt.subplots(
+        1, 2, figsize=(9, 3.5), constrained_layout=True, sharey=True
+    )
     panels = [
         ("target decoded sp", target_log_sp),
         ("generated decoded sp", generated_log_sp),
@@ -196,10 +206,14 @@ def plot_mel_spectrogram_comparison(
     import matplotlib.pyplot as plt
 
     target_mel = waveform_to_log_mel_spectrogram(target_waveform, target_sample_rate)
-    generated_mel = waveform_to_log_mel_spectrogram(generated_waveform, generated_sample_rate)
+    generated_mel = waveform_to_log_mel_spectrogram(
+        generated_waveform, generated_sample_rate
+    )
     vmin = float(min(np.min(target_mel), np.min(generated_mel)))
     vmax = float(max(np.max(target_mel), np.max(generated_mel)))
-    fig, axes = plt.subplots(1, 2, figsize=(9, 3.5), constrained_layout=True, sharey=True)
+    fig, axes = plt.subplots(
+        1, 2, figsize=(9, 3.5), constrained_layout=True, sharey=True
+    )
     panels = [
         ("target waveform mel", target_mel, target_sample_rate),
         ("generated waveform mel", generated_mel, generated_sample_rate),
