@@ -27,6 +27,7 @@ def make_model():
         down_block_types=["DownBlock2D"],
         up_block_types=["UpBlock2D"],
         block_out_channels=[16],
+        norm_num_groups=16,
     )
     return DiffusionModel(
         model=unet,
@@ -65,9 +66,9 @@ def test_q_sample_numerical():
         noise = torch.zeros_like(x0)
         x_t = model.q_sample(x0, t, noise)
         expected = model.alpha_prod[0].sqrt() * x0
-        assert torch.allclose(
-            x_t, expected, atol=1e-5
-        ), f"期待値: {expected[0, 0, 0, 0]:.6f}  実際値: {x_t[0, 0, 0, 0]:.6f}"
+        assert torch.allclose(x_t, expected, atol=1e-5), (
+            f"期待値: {expected[0, 0, 0, 0]:.6f}  実際値: {x_t[0, 0, 0, 0]:.6f}"
+        )
         print("  ✅ q_sample numerical: OK")
         return True
     except Exception as e:
@@ -126,9 +127,9 @@ def test_p_sample_t0_deterministic():
         t = torch.zeros(BATCH, dtype=torch.long)
         x_prev1 = model.p_sample(x, t)
         x_prev2 = model.p_sample(x, t)
-        assert torch.allclose(
-            x_prev1, x_prev2
-        ), "t=0 のとき p_sample は確定論的であるべきです（ノイズを加えてはいけない）"
+        assert torch.allclose(x_prev1, x_prev2), (
+            "t=0 のとき p_sample は確定論的であるべきです（ノイズを加えてはいけない）"
+        )
         print("  ✅ p_sample (t=0 deterministic): OK")
         return True
     except Exception as e:
@@ -146,9 +147,9 @@ def test_p_sample_t_nonzero_stochastic():
         t = torch.full((BATCH,), T // 2, dtype=torch.long)
         x_prev1 = model.p_sample(x, t)
         x_prev2 = model.p_sample(x, t)
-        assert not torch.allclose(
-            x_prev1, x_prev2
-        ), "t>0 のとき p_sample は確率的であるべきです（ノイズを加える必要がある）"
+        assert not torch.allclose(x_prev1, x_prev2), (
+            "t>0 のとき p_sample は確率的であるべきです（ノイズを加える必要がある）"
+        )
         print("  ✅ p_sample (t>0 stochastic): OK")
         return True
     except Exception as e:
