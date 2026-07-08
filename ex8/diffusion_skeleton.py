@@ -129,10 +129,10 @@ class DiffusionModel(nn.Module):
         alpha_t = self.alpha[t].view(-1, 1, 1, 1)
         beta_t = self.beta[t].view(-1, 1, 1, 1)
         alpha_prod_t = self.alpha_prod[t].view(-1, 1, 1, 1)
-        # t=0 のときはノイズを加えない
+        # t=0 のときはノイズを加えない（決定的）
         z = torch.randn_like(x)
         z[t == 0] = 0.0
-        # 分散σ^2 = β_t
+        # 論文中では実験的にσ^2 = β_t としているので、ここでは sqrt(β_t) を使用する
         x_prev = (1.0 / torch.sqrt(alpha_t)) * (
             x - ((beta_t / torch.sqrt(1.0 - alpha_prod_t)) * noise_pred)
         ) + torch.sqrt(beta_t) * z
@@ -206,7 +206,7 @@ class DiffusionModel(nn.Module):
         参照: "Denoising Diffusion Probabilistic Models" Algorithm 1
         """
         # TODO
-        # x_0はN(0,1)で固定
+        # x_0はどうやって生成する？N(0,1)で固定？
         # uniformは一様分布を意味する
         # バッチサイズ分のランダムなタイムステップ t を一様サンプリング
         t = torch.randint(
