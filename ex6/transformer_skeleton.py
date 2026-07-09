@@ -22,8 +22,12 @@ Ex6 B4講義 - 翻訳タスク用 Transformer
     - generate
 """
 
+from typing import Optional
+
 import torch
 import torch.nn as nn
+from numpy import cos, fromfunction, sin, where
+from torch import Tensor, cat, full, inf, softmax, tensor
 
 
 class PositionalEncoding(nn.Module):
@@ -50,14 +54,20 @@ class PositionalEncoding(nn.Module):
         super().__init__()
         self.dropout = nn.Dropout(p=dropout)
 
-        # TODO: (max_seq_len, d_model) の位置エンコーディング行列を作成
-        positional_encoding = torch.zeros(max_seq_len, d_model)
-
-        raise NotImplementedError(
-            "PositionalEncoding.__init__ の TODO を実装してください"
+        # (max_seq_len, d_model) の位置エンコーディング行列を作成
+        positional_encoding = fromfunction(
+            lambda pos, n: where(
+                n % 2 == 0,
+                sin(pos / 10000 ** (n / d_model)),
+                cos(pos / 10000 ** ((n - 1) / d_model)),
+            ),
+            (max_seq_len, d_model),
         )
+        positional_encoding = tensor(positional_encoding, dtype=torch.float32)
+
+        self.pe: Tensor
         self.register_buffer(
-            "pe", positional_encoding
+            "pe", positional_encoding.unsqueeze(0)
         )  # GPU 上で定数テンソルとして保持
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -67,11 +77,8 @@ class PositionalEncoding(nn.Module):
         Returns:
             output(batch, seq_len, d_model): 位置エンコーディングが加算された出力
         """
-        # TODO
-
-        raise NotImplementedError(
-            "PositionalEncoding.forward の TODO を実装してください"
-        )
+        m = x.size(1)
+        output = self.dropout(x + self.pe[:, :m])
         return output
 
 
@@ -112,7 +119,7 @@ class MultiHeadAttention(nn.Module):
         q: torch.Tensor,
         k: torch.Tensor,
         v: torch.Tensor,
-        mask: torch.Tensor = None,
+        mask: Optional[Tensor] = None,
     ):
         """スケールドドットプロダクトアテンションの計算
         Args:
@@ -124,12 +131,12 @@ class MultiHeadAttention(nn.Module):
             output(batch, heads, seq_len, d_k): アテンション出力
             attn_weights(batch, heads, seq_len, seq_len): アテンション重み
         """
-        # TODO
-        d_k = q.size(-1)
+        scores: Tensor = q @ k.transpose(2, 3) / self.d_k**0.5
+        if mask is not None:
+            scores = scores.masked_fill(~mask, -inf)
+        attention_weights = softmax(scores, dim=-1)
+        output = attention_weights @ v
 
-        raise NotImplementedError(
-            "MultiHeadAttention.scaled_dot_product_attention の TODO を実装してください"
-        )
         return output, attention_weights
 
     def forward(
@@ -137,7 +144,7 @@ class MultiHeadAttention(nn.Module):
         query: torch.Tensor,
         key: torch.Tensor,
         value: torch.Tensor,
-        mask: torch.Tensor = None,
+        mask: Optional[Tensor] = None,
     ):
         """アテンションの順伝播計算
         Args:
@@ -152,11 +159,23 @@ class MultiHeadAttention(nn.Module):
         """
         batch_size = query.size(0)
 
-        # TODO
+        def split_heads(x: Tensor) -> Tensor:
+            # split (d_model) into (n_heads, d_k) and transpose
+            return x.view(batch_size, -1, self.n_heads, self.d_k).transpose(1, 2)
 
-        raise NotImplementedError(
-            "MultiHeadAttention.forward の TODO を実装してください"
-        )
+        q, k, v = map(split_heads, (self.w_q(query), self.w_k(key), self.w_v(value)))
+
+        # Correct mask dimensionality
+        if mask is not None:
+            if mask.dim() == 2:
+                mask = mask.unsqueeze(1).unsqueeze(2)
+            elif mask.dim() == 3:
+                mask = mask.unsqueeze(1)
+
+        output, attn_weights = self.scaled_dot_product_attention(q, k, v, mask)
+        concatenated = output.transpose(1, 2).reshape(batch_size, -1, self.d_model)
+        output = self.w_o(concatenated)
+
         return output, attn_weights
 
 
@@ -184,6 +203,12 @@ class FeedForward(nn.Module):
         self.linear1 = nn.Linear(d_model, d_ff)
         self.linear2 = nn.Linear(d_ff, d_model)
         self.dropout = nn.Dropout(dropout)
+        self.layer = nn.Sequential(
+            self.linear1,
+            nn.ReLU(),
+            self.dropout,
+            self.linear2,
+        )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """FFN の順伝播計算.
@@ -193,10 +218,7 @@ class FeedForward(nn.Module):
         Returns:
             output(batch, seq_len, d_model): 出力
         """
-        # TODO
-
-        raise NotImplementedError("FeedForward.forward の TODO を実装してください")
-        return output
+        return self.layer(x)
 
 
 class EncoderBlock(nn.Module):
@@ -227,7 +249,9 @@ class EncoderBlock(nn.Module):
         self.norm2 = nn.LayerNorm(d_model)
         self.dropout = nn.Dropout(dropout)
 
-    def forward(self, x: torch.Tensor, src_mask: torch.Tensor = None) -> torch.Tensor:
+    def forward(
+        self, x: torch.Tensor, src_mask: Optional[Tensor] = None
+    ) -> torch.Tensor:
         """Encoder ブロックの順伝播計算.
 
         Args:
@@ -236,9 +260,13 @@ class EncoderBlock(nn.Module):
         Returns:
             (batch, src_len, d_model): 出力
         """
-        # TODO
 
-        raise NotImplementedError("EncoderBlock.forward の TODO を実装してください")
+        y, _ = self.self_attn(x, x, x, src_mask)
+        x = self.norm1(x + self.dropout(y))
+
+        y = self.feed_forward(x)
+        x = self.norm2(x + self.dropout(y))
+
         return x
 
 
@@ -281,8 +309,8 @@ class DecoderBlock(nn.Module):
         self,
         x: torch.Tensor,
         encoder_out: torch.Tensor,
-        tgt_mask: torch.Tensor = None,
-        src_mask: torch.Tensor = None,
+        tgt_mask: Optional[Tensor] = None,
+        src_mask: Optional[Tensor] = None,
     ) -> torch.Tensor:
         """Decoder ブロックの順伝播計算.
 
@@ -292,9 +320,16 @@ class DecoderBlock(nn.Module):
         Returns:
             torch.Tensor(batch, tgt_len, d_model): 出力
         """
-        # TODO
 
-        raise NotImplementedError("DecoderBlock.forward の TODO を実装してください")
+        y, _ = self.masked_self_attn(x, x, x, tgt_mask)
+        x = self.norm1(x + self.dropout(y))
+
+        y, _ = self.cross_attn(x, encoder_out, encoder_out, src_mask)
+        x = self.norm2(x + self.dropout(y))
+
+        y = self.feed_forward(x)
+        x = self.norm3(x + self.dropout(y))
+
         return x
 
 
@@ -404,7 +439,9 @@ class TranslationModel(nn.Module):
         pad_mask = (tgt != self.pad_idx).unsqueeze(1)  # (batch, 1, tgt_len)
         return causal_mask.unsqueeze(0) & pad_mask  # (batch, tgt_len, tgt_len)
 
-    def encode(self, src: torch.Tensor, src_mask: torch.Tensor = None) -> torch.Tensor:
+    def encode(
+        self, src: torch.Tensor, src_mask: Optional[Tensor] = None
+    ) -> torch.Tensor:
         """Encoder の順伝播計算.
 
         埋め込み → 位置エンコーディング → N 層の EncoderBlock
@@ -415,17 +452,18 @@ class TranslationModel(nn.Module):
         Returns:
             torch.Tensor(batch, src_len, d_model): encoder の出力表現
         """
-        # TODO
+        x = self.pos_encoding(self.src_embedding(src) * self.d_model**0.5)
+        for block in self.encoder_blocks:
+            x = block(x, src_mask)
 
-        raise NotImplementedError("TranslationModel.encode の TODO を実装してください")
         return x
 
     def decode(
         self,
         tgt: torch.Tensor,
         encoder_out: torch.Tensor,
-        tgt_mask: torch.Tensor = None,
-        src_mask: torch.Tensor = None,
+        tgt_mask: Optional[Tensor] = None,
+        src_mask: Optional[Tensor] = None,
     ) -> torch.Tensor:
         """Decoder の順伝播計算.
 
@@ -439,16 +477,18 @@ class TranslationModel(nn.Module):
         Returns:
             torch.Tensor(batch, tgt_len, d_model): decoder の出力表現
         """
-        # TODO
 
-        raise NotImplementedError("TranslationModel.decode の TODO を実装してください")
+        x = self.pos_encoding(self.tgt_embedding(tgt) * self.d_model**0.5)
+        for block in self.decoder_blocks:
+            x = block(x, encoder_out, tgt_mask, src_mask)
+
         return x
 
     def forward(
         self,
         src: torch.Tensor,
         tgt: torch.Tensor,
-        targets: torch.Tensor = None,
+        targets: Optional[Tensor] = None,
     ):
         """
         Args:
@@ -460,9 +500,18 @@ class TranslationModel(nn.Module):
             logits(batch, tgt_len, tgt_vocab_size):
             loss(float): 損失値
         """
-        # TODO
+        src_mask = self._make_src_mask(src)
+        tgt_mask = self._make_tgt_mask(tgt)
 
-        raise NotImplementedError("TranslationModel.forward の TODO を実装してください")
+        encoded = self.encode(src, src_mask)
+        decoded = self.decode(tgt, encoded, tgt_mask, src_mask)
+
+        logits = self.output_proj(decoded)
+        loss = None
+        if targets is not None:
+            crossEntropyLoss = nn.CrossEntropyLoss(ignore_index=self.pad_idx)
+            loss = crossEntropyLoss(logits.transpose(1, 2), targets)
+
         return logits, loss
 
     @torch.no_grad()
@@ -486,11 +535,20 @@ class TranslationModel(nn.Module):
         """
         self.eval()
 
-        # TODO
+        batch_size = src.size(0)
+        src_mask = self._make_src_mask(src)
+        encoded = self.encode(src, src_mask)
+        generated = full((batch_size, 1), bos_idx, device=src.device)
 
-        raise NotImplementedError(
-            "TranslationModel.generate の TODO を実装してください"
-        )
+        for _ in range(max_len):
+            tgt_mask = self._make_tgt_mask(generated)
+            decoded = self.decode(generated, encoded, tgt_mask, src_mask)
+            logits = self.output_proj(decoded)
+            next_token = logits[:, -1].argmax(dim=-1, keepdim=True)
+            generated = cat([generated, next_token], dim=1)
+            if (next_token == eos_idx).all():
+                break
+
         return generated
 
 
