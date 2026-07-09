@@ -27,6 +27,7 @@ def make_model():
         down_block_types=["DownBlock2D"],
         up_block_types=["UpBlock2D"],
         block_out_channels=[16],
+        norm_num_groups=16,
     )
     return DiffusionModel(
         model=unet,

@@ -15,7 +15,11 @@ model:
     - 256
 
 diffusion:
-  num_timesteps: 1000
+  num_timesteps: 500
+  # noise_schedule: cosine
+  # noise_schedule_kwargs:
+  #   start: 0.0001
+  #   end: 0.02
   noise_schedule: linear
   noise_schedule_kwargs:
     start: 0.0001
@@ -25,6 +29,12 @@ plot:
   num_samples: [8, 8]
   image_size: [3, 32, 32]
   every_n_epochs: 50
+
+# 推論（サンプリング）設定
+sampling:
+  use_ddim: false   # true で DDIM（ステップをサブサンプリングして高速生成）
+  ddim_steps: 50    # DDIM 使用時のサブサンプリング後のステップ数
+  ddim_eta: 0.0     # 0.0 で決定的（DDIM）、1.0 で DDPM 相当
 
 train:
   batch_size: 256

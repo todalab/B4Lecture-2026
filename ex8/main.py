@@ -31,12 +31,27 @@ def train_one_epoch(model, loader, optimizer, device):
     return total / len(loader)
 
 
-def visualize(model, num_timesteps, num_samples, image_size, writer, epoch):
-    """生成画像を TensorBoard に記録する。"""
+def visualize(
+    model, num_timesteps, num_samples, image_size, writer, epoch, outdir, sampling
+):
+    """生成画像を TensorBoard に記録し、逆拡散過程を GIF として保存する。"""
     model.eval()
     shape = (num_samples[0] * num_samples[1],) + tuple(image_size)
+    # エポックごとに逆拡散過程を GIF として保存する
+    gif_path = os.path.join(outdir, "gif", f"epoch_{epoch:04d}.gif")
+    # サンプリング方式（DDPM / DDIM）に応じて GIF のフレーム数を決める
+    total_steps = sampling.ddim_steps if sampling.use_ddim else num_timesteps
     with torch.no_grad():
-        generated = model.generate(num_timesteps, shape)
+        generated = model.generate(
+            num_timesteps,
+            shape,
+            use_ddim=sampling.use_ddim,
+            ddim_steps=sampling.ddim_steps,
+            ddim_eta=sampling.ddim_eta,
+            gif_path=gif_path,
+            gif_every_n_steps=max(1, total_steps // 50),
+            gif_nrow=num_samples[1],
+        )
     generated = (generated + 1) / 2  # [-1, 1] → [0, 1]
     grid = make_grid(generated, nrow=num_samples[1])
     writer.add_image("Generated Images", grid, epoch)
@@ -53,6 +68,7 @@ def main(cfg: DictConfig) -> None:
     print(f"Device: {device}")
 
     outdir = hydra.core.hydra_config.HydraConfig.get().runtime.output_dir
+    os.makedirs(os.path.join(outdir, "gif"), exist_ok=True)
 
     train_dataset = load_dataset(
         "huggan/smithsonian_butterflies_subset", split="train", cache_dir=cfg.datadir
@@ -96,6 +112,8 @@ def main(cfg: DictConfig) -> None:
                 cfg.plot.image_size,
                 writer,
                 epoch,
+                outdir,
+                cfg.sampling,
             )
 
     writer.close()
