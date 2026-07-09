@@ -1,0 +1,56 @@
+defaults:
+  - override hydra/sweeper: optuna
+  - override hydra/sweeper/sampler: tpe
+
+model:
+  hidden_channels1: 32
+  hidden_channels2: 16
+  latent_channels: 8
+
+dataset:
+  # folderのパスはプログラムを実行した場所をルートとする（ex5/y_arakawa）
+  train_list: src/dataloaders/train.txt
+  val_list: src/dataloaders/eval.txt
+  test_list: src/dataloaders/test.txt
+  data_dir: ../data/dev/abundant
+  sample_rate: 16000
+  n_fft: 1024
+  hop_length: 512
+  n_mels: 128
+  target_frames: 40
+
+dataset_normal_and_anomaly:
+  # folderのパスはプログラムを実行した場所をルートとする（ex5/y_arakawa）
+  data_dir: ../data/dev
+  train_list: src/dataloaders/normal_and_anomaly_data_train.txt
+  eval_list: src/dataloaders/normal_and_anomaly_data_eval.txt
+  # パラメータのパス
+
+train:
+  seed: 42
+  epochs: 40
+  learning_rate: 0.001
+  margin: 0.02
+  lambda: 0.5
+  batch_size: 128 # 一度に処理するデータの数.VRAMの容量によって変更する
+  epoch_per_val: 1
+  epoch_per_ckpt: 3
+  log_dir: tensorboard_logs
+  ckpt_dir: ckpts
+
+hydra:
+  mode: MULTIRUN
+  job:
+    chdir: True
+  sweeper:
+    sampler:
+      seed: 42
+    direction: minimize
+    n_trials: 4
+    params:
+      model.hidden_channels1: int(32) # optunaというフレームワークを使うことで指定した範囲から最適なパラメータを探索してくれる
+      model.hidden_channels2: int(16) # optunaというフレームワークを使うことで指定した範囲から最適なパラメータを探索してくれる
+      train.learning_rate: tag(log, interval(1e-4, 5e-3))
+  sweep:
+    dir: logs/mel_ae_optuna_for_comp
+    subdir: lr${round:${train.learning_rate}, 4}
