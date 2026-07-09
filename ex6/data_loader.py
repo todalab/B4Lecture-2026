@@ -1,5 +1,5 @@
-"""
-Data Loader for Ex6 B4 Lecture - 英日翻訳タスク
+"""Data Loader for Ex6 B4 Lecture - 英日翻訳タスク.
+
 データセット: ryo0634/bsd_ja_en (BSD ビジネス対話コーパス)
 
 使用例:
@@ -25,7 +25,7 @@ SPECIAL_TOKENS = ["<PAD>", "<UNK>", "<BOS>", "<EOS>"]
 
 
 class WordTokenizer:
-    """単語レベル / 文字レベル トークナイザー
+    """単語レベル / 文字レベル トークナイザー.
 
     Args:
         char_level: True のとき文字レベルでトークン化する（日本語向け）
@@ -38,17 +38,18 @@ class WordTokenizer:
     """
 
     def __init__(self, char_level: bool = False):
+        """トークナイザーを初期化する (char_level=True で文字レベル)."""
         self.char_level = char_level
         self.word2idx = {tok: i for i, tok in enumerate(SPECIAL_TOKENS)}
         self.idx2word = {i: tok for i, tok in enumerate(SPECIAL_TOKENS)}
 
     def _tokenize(self, text: str) -> List[str]:
         if self.char_level:
-            return list(text)        # 文字レベル: 日本語（スペースなし言語）
+            return list(text)  # 文字レベル: 日本語（スペースなし言語）
         return text.lower().split()  # 単語レベル: 英語
 
     def build(self, sentences: List[str], max_vocab: int = 8000) -> "WordTokenizer":
-        """訓練データから語彙を構築する"""
+        """訓練データから語彙を構築する."""
         counter: Counter = Counter()
         for sent in sentences:
             counter.update(self._tokenize(sent))
@@ -69,7 +70,7 @@ class WordTokenizer:
         add_eos: bool = True,
         max_len: int = None,
     ) -> List[int]:
-        """テキストをトークン ID 列に変換する"""
+        """テキストをトークン ID 列に変換する."""
         tokens = self._tokenize(text)
         ids = [self.word2idx.get(t, UNK_IDX) for t in tokens]
         if add_bos:
@@ -81,7 +82,7 @@ class WordTokenizer:
         return ids
 
     def decode(self, ids: List[int]) -> str:
-        """トークン ID 列をテキストに変換する (特殊トークンを除外)"""
+        """トークン ID 列をテキストに変換する (特殊トークンを除外)."""
         tokens = []
         for i in ids:
             if i == EOS_IDX:
@@ -93,11 +94,12 @@ class WordTokenizer:
         return sep.join(tokens)
 
     def __len__(self) -> int:
+        """語彙サイズを返す."""
         return len(self.word2idx)
 
 
 class TranslationDataset(Dataset):
-    """英日翻訳データセット
+    """英日翻訳データセット.
 
     __getitem__ は (src_ids, tgt_in_ids, tgt_out_ids) を返す:
         src_ids:     [..., EOS]        エンコーダ入力 (英語)
@@ -111,6 +113,7 @@ class TranslationDataset(Dataset):
         tgt_data: List[List[int]],
         max_len: int = 64,
     ):
+        """系列長でフィルタした (src, tgt) ペアからデータセットを構築する."""
         pairs = [
             (s, t)
             for s, t in zip(src_data, tgt_data)
@@ -121,14 +124,16 @@ class TranslationDataset(Dataset):
         logger.info(f"Dataset: {len(self.src_data)} sentence pairs")
 
     def __len__(self) -> int:
+        """データセットのサンプル数を返す."""
         return len(self.src_data)
 
     def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """(src, tgt_in, tgt_out) の Tensor 3 つ組を返す."""
         src = self.src_data[idx]  # [..., EOS]
         tgt = self.tgt_data[idx]  # [..., EOS]
 
         tgt_in = [BOS_IDX] + tgt[:-1]  # [BOS, char1, char2, ...]
-        tgt_out = tgt                   # [char1, char2, ..., EOS]
+        tgt_out = tgt  # [char1, char2, ..., EOS]
 
         return (
             torch.tensor(src, dtype=torch.long),
@@ -141,16 +146,18 @@ def collate_fn(
     batch: List[Tuple[torch.Tensor, torch.Tensor, torch.Tensor]],
     pad_idx: int = PAD_IDX,
 ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-    """バッチ内の系列をパディングして揃える"""
+    """バッチ内の系列をパディングして揃える."""
     src_batch, tgt_in_batch, tgt_out_batch = zip(*batch)
     src_padded = pad_sequence(src_batch, batch_first=True, padding_value=pad_idx)
     tgt_in_padded = pad_sequence(tgt_in_batch, batch_first=True, padding_value=pad_idx)
-    tgt_out_padded = pad_sequence(tgt_out_batch, batch_first=True, padding_value=pad_idx)
+    tgt_out_padded = pad_sequence(
+        tgt_out_batch, batch_first=True, padding_value=pad_idx
+    )
     return src_padded, tgt_in_padded, tgt_out_padded
 
 
 def load_bsd_ja_en(max_samples: int = 100_000) -> Tuple[List[str], List[str]]:
-    """ryo0634/bsd_ja_en をロードする
+    """ryo0634/bsd_ja_en をロードする.
 
     BSD (Business Scene Dialogue) 英日対訳コーパス。
     初回実行時にダウンロードされ、以降はキャッシュから読み込まれます。
@@ -186,7 +193,7 @@ def create_data_loaders(
     max_samples: int = 100_000,
     data_dir: str = "data",
 ) -> Tuple[DataLoader, DataLoader, "WordTokenizer", "WordTokenizer"]:
-    """英日翻訳用データローダーを作成する
+    """英日翻訳用データローダーを作成する.
 
     Args:
         max_len:        最大トークン長 (英語は単語数、日本語は文字数)
@@ -208,8 +215,12 @@ def create_data_loaders(
 
     # 語彙構築 (訓練データのみ)
     logger.info("Building vocabularies ...")
-    src_tokenizer = WordTokenizer(char_level=False).build(train_src, max_vocab=src_vocab_size)
-    tgt_tokenizer = WordTokenizer(char_level=True).build(train_tgt, max_vocab=tgt_vocab_size)
+    src_tokenizer = WordTokenizer(char_level=False).build(
+        train_src, max_vocab=src_vocab_size
+    )
+    tgt_tokenizer = WordTokenizer(char_level=True).build(
+        train_tgt, max_vocab=tgt_vocab_size
+    )
 
     def encode_all(sentences, tokenizer):
         return [tokenizer.encode(s, add_eos=True, max_len=max_len) for s in sentences]
