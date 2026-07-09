@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import torch
-from torch import nn
-
 from nf_assignment.flows.transforms import Transform
+from torch import nn
 
 
 class AffineCouplingTransform(Transform):
@@ -41,11 +40,15 @@ class AffineCouplingTransform(Transform):
             )
         return shift, log_scale
 
-    def _log_det(self, log_scale: torch.Tensor, mask: torch.Tensor | None) -> torch.Tensor:
+    def _log_det(
+        self, log_scale: torch.Tensor, mask: torch.Tensor | None
+    ) -> torch.Tensor:
         """Sum log-scales over event axes while ignoring padded sequence frames."""
 
         if mask is not None:
-            log_scale = log_scale * mask.to(dtype=log_scale.dtype, device=log_scale.device)
+            log_scale = log_scale * mask.to(
+                dtype=log_scale.dtype, device=log_scale.device
+            )
         event_dims = tuple(range(1, log_scale.dim()))
         return torch.sum(log_scale, dim=event_dims)
 

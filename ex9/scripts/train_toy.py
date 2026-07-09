@@ -7,8 +7,6 @@ import sys
 import time
 
 import torch
-from tqdm import tqdm
-
 from nf_assignment.toy.data import TwoMoons, make_toy_distribution
 from nf_assignment.toy.model import build_realnvp_2d
 from nf_assignment.toy.train import train_forward_kld
@@ -16,6 +14,7 @@ from nf_assignment.toy.visualize import plot_loss_curve
 from nf_assignment.training.checkpoints import save_checkpoint
 from nf_assignment.utils.io import ensure_dir, load_yaml, write_csv_rows, write_json
 from nf_assignment.utils.seed import set_seed
+from tqdm import tqdm
 
 
 def _resolve_device(requested: str) -> torch.device:

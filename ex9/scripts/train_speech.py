@@ -8,9 +8,6 @@ import sys
 import time
 
 import torch
-from torch.utils.data import DataLoader
-from tqdm import tqdm
-
 from nf_assignment.speech.conditions import parse_condition_spec
 from nf_assignment.speech.data import normalize_speaker_list
 from nf_assignment.speech.dataset import SpeechFeatureDataset, collate_speech_features
@@ -26,6 +23,8 @@ from nf_assignment.speech.visualize import plot_loss_curve
 from nf_assignment.training.checkpoints import load_checkpoint, save_checkpoint
 from nf_assignment.utils.io import ensure_dir, load_yaml, write_csv_rows, write_json
 from nf_assignment.utils.seed import set_seed
+from torch.utils.data import DataLoader
+from tqdm import tqdm
 
 DEFAULT_DATA_CONFIG = "configs/speech/data.yaml"
 DEFAULT_MODEL_CONFIG = "configs/speech/model.yaml"
