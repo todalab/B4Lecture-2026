@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import argparse
+import sys
 import time
 
 import torch
+from tqdm import tqdm
+
 from nf_assignment.toy.data import TwoMoons, make_toy_distribution
 from nf_assignment.toy.model import build_realnvp_2d
 from nf_assignment.toy.train import train_forward_kld
@@ -97,14 +100,34 @@ def main() -> None:
     log_every = int(train_config.get("log_every", 10))
 
     started = time.time()
-    history = train_forward_kld(
-        model,
-        optimizer,
-        target,
-        batch_size=batch_size,
-        num_steps=num_steps,
-        log_every=log_every,
-    )
+    last_progress_step = 0
+
+    def report_progress(entry: dict[str, float | int]) -> None:
+        """Advance the progress bar when a training loss is logged."""
+
+        nonlocal last_progress_step
+        step = int(entry["step"])
+        loss = float(entry["loss"])
+        progress_bar.set_postfix(loss=f"{loss:.6f}", refresh=False)
+        progress_bar.update(step - last_progress_step)
+        last_progress_step = step
+
+    with tqdm(
+        total=num_steps,
+        desc="train_toy",
+        unit="step",
+        dynamic_ncols=True,
+        file=sys.stdout,
+    ) as progress_bar:
+        history = train_forward_kld(
+            model,
+            optimizer,
+            target,
+            batch_size=batch_size,
+            num_steps=num_steps,
+            log_every=log_every,
+            progress_callback=report_progress,
+        )
     elapsed_sec = time.time() - started
 
     write_csv_rows(output_dir / "loss.csv", history, fieldnames=["step", "loss"])

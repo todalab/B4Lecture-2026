@@ -97,7 +97,7 @@ Two Moons は 2 次元の人工データ分布です。設定は `configs/toy/da
 
 #### 2-2. 実行方法
 
-1 章のセットアップ後、Toy pipeline を実行してください。
+1 章のセットアップ後、Toy pipeline を実行してください。ピークVRAMは0.5GiB程度、実行時間は10秒程度です。
 
 ```bash
 # デフォルト設定
@@ -196,6 +196,8 @@ nf-extract-speech-features \
 `--max-utterances` は speaker ごとの上限です。準備済みの CMU ARCTIC 全 speaker を dump する場合は、`--speakers all --max-utterances 1132` を使います。
 
 学習、生成：
+
+学習本体のピークVRAMは3.5GiB程度、実行時間目安は30分程度です。
 
 ```bash
 DEVICE=auto scripts/run_speech.sh
@@ -344,7 +346,7 @@ python -m pytest
 3. **考察**
 
    - 生成分布と target distribution の比較
-   - 余裕があれば、他話者化や品質改善などご自由に
+   - 余裕があれば、多話者化や品質改善などご自由に
 
 ---
 

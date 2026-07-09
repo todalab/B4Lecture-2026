@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import torch
-from nf_assignment.flows.transforms import Transform
 from torch import nn
+
+from nf_assignment.flows.transforms import Transform
 
 
 class AffineCouplingTransform(Transform):
@@ -15,6 +16,38 @@ class AffineCouplingTransform(Transform):
 
         super().__init__()
         self.conditioner = conditioner
+
+    def _conditioner_params(
+        self,
+        identity: torch.Tensor,
+        *,
+        mask: torch.Tensor | None = None,
+        condition: torch.Tensor | None = None,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        """Return shift and log-scale tensors predicted from the identity half."""
+
+        if identity.dim() == 2 and mask is None and condition is None:
+            params = self.conditioner(identity)
+        else:
+            params = self.conditioner(identity, condition=condition, mask=mask)
+
+        if params.shape[1] % 2 != 0:
+            raise ValueError("conditioner output channels must be even.")
+        shift, log_scale = params.chunk(2, dim=1)
+        if shift.shape != identity.shape:
+            raise ValueError(
+                "conditioner output must contain shift and log-scale tensors "
+                "matching the transformed input half."
+            )
+        return shift, log_scale
+
+    def _log_det(self, log_scale: torch.Tensor, mask: torch.Tensor | None) -> torch.Tensor:
+        """Sum log-scales over event axes while ignoring padded sequence frames."""
+
+        if mask is not None:
+            log_scale = log_scale * mask.to(dtype=log_scale.dtype, device=log_scale.device)
+        event_dims = tuple(range(1, log_scale.dim()))
+        return torch.sum(log_scale, dim=event_dims)
 
     def forward(
         self,
@@ -38,8 +71,23 @@ class AffineCouplingTransform(Transform):
             ``log_det`` is shaped ``[batch]``.
         """
 
-        # TODO
-        raise NotImplementedError
+        if x.shape[1] % 2 != 0:
+            raise ValueError("input channels must be even for channel-split coupling.")
+        if mask is not None:
+            mask = mask.to(dtype=x.dtype, device=x.device)
+
+        identity, transform = x.chunk(2, dim=1)
+        shift, log_scale = self._conditioner_params(
+            identity,
+            mask=mask,
+            condition=condition,
+        )
+        transformed = transform * torch.exp(log_scale) + shift
+        y = torch.cat([identity, transformed], dim=1)
+        if mask is not None:
+            y = y * mask
+        log_det = self._log_det(log_scale, mask)
+        return y, log_det
 
     def inverse(
         self,
@@ -61,8 +109,23 @@ class AffineCouplingTransform(Transform):
             ``log_det`` is shaped ``[batch]``.
         """
 
-        # TODO
-        raise NotImplementedError
+        if y.shape[1] % 2 != 0:
+            raise ValueError("input channels must be even for channel-split coupling.")
+        if mask is not None:
+            mask = mask.to(dtype=y.dtype, device=y.device)
+
+        identity, transform = y.chunk(2, dim=1)
+        shift, log_scale = self._conditioner_params(
+            identity,
+            mask=mask,
+            condition=condition,
+        )
+        transformed = (transform - shift) * torch.exp(-log_scale)
+        x = torch.cat([identity, transformed], dim=1)
+        if mask is not None:
+            x = x * mask
+        log_det = -self._log_det(log_scale, mask)
+        return x, log_det
 
 
 class AffineCouplingBlock(Transform):
