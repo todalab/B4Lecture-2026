@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 
 import torch
 from nf_assignment.flows.flow import NormalizingFlow
@@ -39,6 +39,7 @@ def train_forward_kld(
     batch_size: int,
     num_steps: int,
     log_every: int = 1,
+    progress_callback: Callable[[dict[str, float | int]], None] | None = None,
 ) -> list[dict[str, float | int]]:
     """Train by maximum likelihood on samples from the target distribution.
 
@@ -50,7 +51,10 @@ def train_forward_kld(
         batch = target.sample(batch_size)
         loss = forward_kld_step(model, optimizer, batch)
         if step == 1 or step % log_every == 0 or step == num_steps:
-            history.append({"step": step, "loss": loss})
+            entry = {"step": step, "loss": loss}
+            history.append(entry)
+            if progress_callback is not None:
+                progress_callback(entry)
     return history
 
 

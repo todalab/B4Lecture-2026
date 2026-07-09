@@ -13,6 +13,7 @@ dependencies = [
   "numpy>=1.24,<2.3",
   "pyyaml>=6.0",
   "torch>=2.0,<2.6",
+  "tqdm>=4.60",
 ]
 
 [project.scripts]
@@ -34,7 +35,7 @@ speech = [
 content = [
   "ppgs>=0.0.9",
   "scikit-learn>=1.0",
-  "torchaudio>=2.0",
+  "torchaudio>=2.0,<2.6",
 ]
 dev = [
   "pytest>=8.0",

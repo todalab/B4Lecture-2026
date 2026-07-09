@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import sys
 import time
 
 import torch
@@ -23,6 +24,7 @@ from nf_assignment.training.checkpoints import load_checkpoint, save_checkpoint
 from nf_assignment.utils.io import ensure_dir, load_yaml, write_csv_rows, write_json
 from nf_assignment.utils.seed import set_seed
 from torch.utils.data import DataLoader
+from tqdm import tqdm
 
 DEFAULT_DATA_CONFIG = "configs/speech/data.yaml"
 DEFAULT_MODEL_CONFIG = "configs/speech/model.yaml"
@@ -140,17 +142,6 @@ def _model_kwargs(
         "num_blocks": int(model_config.get("num_blocks", 6)),
         "num_layers_per_block": int(model_config.get("num_conditioner_layers", 4)),
     }
-
-
-def _format_duration(seconds: float) -> str:
-    """Format seconds as a compact duration string."""
-
-    seconds = max(0, int(seconds))
-    hours, remainder = divmod(seconds, 3600)
-    minutes, seconds = divmod(remainder, 60)
-    if hours:
-        return f"{hours:d}h{minutes:02d}m{seconds:02d}s"
-    return f"{minutes:d}m{seconds:02d}s"
 
 
 def main() -> None:
@@ -344,41 +335,38 @@ def main() -> None:
     progress_writer = csv.DictWriter(progress_file, fieldnames=["step", "loss"])
     progress_writer.writeheader()
     progress_file.flush()
+    last_progress_step = 0
 
     def report_progress(entry: dict[str, float | int]) -> None:
-        """Write one progress row and print a human-readable status line."""
+        """Write one progress row and advance the progress bar."""
 
+        nonlocal last_progress_step
         step = int(entry["step"])
         loss = float(entry["loss"])
-        elapsed = time.time() - started
-        steps_per_sec = step / elapsed if elapsed > 0.0 else 0.0
-        remaining_steps = max(num_steps - step, 0)
-        eta = remaining_steps / steps_per_sec if steps_per_sec > 0.0 else 0.0
         progress_writer.writerow({"step": step, "loss": loss})
         progress_file.flush()
-        percent = 100.0 * step / num_steps
-        print(
-            "train_progress "
-            f"step={step}/{num_steps} "
-            f"percent={percent:.2f} "
-            f"loss={loss:.6f} "
-            f"elapsed={_format_duration(elapsed)} "
-            f"eta={_format_duration(eta)} "
-            f"steps_per_sec={steps_per_sec:.3f}",
-            flush=True,
-        )
+        progress_bar.set_postfix(loss=f"{loss:.6f}", refresh=False)
+        progress_bar.update(step - last_progress_step)
+        last_progress_step = step
 
-    history = train_speech_flow(
-        model,
-        optimizer,
-        train_loader,
-        device=device,
-        num_steps=num_steps,
-        segment_frames=segment_frames,
-        log_every=log_every,
-        seed=seed,
-        progress_callback=report_progress,
-    )
+    with tqdm(
+        total=num_steps,
+        desc="train_speech",
+        unit="step",
+        dynamic_ncols=True,
+        file=sys.stdout,
+    ) as progress_bar:
+        history = train_speech_flow(
+            model,
+            optimizer,
+            train_loader,
+            device=device,
+            num_steps=num_steps,
+            segment_frames=segment_frames,
+            log_every=log_every,
+            seed=seed,
+            progress_callback=report_progress,
+        )
     progress_file.close()
     elapsed_sec = time.time() - started
 
