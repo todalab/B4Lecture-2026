@@ -75,7 +75,11 @@ class VAE(nn.Module):
         x = x.view(-1, self.x_dim)
         # TODO: enc_fc1 → ReLU → enc_fc2 → ReLU の順に通す。
         #      その後 enc_fc3_mean と enc_fc3_logvar に通して mean と log_var を返す。
-        raise NotImplementedError("VAE.encoder の TODO を実装してください")
+        x = torch.relu(self.enc_fc1(x))
+        x = torch.relu(self.enc_fc2(x))
+        mean = self.enc_fc3_mean(x)
+        log_var = self.enc_fc3_logvar(x)
+        return mean, log_var
 
     def reparametrization_trick(
         self, mean: torch.Tensor, log_var: torch.Tensor
@@ -96,9 +100,9 @@ class VAE(nn.Module):
         参照: "Auto-Encoding Variational Bayes" Section 2.4, Eq. (4)
         """
         # TODO: mean と同じ形状の ε を標準正規分布からサンプリングし、z を計算して返す。
-        raise NotImplementedError(
-            "VAE.reparametrization_trick の TODO を実装してください"
-        )
+        eps = torch.randn(mean.size(), device=mean.device)
+        z = mean + eps * torch.exp(0.5 * log_var)
+        return z
 
     def decoder(self, z: torch.Tensor) -> torch.Tensor:
         """潜在変数から再構成画像を生成する。
@@ -112,7 +116,11 @@ class VAE(nn.Module):
         参照: "Auto-Encoding Variational Bayes" Appendix C.1
         """
         # TODO: dec_fc1 → ReLU → dec_fc2 → ReLU → dec_drop → dec_fc3 → Sigmoid の順に通す。
-        raise NotImplementedError("VAE.decoder の TODO を実装してください")
+        x = torch.relu(self.dec_fc1(z))
+        x = torch.relu(self.dec_fc2(x))
+        x = self.dec_drop(x)
+        y = torch.sigmoid(self.dec_fc3(x))
+        return y
 
     def kld(self, mean: torch.Tensor, log_var: torch.Tensor) -> torch.Tensor:
         """KL ダイバージェンス KL[q(z|x) || p(z)] を計算する。
@@ -128,7 +136,9 @@ class VAE(nn.Module):
         """
         # TODO: KL[q(z|x) || p(z)] の解析解を実装する。
         #       torch.distributions.kl_divergence() の使用は禁止。
-        raise NotImplementedError("VAE.kld の TODO を実装してください")
+        # main.pyでバッチ数で割るので、ここではバッチ平均は取らずに sum で返す。
+        kl = -0.5 * torch.sum(1 + log_var - mean**2 - torch.exp(log_var))
+        return kl
 
     def forward(self, x: torch.Tensor):
         """ELBO の各項を計算してフォワードパスを実行する。
@@ -148,4 +158,15 @@ class VAE(nn.Module):
         # TODO: encoder → reparametrization_trick → decoder の順に呼び出す。
         #      elbo_kl = -self.kld(mean, log_var) で KL 項と（符号に注意）、
         #      elbo_rec を計算して [elbo_kl, elbo_rec], z, y を返す。
-        raise NotImplementedError("VAE.forward の TODO を実装してください")
+        mean, log_var = self.encoder(x)
+        z = self.reparametrization_trick(mean, log_var)
+        y = self.decoder(z)
+        elbo_kl = -self.kld(mean, log_var)
+        # 再構成項の計算（ベルヌーイ対数尤度：ln L(p) = Σ x ln p + (1-x) ln (1-p)）
+
+        # eps を足して log(0) を避ける
+        # main.py でバッチ数で割るので、ここではバッチ平均は取らずに sum で返す。
+        elbo_rec = torch.sum(
+            x * torch.log(y + self.eps) + (1 - x) * torch.log(1 - y + self.eps)
+        )
+        return [elbo_kl, elbo_rec], z, y

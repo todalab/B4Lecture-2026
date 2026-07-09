@@ -3,8 +3,10 @@
 
 import argparse
 import os
+import random
 
 import matplotlib.pyplot as plt
+import numpy as np
 import torch
 from libs.Visualize import Visualize
 from torch import optim
@@ -12,8 +14,39 @@ from torchvision import datasets, transforms
 from VAE_skeleton import VAE
 
 
+def set_seed(seed: int = 42) -> None:
+    """Seed Python, NumPy, and PyTorch RNGs and set deterministic flags.
+
+    Parameters
+    ----------
+    seed : int
+        Seed value for all RNGs.
+    """
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+
+
 def get_data_loaders(batch_size: int, train_rate: float):
     """MNIST DataLoader を作成して返す。"""
+    # 7-2 再現性の確保
+    # 乱数シードの固定
+    seed = 42
+    # ジェネレータを作成してデータのシャッフルを固定
+    generator = torch.Generator()
+    generator.manual_seed(seed)
+
+    # seed_worker
+    # 並列処理でデータローダーを使用する際に、各ワーカーの乱数シードを固定するための関数
+    def seed_worker(worker_id):
+        worker_seed = seed + worker_id
+        torch.manual_seed(worker_seed)
+        np.random.seed(worker_seed)
+
     transform = transforms.Compose(
         [
             transforms.ToTensor(),
@@ -27,9 +60,21 @@ def get_data_loaders(batch_size: int, train_rate: float):
 
     n_train = int(len(full_train) * train_rate)
     n_val = len(full_train) - n_train
-    train_set, val_set = torch.utils.data.random_split(full_train, [n_train, n_val])
+    # train_set, val_set = torch.utils.data.random_split(full_train, [n_train, n_val])
+    # train/val 分割も generator で固定し、再現性を確保する
+    split_generator = torch.Generator()
+    split_generator.manual_seed(seed)
+    train_set, val_set = torch.utils.data.random_split(
+        full_train, [n_train, n_val], generator=split_generator
+    )
 
-    kwargs = dict(batch_size=batch_size, num_workers=2, pin_memory=True)
+    kwargs = dict(
+        batch_size=batch_size,
+        num_workers=2,
+        pin_memory=True,
+        worker_init_fn=seed_worker,
+        generator=generator,
+    )
     train_loader = torch.utils.data.DataLoader(train_set, shuffle=True, **kwargs)
     val_loader = torch.utils.data.DataLoader(val_set, shuffle=False, **kwargs)
     test_loader = torch.utils.data.DataLoader(test_set, shuffle=False, **kwargs)
@@ -79,6 +124,7 @@ def plot_loss(train_losses, val_losses, path):
 
 
 def main():
+    set_seed(42)  # 7-2 再現性の確保
     parser = argparse.ArgumentParser(description="VAE training on MNIST")
     parser.add_argument("--z_dim", type=int, default=2, help="潜在変数の次元数")
     parser.add_argument("--h_dim", type=int, default=400, help="中間層の次元数")
@@ -132,21 +178,30 @@ def main():
     plot_loss(train_losses, val_losses, "./images/loss_curve.png")
 
     # 可視化
-    model.load_state_dict(torch.load(model_path, weights_only=True))
-    model.eval()
     vis = Visualize(args.z_dim, args.h_dim, test_loader, model, device)
     vis.createDirectories()
-    vis.reconstruction()
-    vis.latent_space()
+
+    # 最終エポックのモデル（学習ループ終了時点の重み）で reconstruction / latent_space を出力
+    model.eval()
+    vis.reconstruction(tag="final")
+    vis.latent_space(tag="final")
+
+    # best モデル（val loss 最小）をロードして可視化
+    model.load_state_dict(torch.load(model_path, weights_only=True))
+    model.eval()
+    vis.reconstruction(tag="best")
+    vis.latent_space(tag="best")
 
     if args.z_dim == 2:
         vis.lattice_point()
         vis.walkthrough()
     else:
-        print("z_dim != 2: lattice_point / walkthrough をスキップします。")
         print(
-            "  ヒント: t-SNE や PCA で潜在空間を2次元に落として可視化してみよう（発展課題）。"
+            f"z_dim={args.z_dim}: t-SNE で潜在空間を2次元に落として "
+            "lattice_point / walkthrough を可視化します。"
         )
+        vis.lattice_point()
+        vis.walkthrough()
 
 
 if __name__ == "__main__":
