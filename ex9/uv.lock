@@ -1,5 +1,5 @@
 version = 1
-revision = 2
+revision = 3
 requires-python = ">=3.10"
 resolution-markers = [
     "python_full_version >= '3.13'",
@@ -1784,6 +1784,7 @@ dependencies = [
     { name = "matplotlib", version = "3.10.9", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "matplotlib", version = "3.11.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "numpy" },
+    { name = "pytest" },
     { name = "pyyaml" },
     { name = "torch" },
     { name = "tqdm" },
@@ -1819,6 +1820,7 @@ requires-dist = [
     { name = "numba", marker = "extra == 'speech'", specifier = ">=0.59,<0.62" },
     { name = "numpy", specifier = ">=1.24,<2.3" },
     { name = "ppgs", marker = "extra == 'content'", specifier = ">=0.0.9" },
+    { name = "pytest", specifier = ">=9.1.1" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0" },
     { name = "pytest", marker = "extra == 'test'", specifier = ">=8.0" },
     { name = "pyworld", marker = "extra == 'speech'", specifier = ">=0.3" },
