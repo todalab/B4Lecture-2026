@@ -9,10 +9,24 @@ description = "Normalizing Flow assignment repository for toy and WORLD-envelope
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
+  "black>=26.5.1",
+  "flake8>=7.3.0",
+  "isort>=8.0.1",
+  "librosa>=0.10,<0.12",
   "matplotlib>=3.7",
-  "numpy>=1.24,<2.3",
+  "numba>=0.59,<0.62",
+  "numpy>=1.24",
+  "ppgs>=0.0.9",
+  "pytest>=8.0",
+  "pyworld>=0.3",
   "pyyaml>=6.0",
-  "torch>=2.0,<2.6",
+  "ruff>=0.6",
+  "scikit-learn>=1.0",
+  "scipy>=1.10,<1.16",
+  "setuptools<81",
+  "soundfile>=0.12",
+  "torch>=2.7",
+  "torchaudio>=2.7",
   "tqdm>=4.60",
 ]
 
@@ -35,12 +49,21 @@ speech = [
 content = [
   "ppgs>=0.0.9",
   "scikit-learn>=1.0",
-  "torchaudio>=2.0,<2.6",
+  "torchaudio>=2.7",
 ]
 dev = [
   "pytest>=8.0",
   "ruff>=0.6",
 ]
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu128" }
+torchaudio = { index = "pytorch-cu128" }
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
 
 [tool.setuptools.packages.find]
 where = ["src"]

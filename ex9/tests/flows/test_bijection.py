@@ -1,10 +1,11 @@
 import torch
+from torch import nn
+
 from nf_assignment.flows.coupling import AffineCouplingBlock, AffineCouplingTransform
 from nf_assignment.flows.flow import NormalizingFlow
 from nf_assignment.flows.permutation import Permute
 from nf_assignment.networks.mlp import MLP
 from nf_assignment.toy.model import build_realnvp_2d
-from torch import nn
 
 
 class ChunkedSequenceParams(nn.Module):

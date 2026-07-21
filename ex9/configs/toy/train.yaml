@@ -1,4 +1,4 @@
-device: auto
+device: cuda
 seed: 20260625
 batch_size: 512
 num_steps: 1200

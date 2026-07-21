@@ -1,4 +1,5 @@
 import torch
+
 from nf_assignment.networks.mlp import MLP
 
 

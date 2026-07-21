@@ -1,8 +1,9 @@
 import torch
+from torch import nn
+
 from nf_assignment.flows.coupling import AffineCouplingBlock
 from nf_assignment.flows.distributions import DiagGaussian
 from nf_assignment.flows.flow import NormalizingFlow
-from torch import nn
 
 
 class ConstantAffineParams(nn.Module):

@@ -1,4 +1,5 @@
 import torch
+
 from nf_assignment.toy.data import TwoMoons
 from nf_assignment.toy.model import build_realnvp_2d
 from nf_assignment.toy.sample import sample_model
