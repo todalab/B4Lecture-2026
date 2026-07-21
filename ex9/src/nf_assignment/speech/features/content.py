@@ -10,6 +10,7 @@ from typing import Any
 
 import numpy as np
 import torch
+
 from nf_assignment.speech.features.alignment import (
     crop_or_pad_frames,
     frame_feature_summary,

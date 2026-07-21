@@ -22,3 +22,5 @@ build/
 *.npy
 *.npz
 *.pdf
+
+pr_draft.md

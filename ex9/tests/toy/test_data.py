@@ -1,5 +1,6 @@
 import pytest
 import torch
+
 from nf_assignment.toy.data import TwoMoons, make_toy_distribution
 
 

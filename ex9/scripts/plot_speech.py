@@ -8,6 +8,7 @@ import time
 from pathlib import Path
 
 import numpy as np
+
 from nf_assignment.speech.visualize import (
     plot_coded_sp_comparison,
     plot_loss_curve,

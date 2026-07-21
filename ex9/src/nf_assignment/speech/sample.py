@@ -7,6 +7,7 @@ from typing import Any
 
 import numpy as np
 import torch
+
 from nf_assignment.speech.conditions import (
     WORLD_AUX_CONDITION,
     ConditionSpec,

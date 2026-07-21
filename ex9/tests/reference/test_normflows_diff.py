@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 import torch
+
 from nf_assignment.flows.coupling import AffineCouplingBlock
 from nf_assignment.flows.distributions import DiagGaussian
 from nf_assignment.flows.flow import NormalizingFlow

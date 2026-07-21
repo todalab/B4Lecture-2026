@@ -9,6 +9,8 @@ from typing import Any
 
 import numpy as np
 import torch
+from torch.utils.data import Dataset
+
 from nf_assignment.speech.conditions import ConditionSpec, parse_condition_spec
 from nf_assignment.speech.data import normalize_speaker_list
 from nf_assignment.speech.features.world import (
@@ -20,7 +22,6 @@ from nf_assignment.speech.normalization import (
     FeatureNormalizer,
     load_feature_normalizers,
 )
-from torch.utils.data import Dataset
 
 
 def read_feature_manifest(path: str | Path) -> list[dict[str, Any]]:

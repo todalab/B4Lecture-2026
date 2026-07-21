@@ -7,6 +7,7 @@ import time
 
 import numpy as np
 import torch
+
 from nf_assignment.toy.data import make_toy_distribution
 from nf_assignment.toy.model import build_realnvp_2d
 from nf_assignment.toy.sample import sample_model

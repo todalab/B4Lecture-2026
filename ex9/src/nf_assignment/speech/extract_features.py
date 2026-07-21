@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
+
 from nf_assignment.speech.data import normalize_speaker_list
 from nf_assignment.speech.features.content import (
     ResampledConditionFeature,

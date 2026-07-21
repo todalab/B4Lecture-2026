@@ -9,6 +9,8 @@ import sys
 
 import numpy as np
 import torch
+from torch.utils.data import DataLoader
+
 from nf_assignment.speech.dataset import FeatureNormalizer, collate_speech_features
 from nf_assignment.speech.features.content import ResampledConditionFeature
 from nf_assignment.speech.features.world import WorldFeatureBundle
@@ -25,7 +27,6 @@ from nf_assignment.speech.train import (
     train_speech_flow,
 )
 from nf_assignment.training.checkpoints import load_checkpoint
-from torch.utils.data import DataLoader
 
 
 def _sample(length: int) -> dict:

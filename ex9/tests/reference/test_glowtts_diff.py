@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 import torch
+
 from nf_assignment.flows.coupling import SequenceAffineCoupling
 from nf_assignment.flows.normalization import ActNorm
 from nf_assignment.flows.permutation import InvConvNear

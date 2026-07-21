@@ -7,6 +7,7 @@ import json
 import numpy as np
 import pytest
 import torch
+
 from nf_assignment.speech.dataset import (
     FeatureNormalizer,
     SpeechFeatureDataset,

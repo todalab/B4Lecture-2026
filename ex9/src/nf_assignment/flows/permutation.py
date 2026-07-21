@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import torch
-from nf_assignment.flows.transforms import Transform, batch_zeros_like
 from torch import nn
 from torch.nn import functional as F
+
+from nf_assignment.flows.transforms import Transform, batch_zeros_like
 
 
 class Permute(Transform):

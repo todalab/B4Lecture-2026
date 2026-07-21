@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import torch
+from torch import nn
+
 from nf_assignment.flows.coupling import SequenceAffineCoupling
 from nf_assignment.flows.normalization import ActNorm
 from nf_assignment.flows.permutation import InvConvNear
 from nf_assignment.networks.wavenet import WaveNetConditioner
-from torch import nn
 
 
 class ConditionalSequenceFlow(nn.Module):

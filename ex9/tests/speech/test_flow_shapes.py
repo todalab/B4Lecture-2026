@@ -1,6 +1,7 @@
 """Speech flow shape and reversibility tests."""
 
 import torch
+
 from nf_assignment.flows.coupling import AffineCouplingTransform, SequenceAffineCoupling
 from nf_assignment.flows.normalization import ActNorm
 from nf_assignment.flows.permutation import InvConvNear
