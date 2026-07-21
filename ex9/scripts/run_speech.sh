@@ -6,7 +6,7 @@ cd "${ROOT_DIR}"
 
 export PYTHONPATH="${ROOT_DIR}/src${PYTHONPATH:+:${PYTHONPATH}}"
 
-PYTHON=${PYTHON:-python}
+RUNNER=(uv run python)
 DEVICE=${DEVICE:-auto}
 CONDITION=${CONDITION:-hubert_soft,world_aux}
 CONDITIONS=${CONDITIONS:-${CONDITION}}
@@ -60,20 +60,20 @@ for condition in ${CONDITIONS}; do
   train_output_dir="${TRAIN_BASE_DIR}/${condition_id}"
   sample_output_dir="${SAMPLE_BASE_DIR}/${condition_id}"
 
-  "${PYTHON}" scripts/train_speech.py \
+  "${RUNNER[@]}" scripts/train_speech.py \
     --condition "${condition}" \
     --device "${DEVICE}" \
     --output-dir "${train_output_dir}" \
     "${train_args[@]}"
 
-  "${PYTHON}" scripts/sample_speech.py \
+  "${RUNNER[@]}" scripts/sample_speech.py \
     --condition "${condition}" \
     --device "${DEVICE}" \
     --checkpoint "${train_output_dir}/checkpoint.pt" \
     --output-dir "${sample_output_dir}" \
     "${sample_args[@]}"
 
-  "${PYTHON}" scripts/plot_speech.py \
+  "${RUNNER[@]}" scripts/plot_speech.py \
     --train-output-dir "${train_output_dir}" \
     --sample-output-dir "${sample_output_dir}" \
     --output-dir "${sample_output_dir}" \
